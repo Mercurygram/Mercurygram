@@ -75,6 +75,8 @@ public class UserConfig extends BaseController {
     public long lastUpdatedGenericAnimations;
     public long lastUpdatedDefaultTopicIcons;
 
+    public boolean useRearRoundVideos = false;
+
     public volatile byte[] savedPasswordHash;
     public volatile byte[] savedSaltedPassword;
     public volatile long savedPasswordTime;
@@ -168,6 +170,7 @@ public class UserConfig extends BaseController {
                     editor.putBoolean("filtersLoaded", filtersLoaded);
                     editor.putString("premiumGiftsStickerPack", premiumGiftsStickerPack);
                     editor.putLong("lastUpdatedPremiumGiftsStickerPack", lastUpdatedPremiumGiftsStickerPack);
+                    editor.putBoolean("useRearRoundVideos", useRearRoundVideos);
 
                     editor.putString("genericAnimationsStickerPack", genericAnimationsStickerPack);
                     editor.putLong("lastUpdatedGenericAnimations", lastUpdatedGenericAnimations);
@@ -311,9 +314,11 @@ public class UserConfig extends BaseController {
             filtersLoaded = preferences.getBoolean("filtersLoaded", false);
             premiumGiftsStickerPack = preferences.getString("premiumGiftsStickerPack", null);
             lastUpdatedPremiumGiftsStickerPack = preferences.getLong("lastUpdatedPremiumGiftsStickerPack", 0);
+            useRearRoundVideos = preferences.getBoolean("useRearRoundVideos", false);
 
             genericAnimationsStickerPack = preferences.getString("genericAnimationsStickerPack", null);
             lastUpdatedGenericAnimations = preferences.getLong("lastUpdatedGenericAnimations", 0);
+
 
 
             try {
@@ -475,6 +480,7 @@ public class UserConfig extends BaseController {
         unacceptedTermsOfService = null;
         filtersLoaded = false;
         hasSecureData = false;
+        useRearRoundVideos = false;
         loginTime = (int) (System.currentTimeMillis() / 1000);
         lastContactsSyncTime = (int) (System.currentTimeMillis() / 1000) - 23 * 60 * 60;
         lastHintsSyncTime = (int) (System.currentTimeMillis() / 1000) - 25 * 60 * 60;
