@@ -5641,6 +5641,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         wasManualScroll = true;
                         scrollingChatListView = true;
                     } else if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                        if (MessagesController.getGlobalMainSettings().getBoolean("hide_chat_keyboard", false)) {
+                            AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
+                        }
                         pollHintCell = null;
                         wasManualScroll = true;
                         scrollingFloatingDate = true;

@@ -2232,6 +2232,7 @@
     <string name="SetColor">Set a color</string>
     <string name="MessagesSettings">Messages</string>
     <string name="SendByEnter">Send by Enter</string>
+    <string name="HideChatKeyboard">Hide keyboard on chat scroll</string>
     <string name="Events">Events</string>
     <string name="ContactJoined">Contact joined Telegram</string>
     <string name="PinnedMessages">Pinned Messages</string>
