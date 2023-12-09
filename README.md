@@ -9,6 +9,7 @@ This is an unofficial fork of the [FOSS-friendly fork](https://github.com/Telegr
 This includes the following additional features:
 
 - Add ID in Profile Info
+- Add toggle setting in Chat Settings to start video messages with rear-facing camera
 
 ## Current Maintainers
 
