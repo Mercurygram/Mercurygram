@@ -658,7 +658,7 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
         cameraReady = false;
         selectedCamera = null;
         if (!fromPaused) {
-            isFrontface = true;
+            isFrontface = !UserConfig.getInstance(currentAccount).useRearRoundVideos;
             recordedTime = 0;
             progress = 0;
         }
