@@ -8,6 +8,8 @@ This is an unofficial fork of the [FOSS-friendly fork](https://github.com/Telegr
 
 This includes the following additional features:
 
+- Add ID in Profile Info
+
 ## Current Maintainers
 
 - [drizzt](https://github.com/drizzt)
