@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">텔레그램</string>
-    <string name="AppNameBeta">Telegram Beta</string>
+    <string name="AppName">Mercurygram</string>
+    <string name="AppNameBeta">Mercurygram Beta</string>
     <string name="LanguageName">한국어</string>
     <string name="English">영어</string>
     <string name="LanguageNameInEnglish">한국어</string>
@@ -2026,7 +2026,7 @@
     <string name="Emoji">이모지</string>
     <string name="LargeEmoji">대용량 이모지</string>
     <string name="EmojiUseDefault">시스템 기본 이모지 사용</string>
-    <string name="TelegramVersion">Android용 텔레그램 %1$s</string>
+    <string name="MercurygramVersion">Android용 텔레그램 %1$s</string>
     <string name="DebugMenu">디버그 메뉴</string>
     <string name="DebugSendLogs">로그 보내기</string>
     <string name="DebugSendLastLogs">최신 로그 전송</string>
