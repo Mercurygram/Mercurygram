@@ -11,6 +11,7 @@ This includes the following additional features:
 - Add ID in Profile Info
 - Add toggle setting in Chat Settings to start video messages with rear-facing camera
 - Add toggle setting in Chat Settings to hide keyboard on chat scroll
+- Unlock premium app icons for anybody
 
 ## Current Maintainers
 
