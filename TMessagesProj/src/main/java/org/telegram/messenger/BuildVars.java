@@ -27,7 +27,7 @@ public class BuildVars {
     public static String APP_HASH = BuildConfig.APP_HASH; //obtain your own APP_HASH at https://core.telegram.org/api/obtaining_api_id
 
     // SafetyNet key for Google Identity SDK, set it to empty to disable
-    public static String PLAYSTORE_APP_URL = "https://f-droid.org/en/packages/org.telegram.messenger/";
+    public static String PLAYSTORE_APP_URL = "https://github.com/drizzt/Mercurygram/releases/latest";
 
 
     // You can use this flag to disable Google Play Billing (If you're making fork and want it to be in Google Play)
