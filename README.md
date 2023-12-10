@@ -1,26 +1,27 @@
-[![Releases](https://img.shields.io/github/release/Telegram-FOSS-Team/Telegram-FOSS.svg)](https://github.com/Telegram-FOSS-Team/Telegram-FOSS/releases/latest)
-[![Discussions](https://img.shields.io/badge/Offtopics-Telegram-blue.svg)](https://t.me/tfossofftopics)
+[![Releases](https://img.shields.io/github/release/drizzt/Mercurygram.svg)](https://github.com/drizzt/Mercurygram/releases/latest)
 
-[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Telegram-FOSS/) or <img src="https://en.bitcoin.it/w/images/en/c/cb/BC_Logotype.png" alt="Bitcoin" height="25px" /> `1P8kNcifVAkBWtWmjKY4RvVLy5QwruE2LQ`
-
-# Telegram-FOSS
+# Mercurygram
 
 [Telegram](https://telegram.org) is a messaging app with a focus on speed and security. It’s superfast, simple and free.
 
-This is an unofficial, FOSS-friendly fork of the original [Telegram App for Android](https://github.com/DrKLO/Telegram).
+This is an unofficial fork of the [FOSS-friendly fork](https://github.com/Telegram-FOSS-Team/Telegram-FOSS) of [Telegram App for Android](https://github.com/DrKLO/Telegram).
 
-This version of Telegram is available on FDroid:
-
-[<img src="https://f-droid.org/badge/get-it-on.png"
-      alt="Get it on F-Droid"
-      height="80">](https://f-droid.org/app/org.telegram.messenger)
+This includes the following additional features:
 
 ## Current Maintainers
+
+- [drizzt](https://github.com/drizzt)
+- you? :)
+
+## Contributors
+- [quqkuk](https://github.com/quqkuk)
+
+## Current Telegram-FOSS Maintainers
 
 - [thermatk](https://github.com/thermatk)
 - you? :)
 
-## Contributors
+## Telegram-FOSS Contributors
 
 - [slp](https://github.com/slp)
 - [Bubu](https://github.com/Bubu)
@@ -45,19 +46,12 @@ This version of Telegram is available on FDroid:
 - [verdulo](https://github.com/verdulo)
 - [tehcneko](https://github.com/tehcneko)
 
-## Discussion
-
-Join the [Telegram-FOSS Offtopics group](https://t.me/tfossofftopics)
-
-You can also join `#telegram-foss:matrix.org` via [matrix](https://matrix.to/#/#telegram-foss:matrix.org) or `#telegram-foss` on freenode.
-
 ## Changes:
 
 *Replacement of non-FOSS, untrustworthy or suspicious binaries or source code:*
 - Do location sharing with OpenStreetMap(osmdroid) instead of Google Maps
 - Use Noto emoji set instead of Apple's emoji
-- Google Play Services GCM replaced with Telegram's push service
-- [Has to show a notification on Oreo+, ask Google](Notifications.md)
+- Google Play Services GCM replaced with [UnifiedPush](https://unifiedpush.org)
 - **SECURITY:** BoringSSL prebuilts are replaced with recent upstream source code built at compile time
 - **SECURITY:** FFmpeg prebuilts are replaced with recent upstream source code built at compile time
 - **SECURITY:** libvpx prebuilts are replaced with recent upstream source code built at compile time
@@ -80,10 +74,10 @@ You can also join `#telegram-foss:matrix.org` via [matrix](https://matrix.to/#/#
 
 This repository contains tags to make tracking versions easier.
 
-Versions are in form "v$UPSTREAM$RELEASE" where:
+Versions are in form "$UPSTREAM.$RELEASE" where:
 
-* $UPSTREAM is the public, visible version of upstream.
-* $RELEASE is a letter ([a-z]) indicating minor releases between official versions (sometimes, upstream is updated without relating the changes to an specific version).
+* $UPSTREAM is the tag of Telegram-FOSS upstream.
+* $RELEASE is a number ([0-9]\*), indicating minor releases between official Telegram-FOSS versions.
 
 ## API, Protocol documentation
 
