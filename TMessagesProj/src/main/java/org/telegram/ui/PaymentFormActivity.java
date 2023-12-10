@@ -3372,6 +3372,8 @@ public class PaymentFormActivity extends BaseFragment implements NotificationCen
                                 paymentFormCallback.onInvoiceStatusChanged(invoiceStatus);
                             }
                             finishFragment();
+                        } else if (invoiceStatus == InvoiceStatus.PAID && !isFinishing()) {
+                            finishFragment();
                         }
                     }, 500);
                 }
