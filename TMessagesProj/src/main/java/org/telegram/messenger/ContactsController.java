@@ -366,7 +366,7 @@ public class ContactsController extends BaseController {
     }
 
     public String getInviteText(int contacts) {
-        String link = inviteLink == null ? "https://f-droid.org/packages/org.telegram.messenger" : inviteLink;
+        String link = inviteLink == null ? "https://github.com/drizzt/Mercurygram/releases/latest" : inviteLink;
         if (contacts <= 1) {
             return LocaleController.formatString("InviteText2", R.string.InviteText2, link);
         } else {
