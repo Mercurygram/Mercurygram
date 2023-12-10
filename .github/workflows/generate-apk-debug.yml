@@ -1,0 +1,149 @@
+name: Generate Debug APK
+
+env:
+  # The name of the main module repository
+  main_project_module: TMessagesProj_App
+
+on:
+  push:
+    branches:
+      - 'Mercurygram'
+    paths-ignore:
+      - 'README.md'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: generate_debug_apk
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout TMessagesProj/build.gradle
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: TMessagesProj/build.gradle
+          sparse-checkout-cone-mode: false
+
+      # Set Current Date As Env Variable
+      #- name: Set current date as env variable
+      #  run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      # Set Repository Name As Env Variable
+      #- name: Set repository name as env variable
+      #  run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      - name: Set NDK version as env variables
+        run: sed -n 's:^\s*ndkVersion "\([^"]*\)"\s*$:ndk_version=\1:p' TMessagesProj/build.gradle >> $GITHUB_ENV
+
+      - name: Restore NDK cache
+        uses: actions/cache/restore@v3
+        id: restore-ndk-cache
+        with:
+          path: /usr/local/lib/android/sdk/ndk/${{ env.ndk_version }}
+          key: ${{ runner.os }}-ndk-${{ env.ndk_version }}
+
+      - name: Install Android NDK
+        if: steps.restore-ndk-cache.outputs.cache-hit != 'true'
+        env:
+          ndk_version: ${{ env.ndk_version }}
+        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;$ndk_version"
+
+      - name: Save NDK cache
+        if: steps.restore-ndk-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: /usr/local/lib/android/sdk/ndk/${{ env.ndk_version }}
+          key: ${{ steps.restore-ndk-cache.outputs.cache-primary-key }}
+
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+            #root-reserve-mb: 512
+            #swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Add android build-tools to PATH
+        run: |
+          sdk_version=$(sed -n "s:^\s*buildToolsVersion '\([^']*\)'\s*$:\1:p" TMessagesProj_App/build.gradle)
+          echo "$ANDROID_HOME/build-tools/${sdk_version}" >> $GITHUB_PATH
+          cat "$GITHUB_PATH"
+
+      - name: Set API_KEYS
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_HASH: ${{ secrets.APP_HASH }}
+        run: printf '%s = %s\n' "APP_ID" "$APP_ID" "APP_HASH" "$APP_HASH" > API_KEYS
+
+      - name: Restore jni cache
+        uses: actions/cache/restore@v3
+        id: restore-jni-cache
+        with:
+          path: TMessagesProj/jni
+          key: ${{ runner.os }}-jni-${{ hashFiles('TMessagesProj/jni/**') }}
+
+      - name: Install jni build dependencies
+        if: steps.restore-jni-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install ninja-build yasm
+
+      - name: Build jni libraries
+        if: steps.restore-jni-cache.outputs.cache-hit != 'true'
+        env:
+          NDK: /usr/local/lib/android/sdk/ndk/${{ env.ndk_version }}
+          NINJA_PATH: /usr/bin/ninja
+        working-directory: ./TMessagesProj/jni
+        run: |
+          ./build_libvpx_clang.sh
+          ./build_ffmpeg_clang.sh
+          ./patch_ffmpeg.sh
+          ./patch_boringssl.sh
+          ./build_boringssl.sh
+
+      - name: Save jni cache
+        if: steps.restore-jni-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: TMessagesProj/jni
+          key: ${{ steps.restore-jni-cache.outputs.cache-primary-key }}
+
+      # Run Tests Build
+      #- name: Run gradle tests
+      #  run: ./gradlew --no-daemon test
+
+      - name: Build apk debug
+        run: ./gradlew --no-daemon assembleAfatDebug
+
+      - name: Retrieve keystore and decode it to a file
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > telegram.jks
+
+      - name: Sign apk debug
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: apksigner sign --ks telegram.jks --ks-pass env:KEYSTORE_PASSWORD --out ${{ env.main_project_module }}/build/outputs/apk/afat/debug/app-debug.apk ${{ env.main_project_module }}/build/outputs/apk/afat/debug/app.apk
+
+      - name: Upload APK Debug
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-${{ github.sha }}-debug.apk
+          path: ${{ env.main_project_module }}/build/outputs/apk/afat/debug/app-debug.apk
