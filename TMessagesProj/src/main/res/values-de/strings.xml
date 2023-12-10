@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">Telegram</string>
-    <string name="AppNameBeta">Telegram Beta</string>
+    <string name="AppName">Mercurygram</string>
+    <string name="AppNameBeta">Mercurygram Beta</string>
     <string name="LanguageName">Deutsch</string>
     <string name="English">Englisch</string>
     <string name="LanguageNameInEnglish">German</string>
@@ -2026,7 +2026,7 @@
     <string name="Emoji">Emoji</string>
     <string name="LargeEmoji">Große Emoji</string>
     <string name="EmojiUseDefault">Benutze System-Emoji</string>
-    <string name="TelegramVersion">Telegram für Android %1$s</string>
+    <string name="MercurygramVersion">Mercurygram für Android %1$s</string>
     <string name="DebugMenu">Debug-Menü</string>
     <string name="DebugSendLogs">Protokolldateien senden</string>
     <string name="DebugSendLastLogs">Letzte Protokolldateien senden</string>
