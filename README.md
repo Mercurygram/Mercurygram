@@ -14,6 +14,23 @@ This includes the following additional features:
 - Unlock premium app icons for anybody
 - Add toggle setting in Chat Settings to send large photos (2560px instead of 1280px)
 
+## NOTES
+
+In order to have reliable notifications, it may be necessary to set battery
+optimization to Not optimized for Mercurygram (no, it won't use more battery).
+
+Background Connections setting is not necessary and uses lot of battery, so
+please disable it when you use UnifiedPush.
+
+If you set Battery optimization to Not optimized, Keep-Alive Service will be not
+necessary.
+
+See [dontkillmyapp](https://dontkillmyapp.com/) for more information.
+
+If you can't/want set Battery optimization to Not optimized and you don't
+receive notifications after a while (more than 30 minutes) please enable
+Keep-Alive Service instead.
+
 ## Current Maintainers
 
 - [drizzt](https://github.com/drizzt)
