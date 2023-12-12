@@ -2506,7 +2506,7 @@ public class AndroidUtilities {
 
     public static int getPhotoSize() {
         if (photoSize == null) {
-            photoSize = 1280;
+            photoSize = 2560;
         }
         return photoSize;
     }
