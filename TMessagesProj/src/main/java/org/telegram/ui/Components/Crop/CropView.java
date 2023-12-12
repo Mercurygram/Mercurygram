@@ -27,6 +27,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.BubbleActivity;
@@ -42,7 +43,7 @@ import java.util.ArrayList;
 
 public class CropView extends FrameLayout implements CropAreaView.AreaViewListener, CropGestureDetector.CropGestureListener {
     private static final float EPSILON = 0.00001f;
-    private static final int RESULT_SIDE = 1280;
+    private static final int RESULT_SIDE = UserConfig.getInstance(UserConfig.selectedAccount).sendLargePhotos ? 2560 : 1280;
     private static final float MAX_SCALE = 30.0f;
 
     public CropAreaView areaView;

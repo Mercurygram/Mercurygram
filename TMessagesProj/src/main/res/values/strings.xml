@@ -6273,6 +6273,7 @@
     <string name="MicrophoneForVoiceMessagesScoIfConnected">Headset (if connected)</string>
     <string name="MicrophoneForVoiceMessagesScoHint">Using a headset microphone may reduce background noise but will slightly decrease audio quality.</string>
     <string name="UseRearRoundVideos">Start video messages with rear-facing camera</string>
+    <string name="SendLargePhotos">Send photos in 2560px instead of 1280px</string>
     <string name="AltNavigationEnable">Enable alternative navigation</string>
     <string name="AltNavigationDisable">Disable alternative navigation</string>
     <string name="ReactionInDialog">Reacted with %s to your message</string>
