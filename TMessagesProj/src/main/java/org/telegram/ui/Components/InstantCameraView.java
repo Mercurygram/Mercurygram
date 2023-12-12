@@ -581,7 +581,7 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
             textureOverlayView.setImageResource(R.drawable.icplaceholder);
         }
         cameraReady = false;
-        isFrontface = !SharedConfig.useRearRoundVideos;
+        isFrontface = !UserConfig.getInstance(currentAccount).useRearRoundVideos;
         selectedCamera = null;
         recordedTime = 0;
         progress = 0;

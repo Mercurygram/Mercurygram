@@ -1205,9 +1205,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 dialogRef.set(dialog);
                 showDialog(dialog);
             } else if (position == rearRoundVideosRow) {
-                SharedConfig.toggleUseRearRoundVideos();
+                getUserConfig().useRearRoundVideos = !getUserConfig().useRearRoundVideos;
+                getUserConfig().saveConfig(false);
                 if (view instanceof TextCheckCell) {
-                    ((TextCheckCell) view).setChecked(SharedConfig.useRearRoundVideos);
+                    ((TextCheckCell) view).setChecked(getUserConfig().useRearRoundVideos);
                 }
             } else if (position == customTabsRow) {
                 SharedConfig.toggleCustomTabs();
@@ -2378,7 +2379,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == chatBlurRow) {
                         textCheckCell.setTextAndCheck(LocaleController.getString("BlurInChat", R.string.BlurInChat), SharedConfig.chatBlurEnabled(), true);
                     } else if (position == rearRoundVideosRow) {
-                        textCheckCell.setTextAndCheck(LocaleController.getString("UseRearRoundVideos", R.string.UseRearRoundVideos), SharedConfig.useRearRoundVideos, true);
+                        textCheckCell.setTextAndCheck(LocaleController.getString("UseRearRoundVideos", R.string.UseRearRoundVideos), getUserConfig().useRearRoundVideos, true);
                     }
                     break;
                 }

@@ -291,7 +291,6 @@ public class SharedConfig {
     public static boolean saveStreamMedia = true;
     public static boolean pauseMusicOnRecord = false;
     public static boolean pauseMusicOnMedia = false;
-    public static boolean useRearRoundVideos = false;
     public static boolean noiseSupression;
     public static final boolean noStatusBar = true;
     public static boolean debugWebView;
@@ -601,7 +600,6 @@ public class SharedConfig {
             saveStreamMedia = preferences.getBoolean("saveStreamMedia", true);
             pauseMusicOnRecord = preferences.getBoolean("pauseMusicOnRecord", false);
             pauseMusicOnMedia = preferences.getBoolean("pauseMusicOnMedia", false);
-            useRearRoundVideos = preferences.getBoolean("useRearRoundVideos", false);
             forceDisableTabletMode = preferences.getBoolean("forceDisableTabletMode", false);
             streamAllVideo = preferences.getBoolean("streamAllVideo", BuildVars.DEBUG_VERSION);
             streamMkv = preferences.getBoolean("streamMkv", false);
@@ -1205,14 +1203,6 @@ public class SharedConfig {
 
     public static boolean enabledRaiseTo(boolean speak) {
         return raiseToListen && (!speak || raiseToSpeak);
-    }
-
-    public static void toggleUseRearRoundVideos() {
-        useRearRoundVideos = !useRearRoundVideos;
-        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("useRearRoundVideos", useRearRoundVideos);
-        editor.apply();
     }
 
     public static void toggleCustomTabs() {
