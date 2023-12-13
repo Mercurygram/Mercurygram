@@ -13,6 +13,7 @@ This includes the following additional features:
 - Add toggle setting in Chat Settings to hide keyboard on chat scroll
 - Unlock premium app icons for anybody
 - Add toggle setting in Chat Settings to send large photos (2560px instead of 1280px)
+- Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
 
 ## NOTES
 
