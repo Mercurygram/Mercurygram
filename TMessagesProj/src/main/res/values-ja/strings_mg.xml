@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="MessageDetails">詳細</string>
+    <string name="ExportAsJson">JSONとしてエクスポート</string>
+</resources>

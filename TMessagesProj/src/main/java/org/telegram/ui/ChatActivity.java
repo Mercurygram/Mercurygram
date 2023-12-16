@@ -121,6 +121,8 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.zxing.common.detector.MathUtils;
 
+import it.belloworld.mercurygram.ui.MessageDetailsActivity;
+
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -936,6 +938,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private final static int OPTION_EDIT_SCHEDULE_TIME = 102;
     private final static int OPTION_SPEED_PROMO = 103;
     private final static int OPTION_OPEN_PROFILE = 104;
+
+    private final static int OPTION_DETAILS = 200;
 
     private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
             NotificationCenter.messagesRead,
@@ -25406,6 +25410,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             options.add(OPTION_DELETE);
                             icons.add(selectedObject.messageOwner.ttl_period != 0 ? R.drawable.msg_delete_auto : R.drawable.msg_delete);
                         }
+                        if (SharedConfig.messageDetailsMenu) {
+                            items.add(LocaleController.getString("MessageDetails", R.string.MessageDetails));
+                            options.add(OPTION_DETAILS);
+                            icons.add(R.drawable.menu_info);
+                        }
                     } else {
                         if (allowChatActions && !isInsideContainer) {
                             items.add(LocaleController.getString("Reply", R.string.Reply));
@@ -27811,6 +27820,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             case OPTION_OPEN_PROFILE: {
                 TLRPC.Peer from = selectedObject.messageOwner.from_id;
                 openUserProfile(from.user_id != 0 ? from.user_id : from.channel_id != 0 ? from.channel_id : from.chat_id);
+                break;
+            }
+            case OPTION_DETAILS: {
+                presentFragment(new MessageDetailsActivity(selectedObject));
                 break;
             }
         }
