@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="MessageDetails">Message Details</string>
+    <string name="ExportAsJson">Export as JSON</string>
+    <string name="Date">Date</string>
+    <string name="Buttons">Buttons</string>
+    <string name="Filename">File name</string>
+    <string name="Filesize">File size</string>
+</resources>

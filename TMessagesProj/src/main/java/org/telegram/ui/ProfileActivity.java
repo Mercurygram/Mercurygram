@@ -3790,7 +3790,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? (!SharedConfig.useCamera2 ? "Use Camera 2 API" : "Use old Camera 1 API") : null
                         };
 
-                        builder.setItems(items, (dialog, which) -> {
+                        CharSequence[] mgItems;
+                        mgItems = new CharSequence[]{
+                                !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu",
+                        };
+
+                        CharSequence[] joinedItems = new CharSequence[items.length + mgItems.length];
+                        System.arraycopy(items, 0, joinedItems, 0, items.length);
+                        System.arraycopy(mgItems, 0, joinedItems, items.length, mgItems.length);
+
+                        builder.setItems(joinedItems, (dialog, which) -> {
                             if (which == 0) {
                                 getUserConfig().syncContacts = true;
                                 getUserConfig().saveConfig(false);
@@ -4032,6 +4041,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 getMediaDataController().loadAttachMenuBots(false, true);
                             } else if (which == 27) {
                                 SharedConfig.toggleUseCamera2();
+                            }
+
+                            // MGRAM
+                            else if (which == items.length + 0) {
+                                SharedConfig.toggleMessageDetailsMenu();
                             }
                         });
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
