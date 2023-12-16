@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="MessageDetails">정보</string>
+    <string name="ExportAsJson">JSON으로 내보내기</string>
+</resources>

@@ -3830,7 +3830,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 BuildVars.DEBUG_VERSION ? "Clear bot biometry data" : null
                         };
 
-                        builder.setItems(items, (dialog, which) -> {
+                        CharSequence[] mgItems;
+                        mgItems = new CharSequence[]{
+                                !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu",
+                        };
+
+                        CharSequence[] joinedItems = new CharSequence[items.length + mgItems.length];
+                        System.arraycopy(items, 0, joinedItems, 0, items.length);
+                        System.arraycopy(mgItems, 0, joinedItems, items.length, mgItems.length);
+
+                        builder.setItems(joinedItems, (dialog, which) -> {
                             if (which == 0) {
                                 getUserConfig().syncContacts = true;
                                 getUserConfig().saveConfig(false);
@@ -4084,6 +4093,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 SharedConfig.toggleUseCamera2();
                             } else if (which == 28) {
                                 BotBiometry.clear();
+                            }
+
+                            // MGRAM
+                            else if (which == items.length + 0) {
+                                SharedConfig.toggleMessageDetailsMenu();
                             }
                         });
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
