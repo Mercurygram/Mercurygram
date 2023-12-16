@@ -32,6 +32,13 @@ If you can't/want set Battery optimization to Not optimized and you don't
 receive notifications after a while (more than 30 minutes) please enable
 Keep-Alive Service instead.
 
+## Why the name Mercurygram?
+
+For a couple of reasons:
+
+- Mercury is the Roman, and I'm Italian, God and the "**messenger** of the gods"
+- The logo is a stylized 'F' representing his winged shoes, but it also resembles an 'F' in honor of **Freddy Mercury**.
+
 ## Current Maintainers
 
 - [drizzt](https://github.com/drizzt)
