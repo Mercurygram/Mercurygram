@@ -342,12 +342,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private boolean callItemVisible;
     private boolean videoCallItemVisible;
     private boolean editItemVisible;
+    private boolean showAdminsVisible;
     private ActionBarMenuItem animatingItem;
     private ActionBarMenuItem callItem;
     private ActionBarMenuItem videoCallItem;
     private ActionBarMenuItem editItem;
     private ActionBarMenuItem otherItem;
     private ActionBarMenuItem searchItem;
+    private ActionBarMenuItem showAdminsItem;
     private ImageView ttlIconView;
     private ActionBarMenuItem qrItem;
     private ActionBarMenuSubItem autoDeleteItem;
@@ -468,6 +470,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int gift_premium = 38;
     private final static int channel_stories = 39;
     private final static int edit_color = 40;
+
+    private final static int show_admins = 200;
 
     private Rect rect = new Rect();
 
@@ -2137,6 +2141,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (button != null) {
                         button.setTextColor(Theme.getColor(Theme.key_text_RedBold));
                     }
+                } else if (id == show_admins) {
+                    Bundle args = new Bundle();
+                    args.putLong("chat_id", chatId);
+                    args.putInt("type", ChatUsersActivity.TYPE_ADMIN);
+                    ChatUsersActivity fragment = new ChatUsersActivity(args);
+                    fragment.setInfo(chatInfo);
+                    presentFragment(fragment);
                 } else if (id == edit_channel) {
                     if (isTopic) {
                         Bundle args = new Bundle();
@@ -3076,6 +3087,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             callItem = menu.addItem(call_item, R.drawable.ic_call);
             callItem.setContentDescription(LocaleController.getString("Call", R.string.Call));
         }
+        showAdminsItem = menu.addItem(show_admins, R.drawable.msg_admins);
+        showAdminsItem.setContentDescription(LocaleController.getString("ChannelAdministrators", R.string.ChannelAdministrators));
         editItem = menu.addItem(edit_channel, R.drawable.group_edit_profile);
         editItem.setContentDescription(LocaleController.getString("Edit", R.string.Edit));
         otherItem = menu.addItem(10, R.drawable.ic_ab_other, resourcesProvider);
@@ -8753,6 +8766,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         editItemVisible = false;
         callItemVisible = false;
         videoCallItemVisible = false;
+        showAdminsVisible = false;
         canSearchMembers = false;
         boolean selfUser = false;
         if (userId != 0) {
@@ -8853,6 +8867,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     callItemVisible = call != null;
                 }
                 if (chat.megagroup) {
+                    if (!chat.left && !chat.kicked) {
+                        showAdminsVisible = true;
+                    }
                     if (chatInfo == null || !chatInfo.participants_hidden || ChatObject.hasAdminRights(chat)) {
                         canSearchMembers = true;
                         otherItem.addSubItem(search_members, R.drawable.msg_search, LocaleController.getString("SearchMembers", R.string.SearchMembers));
@@ -8892,6 +8909,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (!ChatObject.isKickedFromChat(chat) && !ChatObject.isLeftFromChat(chat)) {
                     if (chatInfo == null || !chatInfo.participants_hidden || ChatObject.hasAdminRights(chat)) {
                         canSearchMembers = true;
+                        showAdminsVisible = true;
                         otherItem.addSubItem(search_members, R.drawable.msg_search, LocaleController.getString("SearchMembers", R.string.SearchMembers));
                     }
                 }
@@ -8963,6 +8981,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else {
                 if (editItem.getVisibility() != View.GONE) {
                     editItem.setVisibility(View.GONE);
+                }
+            }
+            if (showAdminsVisible) {
+                if (showAdminsItem.getVisibility() != View.VISIBLE) {
+                    showAdminsItem.setVisibility(View.VISIBLE);
+                    if (animated) {
+                        showAdminsItem.setAlpha(0);
+                        showAdminsItem.animate().alpha(1f).setDuration(150).start();
+                    }
+                }
+            } else {
+                if (showAdminsItem.getVisibility() != View.GONE) {
+                    showAdminsItem.setVisibility(View.GONE);
                 }
             }
         }
