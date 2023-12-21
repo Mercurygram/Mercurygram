@@ -3189,6 +3189,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 actionBar.setTitle(LocaleController.getString("SelectChat", R.string.SelectChat));
             }
             actionBar.setBackgroundColor(Theme.getColor(Theme.key_actionBarDefault));
+            actionBar.setOnLongClickListener(v -> {
+                if (getUserConfig().hideAllTab && filterTabsView != null && filterTabsView.getDefaultTabId() != filterTabsView.getCurrentTabId()) {
+                    filterTabsView.toggleAllTabs(true);
+                    filterTabsView.selectDefaultTab();
+                }
+                return false;
+            });
         } else {
             if (searchString != null || folderId != 0) {
                 actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
@@ -6608,7 +6615,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 filterTabsView.removeTabs();
                 for (int a = 0, N = filters.size(); a < N; a++) {
                     if (filters.get(a).isDefault()) {
-                        filterTabsView.addTab(a, 0, LocaleController.getString("FilterAllChats", R.string.FilterAllChats), true, filters.get(a).locked);
+                        if (filterTabsView.showAllChatsTab) {
+                            filterTabsView.addTab(a, 0, LocaleController.getString("FilterAllChats", R.string.FilterAllChats), true, filters.get(a).locked);
+                        }
                     } else {
                         filterTabsView.addTab(a, filters.get(a).localId, filters.get(a).name, false, filters.get(a).locked);
                     }
@@ -6989,7 +6998,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             return false;
         } else if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE && !tabsAnimationInProgress && !filterTabsView.isAnimatingIndicator() && !startedTracking && !filterTabsView.isFirstTabSelected()) {
-            filterTabsView.selectFirstTab();
+            if (!getUserConfig().hideAllTab) {
+                filterTabsView.selectFirstTab();
+            }
             return false;
         } else if (commentView != null && commentView.isPopupShowing()) {
             commentView.hidePopup(true);

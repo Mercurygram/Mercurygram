@@ -6,4 +6,6 @@
     <string name="Buttons">Buttons</string>
     <string name="Filename">File name</string>
     <string name="Filesize">File size</string>
+    <string name="HideAllTab">Hide \"All Chats\" tab</string>
+    <string name="HideAllTabAbout">Press \"Back\" on home page to open it.</string>
 </resources>

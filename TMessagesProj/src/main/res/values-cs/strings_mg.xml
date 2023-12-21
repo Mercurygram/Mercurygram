@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">Detaily</string>
     <string name="ExportAsJson">Exportovat jako JSON</string>
+    <string name="HideAllTab">Skrýt kartu „Všechny chaty“</string>
+    <string name="HideAllTabAbout">Stisknutím tlačítka „Zpět“ na domovské stránce ji otevřete.</string>
 </resources>

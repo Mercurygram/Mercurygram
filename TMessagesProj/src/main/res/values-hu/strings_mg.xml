@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">Részletek</string>
     <string name="ExportAsJson">Exportálás JSON formátumban</string>
+    <string name="HideAllTab">Az \"Összes csevegés\" fül elrejtése</string>
+    <string name="HideAllTabAbout">Nyomja meg a \"Vissza\" gombot a kezdőlapon a megnyitáshoz.</string>
 </resources>
