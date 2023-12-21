@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">Докладно</string>
     <string name="ExportAsJson">Експортувати JSON</string>
+    <string name="HideAllTab">Сховати вкладку \"Усі чати\"</string>
+    <string name="HideAllTabAbout">Натисніть \"Назад\" на головній сторінці, щоб відкрити її.</string>
 </resources>

@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">ریزگان</string>
     <string name="ExportAsJson">برون آوری به شکل JSON</string>
+    <string name="HideAllTab">پنهانکردن تب \"همه گفتگو‌ها\"</string>
+    <string name="HideAllTabAbout">برای نمایش، در رویه آغازین \"بازگشت\" را فشار دهید.</string>
 </resources>

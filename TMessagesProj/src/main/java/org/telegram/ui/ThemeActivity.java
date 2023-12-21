@@ -155,6 +155,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int distanceRow;
     private int bluetoothScoRow;
     private int rearRoundVideosRow;
+    private int hideAllTabRow;
     private int enableAnimationsRow;
     private int settings2Row;
     private int changeUserColor;
@@ -567,6 +568,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         distanceRow = -1;
         bluetoothScoRow = -1;
         rearRoundVideosRow = -1;
+        hideAllTabRow = -1;
         settings2Row = -1;
 
         swipeGestureHeaderRow = -1;
@@ -666,6 +668,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             pauseOnMediaRow = rowCount++;
             bluetoothScoRow = rowCount++;
             rearRoundVideosRow = rowCount++;
+            hideAllTabRow = rowCount++;
             mediaSoundSectionRow = rowCount++;
 
             otherHeaderRow = rowCount++;
@@ -1209,6 +1212,12 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 getUserConfig().saveConfig(false);
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(getUserConfig().useRearRoundVideos);
+                }
+            } else if (position == hideAllTabRow) {
+                getUserConfig().hideAllTab = !getUserConfig().hideAllTab;
+                getUserConfig().saveConfig(false);
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(getUserConfig().hideAllTab);
                 }
             } else if (position == customTabsRow) {
                 SharedConfig.toggleCustomTabs();
@@ -2380,6 +2389,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         textCheckCell.setTextAndCheck(LocaleController.getString("BlurInChat", R.string.BlurInChat), SharedConfig.chatBlurEnabled(), true);
                     } else if (position == rearRoundVideosRow) {
                         textCheckCell.setTextAndCheck(LocaleController.getString("UseRearRoundVideos", R.string.UseRearRoundVideos), getUserConfig().useRearRoundVideos, true);
+                    } else if (position == hideAllTabRow) {
+                        textCheckCell.setTextAndValueAndCheck(LocaleController.getString("HideAllTab", R.string.HideAllTab), LocaleController.getString("HideAllTabAbout", R.string.HideAllTabAbout), getUserConfig().hideAllTab, false, true);
                     }
                     break;
                 }
@@ -2515,7 +2526,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             } else if (position == scheduleLocationRow || position == sendByEnterRow || position == hideChatKeyboardRow ||
                     position == raiseToSpeakRow || position == raiseToListenRow || position == pauseOnRecordRow || position == customTabsRow ||
                     position == directShareRow || position == chatBlurRow || position == pauseOnMediaRow || position == nextMediaTapRow ||
-                    position == rearRoundVideosRow) {
+                    position == rearRoundVideosRow || position == hideAllTabRow) {
                 return TYPE_TEXT_CHECK;
             } else if (position == textSizeRow) {
                 return TYPE_TEXT_SIZE;

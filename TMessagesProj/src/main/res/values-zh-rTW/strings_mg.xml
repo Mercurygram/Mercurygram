@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">詳情</string>
     <string name="ExportAsJson">匯出為 JSON</string>
+    <string name="HideAllTab">隱藏「全部對話」</string>
+    <string name="HideAllTabAbout">在主頁按返回鍵開啟全部對話。</string>
 </resources>

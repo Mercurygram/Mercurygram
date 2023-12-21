@@ -6,4 +6,6 @@
     <string name="Buttons">Bottoni</string>
     <string name="Filename">Nome file</string>
     <string name="Filesize">Dimensione file</string>
+    <string name="HideAllTab">Nascondi la scheda \"Tutte le chat\"</string>
+    <string name="HideAllTabAbout">Premi \"Indietro\" sulla pagina home per aprirlo.</string>
 </resources>
