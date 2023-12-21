@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">詳細</string>
     <string name="ExportAsJson">JSONとしてエクスポート</string>
+    <string name="HideAllTab">「すべてのチャット」タブを非表示にする</string>
+    <string name="HideAllTabAbout">ホームページで「戻る」を押して開く</string>
 </resources>
