@@ -2,4 +2,5 @@
 <resources>
     <string name="MessageDetails">বিস্তারিত</string>
     <string name="ExportAsJson">JSON আকারে এক্সপোর্ট</string>
+    <string name="HideAllTab">\"All Chats\" ট্যাব লুকান</string>
 </resources>

@@ -77,6 +77,7 @@ public class UserConfig extends BaseController {
 
     public boolean useRearRoundVideos = false;
     public boolean sendLargePhotos = false;
+    public boolean hideAllTab = false;
 
     public volatile byte[] savedPasswordHash;
     public volatile byte[] savedSaltedPassword;
@@ -173,6 +174,7 @@ public class UserConfig extends BaseController {
                     editor.putLong("lastUpdatedPremiumGiftsStickerPack", lastUpdatedPremiumGiftsStickerPack);
                     editor.putBoolean("useRearRoundVideos", useRearRoundVideos);
                     editor.putBoolean("sendLargePhotos", sendLargePhotos);
+                    editor.putBoolean("hideAllTab", hideAllTab);
 
                     editor.putString("genericAnimationsStickerPack", genericAnimationsStickerPack);
                     editor.putLong("lastUpdatedGenericAnimations", lastUpdatedGenericAnimations);
@@ -318,6 +320,7 @@ public class UserConfig extends BaseController {
             lastUpdatedPremiumGiftsStickerPack = preferences.getLong("lastUpdatedPremiumGiftsStickerPack", 0);
             useRearRoundVideos = preferences.getBoolean("useRearRoundVideos", false);
             sendLargePhotos = preferences.getBoolean("sendLargePhotos", false);
+            hideAllTab = preferences.getBoolean("hideAllTab", false);
 
             genericAnimationsStickerPack = preferences.getString("genericAnimationsStickerPack", null);
             lastUpdatedGenericAnimations = preferences.getLong("lastUpdatedGenericAnimations", 0);
@@ -485,6 +488,7 @@ public class UserConfig extends BaseController {
         hasSecureData = false;
         useRearRoundVideos = false;
         sendLargePhotos = false;
+        hideAllTab = false;
         loginTime = (int) (System.currentTimeMillis() / 1000);
         lastContactsSyncTime = (int) (System.currentTimeMillis() / 1000) - 23 * 60 * 60;
         lastHintsSyncTime = (int) (System.currentTimeMillis() / 1000) - 25 * 60 * 60;

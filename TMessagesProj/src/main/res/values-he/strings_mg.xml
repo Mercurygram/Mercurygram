@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">פרטים</string>
     <string name="ExportAsJson">ייצוא כ־JSON</string>
+    <string name="HideAllTab">הסתרת כרטיסיית „כל הצ׳אטים”</string>
+    <string name="HideAllTabAbout">לחיצה על „חזרה” בדף הבית תפתח אותו.</string>
 </resources>
