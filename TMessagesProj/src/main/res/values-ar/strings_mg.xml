@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">التفاصيل</string>
     <string name="ExportAsJson">تصدير كـ JSON</string>
+    <string name="HideAllTab">إخفاء علامة التبويب \"كل الدردشة\"</string>
+    <string name="HideAllTabAbout">اضغط على \"العودة\" على الصفحة الرئيسية لفتحها.</string>
 </resources>

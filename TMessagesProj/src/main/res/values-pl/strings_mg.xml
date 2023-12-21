@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">Szczegóły</string>
     <string name="ExportAsJson">Eksportuj jako JSON</string>
+    <string name="HideAllTab">Ukryj folder „Wszystkie czaty”</string>
+    <string name="HideAllTabAbout">Naciśnij „Wstecz” na stronie głównej, aby go otworzyć.</string>
 </resources>

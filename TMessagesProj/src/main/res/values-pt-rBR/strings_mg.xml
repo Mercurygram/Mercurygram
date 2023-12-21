@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">Detalhes</string>
     <string name="ExportAsJson">Exportar como JSON</string>
+    <string name="HideAllTab">Ocultar aba \"Todos os Chats\"</string>
+    <string name="HideAllTabAbout">Toque em \"Voltar\" na página inicial para abri-lo.</string>
 </resources>

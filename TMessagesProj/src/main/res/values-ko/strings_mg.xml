@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">정보</string>
     <string name="ExportAsJson">JSON으로 내보내기</string>
+    <string name="HideAllTab">\"모든 채팅\" 탭 숨기기</string>
+    <string name="HideAllTabAbout">홈페이지의 \"뒤로\" 버튼 눌러서 열기.</string>
 </resources>
