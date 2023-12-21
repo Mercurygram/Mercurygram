@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">Ətraflı məlumat</string>
     <string name="ExportAsJson">JSON olaraq ixrac edin</string>
+    <string name="HideAllTab">\"Bütün söhbətlər\" nişanını gizlədin</string>
+    <string name="HideAllTabAbout">Açmaq üçün ana səhifədəki \"Geri\" düyməsini basın.</string>
 </resources>

@@ -2,4 +2,6 @@
 <resources>
     <string name="MessageDetails">Сведения о сообщении</string>
     <string name="ExportAsJson">Экспорт в JSON</string>
+    <string name="HideAllTab">Скрыть вкладку «Все»</string>
+    <string name="HideAllTabAbout">Нажмите «Назад», чтобы открыть вкладку «Все» снова.</string>
 </resources>
