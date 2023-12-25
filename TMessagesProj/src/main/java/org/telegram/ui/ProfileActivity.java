@@ -3856,6 +3856,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         CharSequence[] mgItems;
                         mgItems = new CharSequence[]{
                                 !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu",
+                                SharedConfig.disableUnifiedPush ? "Enable Unified Push" : "Disable Unified Push",
                         };
 
                         CharSequence[] joinedItems = new CharSequence[items.length + mgItems.length];
@@ -4121,6 +4122,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             // MGRAM
                             else if (which == items.length + 0) {
                                 SharedConfig.toggleMessageDetailsMenu();
+                            } else if (which == items.length + 1) {
+                                SharedConfig.toggleDisableUnifiedPush();
+
+                                Activity activity = AndroidUtilities.findActivity(context);
+                                final PackageManager pm = activity.getPackageManager();
+                                final Intent intent = pm.getLaunchIntentForPackage(activity.getPackageName());
+                                activity.finishAffinity(); // Finishes all activities.
+                                activity.startActivity(intent);    // Start the launch activity
+                                System.exit(0);
                             }
                         });
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
