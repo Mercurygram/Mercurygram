@@ -25033,9 +25033,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             options.add(OPTION_DELETE);
                             icons.add(selectedObject.messageOwner.ttl_period != 0 ? R.drawable.msg_delete_auto : R.drawable.msg_delete);
                         }
-                        items.add(LocaleController.getString("MessageDetails", R.string.MessageDetails));
-                        options.add(OPTION_DETAILS);
-                        icons.add(R.drawable.menu_info);
+                        if (SharedConfig.messageDetailsMenu) {
+                            items.add(LocaleController.getString("MessageDetails", R.string.MessageDetails));
+                            options.add(OPTION_DETAILS);
+                            icons.add(R.drawable.menu_info);
+                        }
                     } else {
                         if (allowChatActions) {
                             items.add(LocaleController.getString("Reply", R.string.Reply));

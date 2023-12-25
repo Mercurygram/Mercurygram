@@ -3679,7 +3679,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 BuildVars.DEBUG_VERSION ? (SharedConfig.useSurfaceInStories ? "back to TextureView in stories" : "use SurfaceView in stories") : null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? (SharedConfig.photoViewerBlur ? "do not blur in photoviewer" : "blur in photoviewer") : null,
                                 !SharedConfig.payByInvoice ? "Enable Invoice Payment" : "Disable Invoice Payment",
-                                BuildVars.DEBUG_PRIVATE_VERSION ? "Update Attach Bots" : null
+                                BuildVars.DEBUG_PRIVATE_VERSION ? "Update Attach Bots" : null,
+                                !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu"
                         };
 
                         builder.setItems(items, (dialog, which) -> {
@@ -3913,6 +3914,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 SharedConfig.togglePaymentByInvoice();
                             } else if (which == 26) {
                                 getMediaDataController().loadAttachMenuBots(false, true);
+                            } else if (which == 27) {
+                                SharedConfig.toggleMessageDetailsMenu();
                             }
                         });
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
