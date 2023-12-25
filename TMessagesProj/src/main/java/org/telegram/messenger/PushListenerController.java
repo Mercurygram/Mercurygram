@@ -1,5 +1,7 @@
 package org.telegram.messenger;
 
+import android.content.Context;
+import android.content.IntentFilter;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -1479,6 +1481,7 @@ public class PushListenerController {
     }
     public final static class UnifiedPushListenerServiceProvider implements IPushListenerServiceProvider {
         public final static UnifiedPushListenerServiceProvider INSTANCE = new UnifiedPushListenerServiceProvider();
+        private final static UnifiedPushReceiver mReceiver = new UnifiedPushReceiver();
 
         private UnifiedPushListenerServiceProvider(){};
 
@@ -1494,37 +1497,47 @@ public class PushListenerController {
 
         @Override
         public void onRequestPushToken() {
-            String currentPushString = SharedConfig.pushString;
-            if (!TextUtils.isEmpty(currentPushString)) {
-                if (BuildVars.DEBUG_PRIVATE_VERSION && BuildVars.LOGS_ENABLED) {
-                    FileLog.d("UnifiedPush endpoint = " + currentPushString);
-                }
+            if (SharedConfig.disableUnifiedPush) {
+                UnifiedPush.unregisterApp(ApplicationLoader.applicationContext, "default");
             } else {
-                if (BuildVars.LOGS_ENABLED) {
-                    FileLog.d("No UnifiedPush string found");
-                }
-            }
-            Utilities.globalQueue.postRunnable(() -> {
-                try {
-                    SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
-                    SharedConfig.saveConfig();
-                    if (UnifiedPush.getDistributor(ApplicationLoader.applicationContext).isEmpty()) {
-                        List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>());
-                        if (distributors.size() > 0) {
-                            String distributor =  distributors.get(0);
-                            UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, distributor);
-                        }
+                String currentPushString = SharedConfig.pushString;
+                if (!TextUtils.isEmpty(currentPushString)) {
+                    if (BuildVars.DEBUG_PRIVATE_VERSION && BuildVars.LOGS_ENABLED) {
+                        FileLog.d("UnifiedPush endpoint = " + currentPushString);
                     }
-                    UnifiedPush.registerApp(
-                            ApplicationLoader.applicationContext,
-                            "default",
-                            new ArrayList<>(),
-                            "Telegram Simple"
-                            );
-                } catch (Throwable e) {
-                    FileLog.e(e);
+                } else {
+                    if (BuildVars.LOGS_ENABLED) {
+                        FileLog.d("No UnifiedPush string found");
+                    }
                 }
-            });
+                IntentFilter intentFilter = new IntentFilter();
+                intentFilter.addAction("org.unifiedpush.android.connector.MESSAGE");
+                intentFilter.addAction("org.unifiedpush.android.connector.UNREGISTERED");
+                intentFilter.addAction("org.unifiedpush.android.connector.NEW_ENDPOINT");
+                intentFilter.addAction("org.unifiedpush.android.connector.REGISTRATION_FAILED");
+                ApplicationLoader.applicationContext.registerReceiver(this.mReceiver, intentFilter, Context.RECEIVER_EXPORTED);
+                Utilities.globalQueue.postRunnable(() -> {
+                    try {
+                        SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
+                        SharedConfig.saveConfig();
+                        if (UnifiedPush.getDistributor(ApplicationLoader.applicationContext).isEmpty()) {
+                            List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>());
+                            if (distributors.size() > 0) {
+                                String distributor = distributors.get(0);
+                                UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, distributor);
+                            }
+                        }
+                        UnifiedPush.registerApp(
+                                ApplicationLoader.applicationContext,
+                                "default",
+                                new ArrayList<>(),
+                                "Telegram Simple"
+                        );
+                    } catch (Throwable e) {
+                        FileLog.e(e);
+                    }
+                });
+            }
         }
 
         @Override
