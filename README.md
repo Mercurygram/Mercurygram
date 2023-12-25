@@ -12,6 +12,8 @@ This includes the following additional features:
 - Add ID in Profile Info
 - Add toggle setting in Chat Settings to start video messages with rear-facing camera
 - Add toggle setting in Chat Settings to hide keyboard on chat scroll
+- Add toggle setting in Chat Setting to hide "All Chats" tab (feature from NekoX)
+- Add toggle setting in Debug Menu to enable Message Details menu
 - Unlock premium app icons for anybody
 - Add toggle setting in Chat Settings to send large photos (2560px instead of 1280px)
 - Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
