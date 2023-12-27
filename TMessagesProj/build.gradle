@@ -39,7 +39,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10'
     implementation 'com.google.guava:guava:31.1-android'
 
-    implementation 'com.github.UnifiedPush:android-connector:2.2.0'
+    implementation 'com.github.UnifiedPush:android-connector:2.3.1'
 
     implementation 'org.osmdroid:osmdroid-android:6.1.14'
 
