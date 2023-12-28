@@ -1,7 +1,5 @@
 package org.telegram.messenger;
 
-import android.content.Context;
-import android.content.IntentFilter;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -1510,12 +1508,6 @@ public class PushListenerController {
                         FileLog.d("No UnifiedPush string found");
                     }
                 }
-                IntentFilter intentFilter = new IntentFilter();
-                intentFilter.addAction("org.unifiedpush.android.connector.MESSAGE");
-                intentFilter.addAction("org.unifiedpush.android.connector.UNREGISTERED");
-                intentFilter.addAction("org.unifiedpush.android.connector.NEW_ENDPOINT");
-                intentFilter.addAction("org.unifiedpush.android.connector.REGISTRATION_FAILED");
-                ApplicationLoader.applicationContext.registerReceiver(this.mReceiver, intentFilter, Context.RECEIVER_EXPORTED);
                 Utilities.globalQueue.postRunnable(() -> {
                     try {
                         SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
