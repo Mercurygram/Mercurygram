@@ -27,12 +27,14 @@ import java.util.concurrent.CountDownLatch;
 
 public class PushListenerController {
     public static final int PUSH_TYPE_FIREBASE = 2,
+        PUSH_TYPE_SIMPLE = 4,
         PUSH_TYPE_WEBPUSH = 10,
         PUSH_TYPE_HUAWEI = 13;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({
             PUSH_TYPE_FIREBASE,
+            PUSH_TYPE_SIMPLE,
             PUSH_TYPE_WEBPUSH,
             PUSH_TYPE_HUAWEI
     })

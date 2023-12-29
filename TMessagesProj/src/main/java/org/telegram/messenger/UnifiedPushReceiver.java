@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import org.json.JSONStringer;
 import org.telegram.tgnet.ConnectionsManager;
 import org.unifiedpush.android.connector.MessagingReceiver;
+import org.unifiedpush.android.connector.UnifiedPush;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -29,6 +30,13 @@ public class UnifiedPushReceiver extends MessagingReceiver {
         Utilities.globalQueue.postRunnable(() -> {
             String jsonToken;
             SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
+
+            String savedDistributor = UnifiedPush.getSavedDistributor(context);
+
+            if (savedDistributor.equals("io.heckel.ntfy")) {
+                PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_SIMPLE, endpoint);
+                return;
+            }
 
             if (!endpoint.equals(SharedConfig.pushString)) {
                 // Generate ECDH Keypair on P-256 curve
