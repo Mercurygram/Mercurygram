@@ -2971,12 +2971,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updatePasscodeButton();
             updateProxyButton(false, false);
         }
-        menu.addItem(0, R.drawable.msg_saved).setOnClickListener(v -> {
-            Bundle args = new Bundle();
-            args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
-            presentFragment(new ChatActivity(args));
-        });
-
         searchItem = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true, false).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
             boolean isSpeedItemCreated = false;
 
