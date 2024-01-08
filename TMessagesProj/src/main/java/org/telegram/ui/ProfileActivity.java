@@ -3686,12 +3686,20 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 BuildVars.DEBUG_PRIVATE_VERSION ? (SharedConfig.photoViewerBlur ? "do not blur in photoviewer" : "blur in photoviewer") : null,
                                 !SharedConfig.payByInvoice ? "Enable Invoice Payment" : "Disable Invoice Payment",
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Update Attach Bots" : null,
-                                BuildVars.DEBUG_PRIVATE_VERSION ? ((SharedConfig.forceLessData ? "Disable using less data" : "Use less data on stories") + (ApplicationLoader.isConnectionSlow() ? " (connection is already slow)" : "")) : null,
+                                BuildVars.DEBUG_PRIVATE_VERSION ? ((SharedConfig.forceLessData ? "Disable using less data" : "Use less data on stories") + (ApplicationLoader.isConnectionSlow() ? " (connection is already slow)" : "")) : null
+                        };
+
+                        CharSequence[] mgItems;
+                        mgItems = new CharSequence[]{
                                 !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu",
                                 SharedConfig.disableUnifiedPush ? "Enable Unified Push" : "Disable Unified Push",
                         };
 
-                        builder.setItems(items, (dialog, which) -> {
+                        CharSequence[] joinedItems = new CharSequence[items.length + mgItems.length];
+                        System.arraycopy(items, 0, joinedItems, 0, items.length);
+                        System.arraycopy(mgItems, 0, joinedItems, items.length, mgItems.length);
+
+                        builder.setItems(joinedItems, (dialog, which) -> {
                             if (which == 0) {
                                 getUserConfig().syncContacts = true;
                                 getUserConfig().saveConfig(false);
@@ -3933,9 +3941,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 getMediaDataController().loadAttachMenuBots(false, true);
                             } else if (which == 27) {
                                 SharedConfig.setForceLessData(!SharedConfig.forceLessData);
-                            } else if (which == 28) {
+                            }
+
+                            // MGRAM
+                            else if (which == items.length + 0) {
                                 SharedConfig.toggleMessageDetailsMenu();
-                            } else if (which == 29) {
+                            } else if (which == items.length + 1) {
                                 SharedConfig.toggleDisableUnifiedPush();
 
                                 Activity activity = AndroidUtilities.findActivity(context);
