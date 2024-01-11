@@ -25,6 +25,18 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.concurrent.CountDownLatch;
 
 public class UnifiedPushReceiver extends MessagingReceiver {
+
+    private static long lastReceivedNotification = 0;
+    private static long numOfReceivedNotifications = 0;
+
+    public static long getLastReceivedNotification() {
+        return lastReceivedNotification;
+    }
+
+    public static long getNumOfReceivedNotifications() {
+        return numOfReceivedNotifications;
+    }
+
     @Override
     public void onNewEndpoint(Context context, String endpoint, String instance){
         Utilities.globalQueue.postRunnable(() -> {
@@ -100,6 +112,9 @@ public class UnifiedPushReceiver extends MessagingReceiver {
     public void onMessage(Context context, byte[] message, String instance){
         final long receiveTime = SystemClock.elapsedRealtime();
         final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        lastReceivedNotification = SystemClock.elapsedRealtime();
+        numOfReceivedNotifications++;
 
         AndroidUtilities.runOnUIThread(() -> {
             if (BuildVars.LOGS_ENABLED) {
