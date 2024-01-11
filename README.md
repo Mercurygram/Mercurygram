@@ -10,6 +10,7 @@ This is an unofficial fork of the [FOSS-friendly fork](https://github.com/Telegr
 This includes the following additional features:
 
 - Add ID in Profile Info
+- Add a menu in Notifications and Sounds in order to set the UnifiedPush Distributors. The same menu may be longclicked in order to know if UnifiedPush notifications are working correctly.
 - Add toggle setting in Chat Settings to start video messages with rear-facing camera
 - Add toggle setting in Chat Settings to hide keyboard on chat scroll
 - Add toggle setting in Chat Setting to hide "All Chats" tab (feature from NekoX)
