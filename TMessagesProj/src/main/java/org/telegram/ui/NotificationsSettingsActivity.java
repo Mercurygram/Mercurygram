@@ -797,7 +797,6 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                 return false;
             }
             if (position == unifiedPushDistributorRow) {
-                long secsFromLastReceivedNotification;
                 String txt;
                 if (UnifiedPushReceiver.getNumOfReceivedNotifications() == 0) {
                     txt = "You never received notifications with UnifiedPush since Mercurygram was started.";
@@ -807,6 +806,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                                         (SystemClock.elapsedRealtime() - UnifiedPushReceiver.getLastReceivedNotification()) / 1000,
                                         UnifiedPushReceiver.getNumOfReceivedNotifications());
                 }
+                txt += String.format("\n\nThe current UnifiedPush endpoint is: %s", SharedConfig.pushString);
                 Dialog dialog = new AlertDialog.Builder(getParentActivity())
                         .setTitle("UnifiedPush Notifications")
                         .setMessage(txt)
