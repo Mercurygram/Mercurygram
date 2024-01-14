@@ -2599,14 +2599,18 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                     if (allowScreenshots) {
                         fragment.getParentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
                     } else {
-                        fragment.getParentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                        if (!SharedConfig.disableSecureFlags) {
+                            fragment.getParentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                        }
                     }
                 }
             } else {
                 if (allowScreenshots) {
                     windowLayoutParams.flags &= ~WindowManager.LayoutParams.FLAG_SECURE;
                 } else {
-                    windowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SECURE;
+                    if (!SharedConfig.disableSecureFlags) {
+                        windowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SECURE;
+                    }
                 }
                 try {
                     windowManager.updateViewLayout(windowView, windowLayoutParams);
