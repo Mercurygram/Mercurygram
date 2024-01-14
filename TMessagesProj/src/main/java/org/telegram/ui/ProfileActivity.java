@@ -3693,6 +3693,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         mgItems = new CharSequence[]{
                                 !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu",
                                 SharedConfig.disableUnifiedPush ? "Enable Unified Push" : "Disable Unified Push",
+                                SharedConfig.disableSecureFlags ? "Enable Secure Flags" : "Disable Secure Flags",
                         };
 
                         CharSequence[] joinedItems = new CharSequence[items.length + mgItems.length];
@@ -3955,6 +3956,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 activity.finishAffinity(); // Finishes all activities.
                                 activity.startActivity(intent);    // Start the launch activity
                                 System.exit(0);
+                            } else if (which == items.length + 2) {
+                                SharedConfig.toggleDisableSecureFlags();
                             }
                         });
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
