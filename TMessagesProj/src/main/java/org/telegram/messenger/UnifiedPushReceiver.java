@@ -2,26 +2,13 @@ package org.telegram.messenger;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.util.Base64;
 
-import androidx.annotation.NonNull;
-
-import org.json.JSONStringer;
 import org.telegram.tgnet.ConnectionsManager;
 import org.unifiedpush.android.connector.MessagingReceiver;
 import org.unifiedpush.android.connector.UnifiedPush;
 
-import java.math.BigInteger;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.ECPublicKey;
-import java.security.spec.ECFieldFp;
-import java.security.spec.ECGenParameterSpec;
-import java.security.spec.ECParameterSpec;
-import java.security.spec.ECPoint;
-import java.security.spec.EllipticCurve;
-import java.security.spec.X509EncodedKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.concurrent.CountDownLatch;
 
 public class UnifiedPushReceiver extends MessagingReceiver {
@@ -48,7 +35,11 @@ public class UnifiedPushReceiver extends MessagingReceiver {
             if (savedDistributor.equals("io.heckel.ntfy")) {
                 PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_SIMPLE, endpoint);
             } else {
-                PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_SIMPLE, "https://p2p.belloworld.it/" + endpoint);
+                try {
+                    PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_SIMPLE, "https://p2p.belloworld.it/" + URLEncoder.encode(endpoint, "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    FileLog.e(e);
+                }
             }
         });
     }
