@@ -773,7 +773,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         UnifiedPush.registerApp(ApplicationLoader.applicationContext,
                                 "default",
                                 new ArrayList<String>(),
-                                "Telegram WebPush");
+                                "Telegram Simple Push");
                         updateUnifiedPushDistributor = true;
                         adapter.notifyItemChanged(position);
                         dialogRef.get().dismiss();

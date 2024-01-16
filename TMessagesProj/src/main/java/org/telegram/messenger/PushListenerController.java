@@ -1525,7 +1525,7 @@ public class PushListenerController {
                                 ApplicationLoader.applicationContext,
                                 "default",
                                 new ArrayList<>(),
-                                "Telegram WebPush"
+                                "Telegram Simple Push"
                         );
                     } catch (Throwable e) {
                         FileLog.e(e);
