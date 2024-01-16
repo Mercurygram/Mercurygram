@@ -758,7 +758,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                 List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>());
                 CharSequence[] items = distributors.toArray(new CharSequence[distributors.size()]);
 
-                String distributor = UnifiedPush.getDistributor(ApplicationLoader.applicationContext);
+                String distributor = UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext);
 
                 for (int i = 0; i < items.length; ++i) {
                     final int index = i;
@@ -1168,7 +1168,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         textCell.setTextAndValue(LocaleController.getString("RepeatNotifications", R.string.RepeatNotifications), value, updateRepeatNotifications, false);
                         updateRepeatNotifications = false;
                     } else if (position == unifiedPushDistributorRow) {
-                        String value = UnifiedPush.getDistributor(ApplicationLoader.applicationContext);
+                        String value = UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext);
                         textCell.setTextAndValue(LocaleController.getString("UnifiedPushDistributor", R.string.UnifiedPushDistributor), value, updateUnifiedPushDistributor, false);
                         updateUnifiedPushDistributor = false;
                     }

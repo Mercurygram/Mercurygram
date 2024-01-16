@@ -1514,7 +1514,7 @@ public class PushListenerController {
                     try {
                         SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
                         SharedConfig.saveConfig();
-                        if (UnifiedPush.getDistributor(ApplicationLoader.applicationContext).isEmpty()) {
+                        if (UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext) == null) {
                             List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>());
                             if (distributors.size() > 0) {
                                 String distributor = distributors.get(0);
