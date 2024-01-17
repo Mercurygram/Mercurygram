@@ -11,6 +11,7 @@ This includes the following additional features:
 
 - Add ID in Profile Info
 - Add a menu in Notifications and Sounds in order to set the UnifiedPush Distributors. The same menu may be longclicked in order to know if UnifiedPush notifications are working correctly.
+- Add a menu in Notifications and Sounds in order to set [UnifiedPush PUT to POST gateway](#unifiedpush-put-to-post-gateway).
 - Add toggle setting in Chat Settings to start video messages with rear-facing camera
 - Add toggle setting in Chat Settings to hide keyboard on chat scroll
 - Add toggle setting in Chat Setting to hide "All Chats" tab (feature from NekoX)
@@ -37,6 +38,22 @@ See [dontkillmyapp](https://dontkillmyapp.com/) for more information.
 If you can't/want set Battery optimization to Not optimized and you don't
 receive notifications after a while (more than 30 minutes) please enable
 Keep-Alive Service instead.
+
+## UnifiedPush PUT to POST gateway
+
+I tested the Telegram web push notifications, but it seems they are not reliable at all and so I came back to use Simple push.
+
+Simple push is quite reliable, but it uses PUT and UnifiedPush only supports POST.
+
+In order to avoid that, it's necessary to use a gateway that converts from PUT to POST.
+
+I wrote 2 different gateway implementations, one in [Python](https://github.com/drizzt/Mercurygram/tree/Mercurygram/Gateways/Python) and one in [Rust](https://github.com/drizzt/Mercurygram/tree/Mercurygram/Gateways/Rust).
+
+The Rust implementation is live at https://p2p.belloworld.it/ and it's currently used, by default, by Mercurygram.
+
+My live instance only accepts Telegram servers IP ranges (https://core.telegram.org/resources/cidr.txt) in order to avoid abuses.
+
+Since ntfy supports PUT the gateway is **not** used if you use it as distributor.
 
 ## Why the name Mercurygram?
 
