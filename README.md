@@ -18,6 +18,7 @@ This includes the following additional features:
 - Add toggle setting in Debug Menu to enable Message Details menu
 - Add toggle setting in Debug Menu to disable Unified Push support
 - Add toggle setting in Debug Menu to disable Secure Flags. This option must **only** be used for debugging.
+- Disabled DOH resolving since this leaks your used proxy to Google and it's not needed since Android DNS over TLS should be used instead.
 - Unlock premium app icons for anybody
 - Add toggle setting in Chat Settings to send large photos (2560px instead of 1280px)
 - Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
