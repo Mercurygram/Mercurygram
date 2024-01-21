@@ -8,5 +8,4 @@
     android:autoAdvanceViewId="@id/list_view"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:configure="org.telegram.ui.FeedWidgetConfigActivity">
 </appwidget-provider>
