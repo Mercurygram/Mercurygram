@@ -15,6 +15,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
 
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
     <application
         android:icon="@mipmap/ic_launcher_sa"
         android:roundIcon="@mipmap/ic_launcher_sa"
@@ -105,6 +109,12 @@
                 <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
             </intent-filter>
         </activity-alias>
+
+        <receiver
+            android:name="org.telegram.messenger.SMSResultService"
+            android:exported="false">
+        </receiver>
+
     </application>
 
 </manifest>

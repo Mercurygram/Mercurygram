@@ -134,6 +134,7 @@ import org.telegram.ui.ActionBar.DrawerLayoutContainer;
 import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Adapters.DrawerLayoutAdapter;
+import org.telegram.ui.Cells.ChatMessageCell;
 import org.telegram.ui.Cells.DrawerActionCell;
 import org.telegram.ui.Cells.DrawerAddCell;
 import org.telegram.ui.Cells.DrawerProfileCell;
@@ -505,6 +506,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         layoutParams.height = LayoutHelper.MATCH_PARENT;
         sideMenuContainer.setLayoutParams(layoutParams);
         sideMenu.setOnItemClickListener((view, position, x, y) -> {
+            if (drawerLayoutAdapter.click(view, position)) {
+                drawerLayoutContainer.closeDrawer(false);
+                return;
+            }
             if (position == 0) {
                 DrawerProfileCell profileCell = (DrawerProfileCell) view;
                 if (profileCell.isInAvatar(x, y)) {
@@ -1424,6 +1429,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     private void checkCurrentAccount() {
         if (currentAccount != UserConfig.selectedAccount) {
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.openBoostForUsersDialog);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.appDidLogout);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.mainUserInfoChanged);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.attachMenuBotsDidLoad);
@@ -1445,6 +1451,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.storiesEnabledUpdate);
         }
         currentAccount = UserConfig.selectedAccount;
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.openBoostForUsersDialog);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.appDidLogout);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.mainUserInfoChanged);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.attachMenuBotsDidLoad);
@@ -3938,7 +3945,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
                         if (isBoost) {
                             TLRPC.Chat chat = MessagesController.getInstance(intentAccount).getChat(-peerId);
-                            if (ChatObject.isChannelAndNotMegaGroup(chat)) {
+                            if (ChatObject.isBoostSupported(chat)) {
                                 processBoostDialog(peerId, dismissLoading, progress);
                                 return;
                             }
@@ -4785,7 +4792,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     args.putInt("message_id", messageId);
                 }
                 TLRPC.Chat chatLocal = MessagesController.getInstance(currentAccount).getChat(channelId);
-                if (chatLocal != null && ChatObject.isChannelAndNotMegaGroup(chatLocal) && isBoost) {
+                if (chatLocal != null && ChatObject.isBoostSupported(chatLocal) && isBoost) {
                     processBoostDialog(-channelId, dismissLoading, progress);
                 } else if (chatLocal != null && chatLocal.forum) {
                     openForumFromLink(-channelId, messageId,  () -> {
@@ -4817,7 +4824,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             notFound = false;
                                             MessagesController.getInstance(currentAccount).putChats(res.chats, false);
                                             TLRPC.Chat chat = res.chats.get(0);
-                                            if (chat != null && isBoost && ChatObject.isChannelAndNotMegaGroup(chat)) {
+                                            if (chat != null && isBoost && ChatObject.isBoostSupported(chat)) {
                                                 processBoostDialog(-channelId, null, progress);
                                             } else if (chat != null && chat.forum) {
                                                 if (threadId != null) {
@@ -4956,8 +4963,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     }
 
-
     private void processBoostDialog(Long peerId, Runnable dismissLoading, Browser.Progress progress) {
+        processBoostDialog(peerId, dismissLoading, progress, null);
+    }
+
+    private void processBoostDialog(Long peerId, Runnable dismissLoading, Browser.Progress progress, ChatMessageCell chatMessageCell) {
         ChannelBoostsController boostsController = MessagesController.getInstance(currentAccount).getBoostsController();
         if (progress != null) {
             progress.init();
@@ -4967,7 +4977,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 if (progress != null) {
                     progress.end();
                 }
-                dismissLoading.run();
+                if (dismissLoading != null) {
+                    dismissLoading.run();
+                }
                 return;
             }
             boostsController.userCanBoostChannel(peerId, boostsStatus, canApplyBoost -> {
@@ -4988,9 +5000,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 boolean isCurrentChat = false;
                 if (lastFragment instanceof ChatActivity) {
                     isCurrentChat = ((ChatActivity) lastFragment).getDialogId() == peerId;
+                } else if (lastFragment instanceof DialogsActivity) {
+                    DialogsActivity dialogsActivity = ((DialogsActivity) lastFragment);
+                    isCurrentChat = dialogsActivity.rightSlidingDialogContainer != null && dialogsActivity.rightSlidingDialogContainer.getCurrentFragmetDialogId() == peerId;
                 }
                 limitReachedBottomSheet.setBoostsStats(boostsStatus, isCurrentChat);
                 limitReachedBottomSheet.setDialogId(peerId);
+                limitReachedBottomSheet.setChatMessageCell(chatMessageCell);
+
                 lastFragment.showDialog(limitReachedBottomSheet);
                 try {
                     if (dismissLoading != null) {
@@ -5825,6 +5842,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (!checkPermissionsResult(requestCode, permissions, grantResults)) return;
+        if (ApplicationLoader.applicationLoaderInstance != null && ApplicationLoader.applicationLoaderInstance.checkRequestPermissionResult(requestCode, permissions, grantResults)) return;
 
         if (actionBarLayout.getFragmentStack().size() != 0) {
             BaseFragment fragment = actionBarLayout.getFragmentStack().get(actionBarLayout.getFragmentStack().size() - 1);
@@ -6165,6 +6183,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     public void didReceivedNotification(int id, final int account, Object... args) {
         if (id == NotificationCenter.appDidLogout) {
             switchToAvailableAccountOrLogout();
+        } else if (id == NotificationCenter.openBoostForUsersDialog) {
+            long dialogId = (long) args[0];
+            ChatMessageCell chatMessageCell = null;
+            if (args.length > 1) {
+                chatMessageCell = (ChatMessageCell) args[1];
+            }
+            processBoostDialog(dialogId, null, null, chatMessageCell);
         } else if (id == NotificationCenter.closeOtherAppActivities) {
             if (args[0] != this) {
                 onFinish();
@@ -7482,7 +7507,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         getActionBarLayout().presentFragment(params.setNoAnimation(forceWithoutAnimation).setCheckPresentFromDelegate(false));
                     }
                     return result;
-                } else if (!tabletFullSize && layout != rightActionBarLayout) {
+                } else if (!tabletFullSize && layout != rightActionBarLayout && rightActionBarLayout != null) {
                     if (rightActionBarLayout.getView() != null) {
                         rightActionBarLayout.getView().setVisibility(View.VISIBLE);
                     }
