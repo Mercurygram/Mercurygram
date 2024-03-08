@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div align="center">
 
 <img src="./.github/assets/logo.png" alt="Mercurygram logo" title="Mercurygram logo" width="80"/>
 
@@ -12,8 +12,6 @@ This is an unofficial fork of the [FOSS-friendly fork](https://github.com/Telegr
 [![Discussions](https://img.shields.io/badge/Official-Group-blue.svg?logo=telegram)](https://t.me/Mercurygram)
 
 </div>
-
----
 
 ## Features
 
