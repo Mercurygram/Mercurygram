@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="MercurySettingsTitle">Mercury Settings</string>
+    <string name="LargePhoto">Send photos in 2560px instead of 1280px</string>
     <string name="MessageDetails">Message Details</string>
     <string name="ExportAsJson">Export as JSON</string>
     <string name="Date">Date</string>
