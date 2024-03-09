@@ -1,5 +1,6 @@
-[![Releases](https://img.shields.io/github/release/drizzt/Mercurygram.svg)](https://github.com/drizzt/Mercurygram/releases/latest)
-[![Discussions](https://img.shields.io/badge/Official-Group-blue.svg?logo=telegram)](https://t.me/Mercurygram)
+<div align="center">
+
+<img src="./.github/assets/logo.png" alt="Mercurygram logo" title="Mercurygram logo" width="80"/>
 
 # Mercurygram
 
@@ -7,7 +8,12 @@
 
 This is an unofficial fork of the [FOSS-friendly fork](https://github.com/Telegram-FOSS-Team/Telegram-FOSS) of [Telegram App for Android](https://github.com/DrKLO/Telegram).
 
-This includes the following additional features:
+[![Releases](https://img.shields.io/github/release/drizzt/Mercurygram.svg)](https://github.com/drizzt/Mercurygram/releases/latest)
+[![Discussions](https://img.shields.io/badge/Official-Group-blue.svg?logo=telegram)](https://t.me/Mercurygram)
+
+</div>
+
+## Features
 
 - Add ID in Profile Info
 - Add a menu in Notifications and Sounds in order to set the UnifiedPush Distributors. The same menu may be longclicked in order to know if UnifiedPush notifications are working correctly.
@@ -23,10 +29,34 @@ This includes the following additional features:
 - Add toggle setting in Chat Settings to send large photos (2560px instead of 1280px)
 - Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
 
-## NOTES
+### From [Telegram-FOSS](https://github.com/Telegram-FOSS-Team/Telegram-FOSS)
+
+*Replacement of non-FOSS, untrustworthy or suspicious binaries or source code:*
+- Do location sharing with OpenStreetMap(osmdroid) instead of Google Maps
+- Use Noto emoji set instead of Apple's emoji
+- Google Play Services GCM replaced with [UnifiedPush](https://unifiedpush.org)
+- **SECURITY:** BoringSSL prebuilts are replaced with recent upstream source code built at compile time
+- **SECURITY:** FFmpeg prebuilts are replaced with recent upstream source code built at compile time
+- **SECURITY:** libvpx prebuilts are replaced with recent upstream source code built at compile time
+- **SECURITY:** Bundled libWebP is updated
+
+*Removal of non-FOSS, untrustworthy or suspicious binaries or source code and their functionality:*
+- Google Vision face detection and barcode scanning (Passport)
+- Google Wallet and Android Pay integration
+- Google Voice integration
+- HockeyApp crash reporting and self-updates
+- Google SMS retrieval
+- Google ML Kit
+
+*Other:*
+- Added the ability to parse locations from intents containing a `geo:<lat>,<lon>,<zoom>` string
+- Force static map previews from Telegram
+- No content restrictions
+
+## Notes
 
 In order to have reliable notifications, it may be necessary to set battery
-optimization to Not optimized for Mercurygram (no, it won't use more battery).
+optimization to **Not optimized** for Mercurygram (no, it won't use more battery).
 
 Background Connections setting is not necessary and uses lot of battery, so
 please disable it when you use UnifiedPush.
@@ -101,30 +131,6 @@ For a couple of reasons:
 - [verdulo](https://github.com/verdulo)
 - [tehcneko](https://github.com/tehcneko)
 
-## Changes:
-
-*Replacement of non-FOSS, untrustworthy or suspicious binaries or source code:*
-- Do location sharing with OpenStreetMap(osmdroid) instead of Google Maps
-- Use Noto emoji set instead of Apple's emoji
-- Google Play Services GCM replaced with [UnifiedPush](https://unifiedpush.org)
-- **SECURITY:** BoringSSL prebuilts are replaced with recent upstream source code built at compile time
-- **SECURITY:** FFmpeg prebuilts are replaced with recent upstream source code built at compile time
-- **SECURITY:** libvpx prebuilts are replaced with recent upstream source code built at compile time
-- **SECURITY:** Bundled libWebP is updated
-
-*Removal of non-FOSS, untrustworthy or suspicious binaries or source code and their functionality:*
-- Google Vision face detection and barcode scanning (Passport)
-- Google Wallet and Android Pay integration
-- Google Voice integration
-- HockeyApp crash reporting and self-updates
-- Google SMS retrieval
-- Google ML Kit
-
-*Other:*
-- Added the ability to parse locations from intents containing a `geo:<lat>,<lon>,<zoom>` string
-- Force static map previews from Telegram
-- No content restrictions
-
 ## Versioning
 
 This repository contains tags to make tracking versions easier.
@@ -167,7 +173,7 @@ Consider using a Linux VM or dual booting.**
       ```
 
 4. If you want to publish a modified version of Telegram:
-      - You should get **your own API key** here: https://core.telegram.org/api/obtaining\_api\_id and create a file called `API_KEYS` in the source root directory.
+      - You should get **your own API key** here: https://core.telegram.org/api/obtaining_api_id and create a file called `API_KEYS` in the source root directory.
         The contents should look like this:
         ```
         APP_ID = 12345
