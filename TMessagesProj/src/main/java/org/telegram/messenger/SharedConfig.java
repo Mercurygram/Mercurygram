@@ -377,6 +377,8 @@ public class SharedConfig {
     public static boolean isFloatingDebugActive;
     public static LiteMode liteMode;
 
+    public static int photoSizeFactor = 1;
+
     private static final int[] LOW_SOC = {
             -1775228513, // EXYNOS 850
             802464304,  // EXYNOS 7872
@@ -695,6 +697,8 @@ public class SharedConfig {
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
 
+            photoSizeFactor = MessagesController.getGlobalMainSettings().getBoolean("largePhoto", false) ? 2 : 1;
+            
             configLoaded = true;
 
             try {

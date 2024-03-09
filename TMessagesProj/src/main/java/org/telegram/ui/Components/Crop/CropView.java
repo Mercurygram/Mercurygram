@@ -42,7 +42,7 @@ import java.util.ArrayList;
 
 public class CropView extends FrameLayout implements CropAreaView.AreaViewListener, CropGestureDetector.CropGestureListener {
     private static final float EPSILON = 0.00001f;
-    private static final int RESULT_SIDE = 2560;
+    private static final int RESULT_SIDE = 1280 * SharedConfig.photoSizeFactor;
     private static final float MAX_SCALE = 30.0f;
 
     public CropAreaView areaView;
@@ -1036,7 +1036,8 @@ public class CropView extends FrameLayout implements CropAreaView.AreaViewListen
     }
 
     RectF cropRect = new RectF();
-    RectF sizeRect = new RectF(0, 0, RESULT_SIDE, RESULT_SIDE);
+    //    RectF sizeRect = new RectF(0, 0, RESULT_SIDE, RESULT_SIDE);
+    RectF sizeRect = new RectF(0, 0, RESULT_SIDE * SharedConfig.photoSizeFactor, RESULT_SIDE * SharedConfig.photoSizeFactor);
 
     private void updateCropTransform() {
         if (cropTransform == null || state == null) {
