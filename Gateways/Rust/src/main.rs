@@ -50,7 +50,7 @@ async fn main() {
     let client = Client::new();
     let app = Router::new().route("/*path", put(topic)).with_state(client);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8001").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8001").await.unwrap();
     println!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
 }
