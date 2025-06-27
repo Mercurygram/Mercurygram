@@ -20,11 +20,18 @@ async def topic(request):
 
     body = await request.body()
 
+    headers = httpx.Headers({
+        "TTL": "2592000", # 30 days
+        "Content-Encoding": "aes128gcm", # Fake this encoding to be web push compliant
+        "Urgency": "high"
+    })
+
     # Forward the request to the target URL
     async with httpx.AsyncClient() as client:
         upstream_response = await client.post(
             url=path,
             data=body,
+            headers=headers,
         )
 
     return Response(

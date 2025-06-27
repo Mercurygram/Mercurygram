@@ -18,6 +18,9 @@ async fn topic(State(client): State<Client>, Path(path): Path<String>, body: Byt
     let reqwest_response = match client
         .post(&path)
         .body(body)
+        .header("TTL", "2592000") // 30 days
+        .header("Content-Encoding", "aes128gcm") // Fake this encoding to be web push compliant
+        .header("Urgency", "high")
         .send()
         .await
     {
