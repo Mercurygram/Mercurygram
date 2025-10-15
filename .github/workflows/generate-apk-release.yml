@@ -146,7 +146,7 @@ jobs:
         run: apksigner sign --ks telegram.jks --ks-pass env:KEYSTORE_PASSWORD --out ${{ env.main_project_module }}/build/outputs/apk/afat/release/app-release.apk ${{ env.main_project_module }}/build/outputs/apk/afat/release/app-aligned.apk
 
       - name: Upload APK Release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-${{ github.sha }}-release.apk
           path: ${{ env.main_project_module }}/build/outputs/apk/afat/release/app-release.apk
