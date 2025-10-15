@@ -1,4 +1,4 @@
-name: Ge6nerate Debug APK
+name: Generate Debug APK
 
 env:
   # The name of the main module repository
