@@ -1,0 +1,25 @@
+[package]
+name = "p2p-gateway"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["native-tls"]
+native-tls = ["reqwest/native-tls"]
+rustls = ["reqwest/rustls"]
+
+[dependencies]
+axum = "0.8.8"
+reqwest = { version = "0.13", default-features = false, features = ["stream"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+serde = { version = "1", features = ["derive"] }
+url = "2"
+listenfd = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-journald = "0.3"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
