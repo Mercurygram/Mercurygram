@@ -224,6 +224,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int lastShadowRow;
     @Keep
     private int stickersRow;
+    private int sendLargePhotosRow;
     private int stickersInfoRow;
     private int stickersSectionRow, mediaSoundSectionRow, otherSectionRow;
     private int mediaSoundHeaderRow, otherHeaderRow;
@@ -569,6 +570,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         pauseOnRecordRow = -1;
         pauseOnMediaRow = -1;
         stickersRow = -1;
+        sendLargePhotosRow = -1;
         stickersInfoRow = -1;
         stickersSectionRow = -1;
         mediaSoundHeaderRow = -1;
@@ -703,6 +705,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 sensitiveContentRow = rowCount++;
             }
             sendByEnterRow = rowCount++;
+            sendLargePhotosRow = rowCount++;
             distanceRow = rowCount++;
             otherSectionRow = rowCount++;
         } else {
@@ -1119,6 +1122,13 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 editor.commit();
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(!send);
+                }
+            } else if (position == sendLargePhotosRow) {
+                getUserConfig().sendLargePhotos = !getUserConfig().sendLargePhotos;
+                AndroidUtilities.photoSize = null; // clear cache so getPhotoSize() re-evaluates
+                getUserConfig().saveConfig(false);
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(getUserConfig().sendLargePhotos);
                 }
             } else if (position == raiseToSpeakRow) {
                 SharedConfig.toggleRaiseToSpeak();
@@ -2597,6 +2607,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == sendByEnterRow) {
                         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                         textCheckCell.setTextAndCheck(getString("SendByEnter", R.string.SendByEnter), preferences.getBoolean("send_by_enter", false), true);
+                    } else if (position == sendLargePhotosRow) {
+                        textCheckCell.setTextAndCheck(getString(R.string.SendLargePhotos), getUserConfig().sendLargePhotos, true);
                     } else if (position == raiseToSpeakRow) {
                         textCheckCell.setTextAndValueAndCheck(getString("RaiseToSpeak", R.string.RaiseToSpeak), getString("RaiseToSpeakInfo", R.string.RaiseToSpeakInfo), SharedConfig.raiseToSpeak, true, true);
                     } else if (position == raiseToListenRow) {
@@ -2746,7 +2758,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 return TYPE_BRIGHTNESS;
             } else if (position == scheduleLocationRow || position == sendByEnterRow ||
                     position == raiseToSpeakRow || position == raiseToListenRow || position == pauseOnRecordRow ||
-                    position == directShareRow || position == chatBlurRow || position == pauseOnMediaRow || position == nextMediaTapRow || position == sensitiveContentRow) {
+                    position == directShareRow || position == chatBlurRow || position == pauseOnMediaRow || position == nextMediaTapRow || position == sensitiveContentRow ||
+                    position == sendLargePhotosRow) {
                 return TYPE_TEXT_CHECK;
             } else if (position == textSizeRow) {
                 return TYPE_TEXT_SIZE;
