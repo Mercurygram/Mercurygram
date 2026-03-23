@@ -305,14 +305,20 @@ public class UserInfoActivity extends UniversalFragment implements NotificationC
             }
             if (!UserConfig.hasPremiumOnAccounts()) {
                 final int moreAccounts = Math.max(0, UserConfig.getMaxAccountCount() - UserConfig.getActivatedAccountsCount());
-                items.add(UItem.asShadow(
-                    TextUtils.concat(
-                        moreAccounts > 0 ? LocaleController.formatPluralStringComma("AddAccountInfo1", moreAccounts) + " " : "",
-                        replaceSingleTag(LocaleController.formatPluralStringComma("AddAccountInfo2", UserConfig.getMaxAccountCount()), () -> {
-                            presentFragment(new PremiumPreviewFragment("add_account"));
-                        })
-                    )
-                ));
+                if (UserConfig.MAX_ACCOUNT_DEFAULT_COUNT == UserConfig.MAX_ACCOUNT_COUNT) {
+                    items.add(UItem.asShadow(
+                        moreAccounts > 0 ? LocaleController.formatPluralStringComma("AddAccountInfo1", moreAccounts) : null
+                    ));
+                } else {
+                    items.add(UItem.asShadow(
+                        TextUtils.concat(
+                            moreAccounts > 0 ? LocaleController.formatPluralStringComma("AddAccountInfo1", moreAccounts) + " " : "",
+                            replaceSingleTag(LocaleController.formatPluralStringComma("AddAccountInfo2", UserConfig.getMaxAccountCount()), () -> {
+                                presentFragment(new PremiumPreviewFragment("add_account"));
+                            })
+                        )
+                    ));
+                }
             } else {
                 items.add(UItem.asShadow(null));
             }
