@@ -4,10 +4,10 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Pair;
 
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingFlowParams;
-import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.QueryProductDetailsParams;
+import it.belloworld.mercurygram.compat.billing.BillingClient;
+import it.belloworld.mercurygram.compat.billing.BillingFlowParams;
+import it.belloworld.mercurygram.compat.billing.ProductDetails;
+import it.belloworld.mercurygram.compat.billing.QueryProductDetailsParams;
 
 import org.json.JSONObject;
 import org.telegram.messenger.AccountInstance;
