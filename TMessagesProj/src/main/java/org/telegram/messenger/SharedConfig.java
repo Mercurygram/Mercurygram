@@ -144,11 +144,35 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleMessageDetailsMenu() {
+        messageDetailsMenu = !messageDetailsMenu;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_messageDetailsMenu", messageDetailsMenu)
+                .apply();
+    }
+
     public static void toggleDisableUnifiedPush() {
         disableUnifiedPush = !disableUnifiedPush;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
                 .edit()
                 .putBoolean("mg_disableUnifiedPush", disableUnifiedPush)
+                .commit();
+    }
+
+    public static void toggleDisableSecureFlags() {
+        disableSecureFlags = !disableSecureFlags;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_disableSecureFlags", disableSecureFlags)
+                .commit();
+    }
+
+    public static void toggleRemoveAdsAndProxySponsor() {
+        removeAdsAndProxySponsor = !removeAdsAndProxySponsor;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_removeAdsAndProxySponsor", removeAdsAndProxySponsor)
                 .commit();
     }
 
@@ -272,7 +296,11 @@ public class SharedConfig {
     public static volatile byte[] webPushPrivateKey;    // PKCS#8-encoded P-256 private key
     public static volatile byte[] webPushPublicKey;     // Raw 65-byte uncompressed P-256 point (04||X||Y)
     public static volatile byte[] webPushAuthSecret;    // 16-byte random auth secret
+
     // Mercurygram: UI settings
+    public static boolean messageDetailsMenu = false;
+    public static boolean disableSecureFlags = false;
+    public static boolean removeAdsAndProxySponsor = false;
     public static boolean useRearRoundVideos = false;
     public static boolean hideKeyboardOnScroll = false;
     public static boolean hideAllTab = false;
@@ -558,8 +586,11 @@ public class SharedConfig {
                 editor.putBoolean("floatingDebugActive", isFloatingDebugActive);
                 editor.putBoolean("record_via_sco", recordViaSco);
                 // Mercurygram settings
+                editor.putBoolean("mg_messageDetailsMenu", messageDetailsMenu);
                 editor.putBoolean("mg_disableUnifiedPush", disableUnifiedPush);
                 editor.putString("mg_unifiedPushGateway2", unifiedPushGateway);
+                editor.putBoolean("mg_disableSecureFlags", disableSecureFlags);
+                editor.putBoolean("mg_removeAdsAndProxySponsor", removeAdsAndProxySponsor);
                 editor.putBoolean("mg_useRearRoundVideos", useRearRoundVideos);
                 editor.putBoolean("mg_hideKeyboardOnScroll", hideKeyboardOnScroll);
                 editor.putBoolean("mg_hideAllTab", hideAllTab);
@@ -758,8 +789,11 @@ public class SharedConfig {
             shadowsInSections = preferences.getBoolean("shadowsInSections", false);
 
             // Mercurygram settings
+            messageDetailsMenu = preferences.getBoolean("mg_messageDetailsMenu", false);
             disableUnifiedPush = preferences.getBoolean("mg_disableUnifiedPush", false);
             unifiedPushGateway = preferences.getString("mg_unifiedPushGateway2", unifiedPushGateway);
+            disableSecureFlags = preferences.getBoolean("mg_disableSecureFlags", false);
+            removeAdsAndProxySponsor = preferences.getBoolean("mg_removeAdsAndProxySponsor", false);
             useRearRoundVideos = preferences.getBoolean("mg_useRearRoundVideos", false);
             hideKeyboardOnScroll = preferences.getBoolean("mg_hideKeyboardOnScroll", false);
             hideAllTab = preferences.getBoolean("mg_hideAllTab", false);
