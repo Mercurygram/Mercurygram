@@ -65,6 +65,9 @@ public class UnifiedPushReceiver extends PushService {
         Utilities.globalQueue.postRunnable(() -> {
             SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
 
+            // Persist the raw endpoint URL so we can detect ntfy.sh usage
+            SharedConfig.setUnifiedPushEndpointUrl(endpoint.getUrl());
+
             // Ensure WebPush ECDH keys exist before registering
             SharedConfig.ensureWebPushKeys();
 
@@ -99,6 +102,15 @@ public class UnifiedPushReceiver extends PushService {
             } catch (Exception e) {
                 FileLog.e(e);
             }
+
+            // Notify NotificationsSettingsActivity to rebuild its rows (shows/hides ntfy.sh warning)
+            AndroidUtilities.runOnUIThread(() -> {
+                for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                    if (UserConfig.getInstance(a).isClientActivated()) {
+                        NotificationCenter.getInstance(a).postNotificationName(NotificationCenter.notificationsSettingsUpdated);
+                    }
+                }
+            });
         });
     }
 
