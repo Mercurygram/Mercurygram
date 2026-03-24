@@ -82,6 +82,10 @@ android {
         }
     }
 
+    aaptOptions {
+        cruncherEnabled = false
+    }
+
     lintOptions {
         disable 'MissingTranslation'
         disable 'ExtraTranslation'
