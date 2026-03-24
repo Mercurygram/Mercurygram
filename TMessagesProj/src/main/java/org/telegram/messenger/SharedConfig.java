@@ -272,6 +272,10 @@ public class SharedConfig {
     public static volatile byte[] webPushPrivateKey;    // PKCS#8-encoded P-256 private key
     public static volatile byte[] webPushPublicKey;     // Raw 65-byte uncompressed P-256 point (04||X||Y)
     public static volatile byte[] webPushAuthSecret;    // 16-byte random auth secret
+    // Mercurygram: UI settings
+    public static boolean useRearRoundVideos = false;
+    public static boolean hideKeyboardOnScroll = false;
+    public static boolean hideAllTab = false;
     public static boolean sendLargePhotos = false;
 
     public static long pushStringGetTimeStart;
@@ -556,6 +560,9 @@ public class SharedConfig {
                 // Mercurygram settings
                 editor.putBoolean("mg_disableUnifiedPush", disableUnifiedPush);
                 editor.putString("mg_unifiedPushGateway2", unifiedPushGateway);
+                editor.putBoolean("mg_useRearRoundVideos", useRearRoundVideos);
+                editor.putBoolean("mg_hideKeyboardOnScroll", hideKeyboardOnScroll);
+                editor.putBoolean("mg_hideAllTab", hideAllTab);
                 editor.putBoolean("mg_sendLargePhotos", sendLargePhotos);
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
@@ -753,6 +760,9 @@ public class SharedConfig {
             // Mercurygram settings
             disableUnifiedPush = preferences.getBoolean("mg_disableUnifiedPush", false);
             unifiedPushGateway = preferences.getString("mg_unifiedPushGateway2", unifiedPushGateway);
+            useRearRoundVideos = preferences.getBoolean("mg_useRearRoundVideos", false);
+            hideKeyboardOnScroll = preferences.getBoolean("mg_hideKeyboardOnScroll", false);
+            hideAllTab = preferences.getBoolean("mg_hideAllTab", false);
             sendLargePhotos = preferences.getBoolean("mg_sendLargePhotos", false);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
