@@ -100,7 +100,7 @@ public class ApplicationLoader extends Application {
     }
 
     protected IMapsProvider onCreateMapsProvider() {
-        return new GoogleMapsProvider();
+        return new MapLibreMapsProvider();
     }
 
     public static PushListenerController.IPushListenerServiceProvider getPushProvider() {
@@ -342,6 +342,7 @@ public class ApplicationLoader extends Application {
 
         LauncherIconController.tryFixLauncherIconIfNeeded();
         ProxyRotationController.init();
+
     }
 
     public static void startPushService() {
@@ -390,7 +391,7 @@ public class ApplicationLoader extends Application {
         }, 1000);
     }
 
-    private static long lastNetworkCheck = -1;
+private static long lastNetworkCheck = -1;
     private static void ensureCurrentNetworkGet() {
         final long now = System.currentTimeMillis();
         ensureCurrentNetworkGet(now - lastNetworkCheck > 5000);
