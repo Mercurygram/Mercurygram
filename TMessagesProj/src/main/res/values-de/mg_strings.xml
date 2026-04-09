@@ -15,4 +15,9 @@
     <string name="HideChatKeyboard">Tastatur beim Scrollen im Chat ausblenden</string>
     <string name="HideAllTab">\"Alle Chats\"-Tab ausblenden</string>
     <string name="HideAllTabAbout">Lange auf die Titelleiste drücken, um sie vorübergehend anzuzeigen</string>
+    <string name="MessageDetails">Nachrichtendetails</string>
+    <string name="ExportAsJson">Als JSON exportieren</string>
+    <string name="Date">Datum</string>
+    <string name="Filename">Dateiname</string>
+    <string name="Filesize">Dateigröße</string>
 </resources>
