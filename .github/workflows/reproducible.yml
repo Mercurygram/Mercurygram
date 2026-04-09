@@ -1,0 +1,53 @@
+name: Reproducible build check
+
+# Heavy (full native + 2x fdroidserver build) — manual trigger only, not on
+# every push. Run before tagging a release, or after touching build.gradle,
+# native code, or bundled assets. Mirrors F-Droid's real reproducible-build
+# verification (scripts/check-reproducibility.sh).
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'determinism (build ref twice) | verify (vs f-droid.org or GitHub release APK)'
+        type: choice
+        options: [determinism, verify]
+        default: determinism
+      arg:
+        description: 'determinism: git ref (blank=checked-out) — verify: versionCode OR GitHub APK URL'
+        type: string
+        default: ''
+      arg2:
+        description: 'verify with URL only: optional git ref (defaults to checked-out commit)'
+        type: string
+        default: ''
+
+concurrency:
+  group: reproducible-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reproducible:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Run reproducibility check (real fdroidserver, podman)
+        env:
+          ARG: ${{ inputs.arg }}
+          ARG2: ${{ inputs.arg2 }}
+        run: |
+          set -euo pipefail
+          arg=$(printf '%s' "$ARG" | xargs)        # trim whitespace
+          arg2=$(printf '%s' "$ARG2" | xargs)
+          case "${{ inputs.mode }}" in
+            verify) scripts/check-reproducibility.sh verify "$arg" "$arg2" ;;
+            *)      scripts/check-reproducibility.sh determinism "$arg" ;;
+          esac
