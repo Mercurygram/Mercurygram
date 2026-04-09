@@ -41,7 +41,7 @@ Open the link on your Android device and the app source pre-fills with the right
 
 [![Add Mercurygram Beta to Obtainium](https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22it.belloworld.mercurygram.beta%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FMercurygram%2FMercurygram%22%2C%22author%22%3A%22Mercurygram%22%2C%22name%22%3A%22Mercurygram%20Beta%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3A%20true%2C%20%5C%22filterReleaseTitlesByRegEx%5C%22%3A%20%5C%22%5E%5C%5C%5C%5Cd%2B%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%24%5C%22%7D%22%7D)
 
-> **Stable users:** the in-app updater can be opted in to pre-release updates from **Settings → Mercurygram → Updates → Accept pre-release updates**. Enabling shows a warning dialog; once installed a pre-release you can only turn the toggle off again after upgrading to a stable (4-part) release.
+> **Stable users:** the in-app updater can be opted in to pre-release updates from **Settings → Mercurygram → Updates → Accept pre-release updates**. Enabling shows a warning dialog. Turning it back off while a pre-release is installed offers the matching 4-part stable as an update, rolling the install back. Installing a pre-release by other means (sideload, Obtainium) switches the toggle on by itself at the next update check, so it always reflects the channel you are actually on.
 
 ## Features
 
@@ -219,7 +219,7 @@ Tag shape encodes the release channel (see the [Install](#install) section for t
 
 Pure lex compare on the dotted integer vector (shorter padded with zero) gives the right chronology: `12.7.3.0.5 < 12.7.3.1 < 12.7.3.1.42 < 12.7.3.2`.
 
-`MgUpdateChecker` records the tag the in-app updater last installed in `SharedConfig.mgLastInstalledTag` and uses that for comparisons — runtime `versionName`/`versionCode` alone can't distinguish a 5-part snapshot from the stable it's a snapshot of.
+`MgUpdateChecker` reads the GitHub tag from `PackageInfo.versionName` — the manifest carries the tag verbatim (see `gradle/mg-version.gradle`), so the canonical tag is available for every install path (in-app updater, sideload, F-Droid).
 
 ## API, Protocol documentation
 
