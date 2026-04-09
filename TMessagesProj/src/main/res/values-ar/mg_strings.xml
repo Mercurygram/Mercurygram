@@ -14,4 +14,9 @@
     <string name="HideChatKeyboard">إخفاء لوحة المفاتيح عند التمرير في المحادثة</string>
     <string name="HideAllTab">إخفاء علامة تبويب \"جميع المحادثات\"</string>
     <string name="HideAllTabAbout">اضغط مطولاً على شريط العنوان لإظهاره مؤقتًا</string>
+    <string name="MessageDetails">تفاصيل الرسالة</string>
+    <string name="ExportAsJson">تصدير كـ JSON</string>
+    <string name="Date">التاريخ</string>
+    <string name="Filename">اسم الملف</string>
+    <string name="Filesize">حجم الملف</string>
 </resources>
