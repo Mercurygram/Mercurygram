@@ -79,7 +79,8 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Re-add Monet themes ([#31](https://github.com/Mercurygram/Mercurygram/pull/31))
 - Disabled DOH resolving since this leaks your used proxy to Google and it's not needed since Android DNS over TLS should be used instead
 - Unlock premium app icons for anybody
-- Unlock 5 accounts (was 3) and remove premium check for number of accounts
+- Unlock 8 accounts (was 3) and remove premium check for number of accounts
+- Let non-premium users use the per-language "Do Not Translate" list, so adding a language there permanently stops the in-chat "Translate to X" bar for that language (upstream only enforced this list for Premium accounts). The list stays local to the device; manual translation is still available
 - Add toggle setting in Chat Settings to send large photos (2560px instead of 1280px)
 - Add per-account toggle setting in Settings → Mercurygram to hide the stories bar in the chat list
 - Add per-account toggle setting in Settings → Mercurygram to pre-tick "delete for everyone" (and "also delete for…" in private chats) by default in the delete-message dialog
