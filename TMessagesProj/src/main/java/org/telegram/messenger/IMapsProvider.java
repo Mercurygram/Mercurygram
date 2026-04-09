@@ -31,6 +31,7 @@ public interface IMapsProvider {
     IMapStyleOptions loadRawResourceStyle(Context context, int resId);
     String getMapsAppPackageName();
     int getInstallMapsString();
+    default boolean supportsMapTypes() { return true; }
 
     interface IMap {
         void setMapType(int mapType);
