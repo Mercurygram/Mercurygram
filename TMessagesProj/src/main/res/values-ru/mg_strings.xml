@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="MercurygramSettings">Mercurygram</string>
+    <string name="MercurygramSettingsInfo">Функции, специфичные для Mercurygram</string>
+    <string name="MercurygramSettingsGeneral">Основное</string>
+    <string name="MercurygramSettingsMedia">Медиа</string>
+    <string name="MercurygramSettingsUpdates">Обновления</string>
+    <string name="MercurygramSettingsNotifications">Уведомления</string>
+    <string name="MercurygramMessageDetailsMenu">Показать «Подробности сообщения»</string>
+    <string name="MercurygramDisableAutoUpdate">Отключить встроенное обновление</string>
+    <string name="MercurygramDisableAutoUpdateAbout">Mercurygram больше не будет проверять обновления на GitHub при запуске. Вручную проверить можно с помощью кнопки ниже.</string>
+    <string name="MercurygramAcceptPreReleaseUpdates">Принимать предварительные обновления</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesAbout">Получайте 5-точечные предварительные сборки (например, 12.6.4.4.42) через встроенный обновлятор. Это снимки разработки между стабильными выпусками; они могут содержать сбои, частично работающие функции или другие регрессии. Вы можете отключить эту опцию позже, чтобы вернуться к соответствующему стабильному (4-точечному) выпуску.</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningTitle">Включить предварительные обновления?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningMessage">Предварительные сборки Mercurygram (5-точечные, например 12.6.4.4.42) — это снимки разработки между стабильными выпусками. Они могут содержать ещё не обнаруженные сбои, частично работающие функции или другие регрессии. Вы можете отключить эту опцию позже, чтобы вернуться к соответствующему стабильному (4-точечному) выпуску. Продолжить?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesEnable">Включить</string>
+    <string name="MercurygramPreReleaseBadge">Предварительный выпуск</string>
+    <string name="MercurygramCheckForUpdatesNow">Проверить обновления сейчас</string>
+    <string name="MercurygramCheckForUpdatesLastChecked">Последняя проверка: %1$s</string>
+    <string name="MercurygramCheckForUpdatesNever">Никогда</string>
+    <string name="MercurygramCheckForUpdatesToast">Проверка обновлений…</string>
+    <string name="MercurygramDisableUnifiedPush">Отключить UnifiedPush</string>
+    <string name="MercurygramDisableUnifiedPushAbout">Если отключено, Mercurygram переходит на опрос новых сообщений. Приложение перезапустится для применения изменения.</string>
+    <string name="MercurygramUnifiedPushRestartConfirm">Для применения этого изменения Mercurygram нужно перезапустить. Продолжить?</string>
+    <string name="MercurygramRestart">Перезапустить</string>
     <string name="NtfyDefaultServerDisableUP">Отключить UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">Сервер ntfy.sh по умолчанию имеет очень низкие лимиты запросов и блокирует push-шлюз Mercurygram. Push-уведомления будут работать нестабильно.</string>
     <string name="NtfyDefaultServerNoAlternative">Альтернативные дистрибьюторы не установлены. UnifiedPush будет отключён. Вы можете снова включить его после установки совместимого дистрибьютора с собственным сервером.</string>

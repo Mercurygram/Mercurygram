@@ -78,17 +78,33 @@ android {
 
     signingConfigs {
         debug {
-            storeFile file("../TMessagesProj/config/release.keystore")
+            storeFile file(findProperty('RELEASE_STORE_FILE') ?: "../TMessagesProj/config/release.keystore")
             storePassword RELEASE_STORE_PASSWORD
             keyAlias RELEASE_KEY_ALIAS
             keyPassword RELEASE_KEY_PASSWORD
+            enableV1Signing true
+            enableV2Signing true
+            enableV3Signing true
+            // v4 .idsig sits beside the APK and would mismatch fdroid's reproducible build
+            enableV4Signing false
         }
 
         release {
-            storeFile file("../TMessagesProj/config/release.keystore")
+            storeFile file(findProperty('RELEASE_STORE_FILE') ?: "../TMessagesProj/config/release.keystore")
             storePassword RELEASE_STORE_PASSWORD
             keyAlias RELEASE_KEY_ALIAS
             keyPassword RELEASE_KEY_PASSWORD
+            // v1 (JAR) signing disabled: Mercurygram's MANIFEST.MF is too large
+            // (~900 KB / 10k entries) for apksigner's multi-block deflate to match
+            // the single-pass deflate apksigcopier expects when grafting the dev
+            // signature onto the F-Droid reproducible build. Dropping v1 forces
+            // minSdk >= 24 globally so v2+v3 alone cover every supported install
+            // (see defaultConfig.minSdkVersion below). v4 .idsig sidecar would
+            // not be in the APK and would mismatch the reproducible build.
+            enableV1Signing false
+            enableV2Signing true
+            enableV3Signing true
+            enableV4Signing false
         }
     }
 
@@ -191,7 +207,6 @@ android {
             ndk {
                 abiFilters "armeabi-v7a"
             }
-            minSdkVersion 24
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
             }
@@ -207,7 +222,6 @@ android {
             ndk {
                 abiFilters "arm64-v8a"
             }
-            minSdkVersion 24
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
             }
@@ -223,7 +237,6 @@ android {
             ndk {
                 abiFilters "x86"
             }
-            minSdkVersion 24
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
             }
@@ -239,7 +252,6 @@ android {
             ndk {
                 abiFilters "x86_64"
             }
-            minSdkVersion 24
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
             }
@@ -279,7 +291,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 35
         versionName rootProject.ext.MG_VERSION_NAME
         ndkVersion "27.2.12479018"
@@ -291,7 +303,7 @@ android {
         externalNativeBuild {
             cmake {
                 version '3.10.2'
-                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21' // , '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-24' // , '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
             }
         }
     }

@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="MercurygramSettings">Mercurygram</string>
+    <string name="MercurygramSettingsInfo">Mercurygram-spezifische Funktionen</string>
+    <string name="MercurygramSettingsGeneral">Allgemein</string>
+    <string name="MercurygramSettingsMedia">Medien</string>
+    <string name="MercurygramSettingsUpdates">Updates</string>
+    <string name="MercurygramSettingsNotifications">Benachrichtigungen</string>
+    <string name="MercurygramMessageDetailsMenu">\"Nachrichtendetails\" anzeigen</string>
+    <string name="MercurygramDisableAutoUpdate">In-App-Updater deaktivieren</string>
+    <string name="MercurygramDisableAutoUpdateAbout">Mercurygram sucht beim Start nicht mehr auf GitHub nach Updates. Du kannst die Suche weiterhin manuell über die Schaltfläche unten anstoßen.</string>
+    <string name="MercurygramAcceptPreReleaseUpdates">Pre-Release-Updates akzeptieren</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesAbout">Empfange 5-Punkt-Pre-Release-Builds (z. B. 12.6.4.4.42) über den In-App-Updater. Das sind Entwicklungs-Snapshots zwischen stabilen Versionen; sie können Abstürze, teilweise funktionierende Features oder andere Regressionen enthalten. Du kannst diese Option später deaktivieren, um auf die zugehörige stabile (4-Punkt-)Version zurückzuwechseln.</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningTitle">Pre-Release-Updates aktivieren?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningMessage">Mercurygram-Pre-Release-Builds (5-Punkt, z. B. 12.6.4.4.42) sind Entwicklungs-Snapshots zwischen stabilen Versionen. Sie können noch unbekannte Abstürze, nur teilweise funktionierende Features oder andere Regressionen enthalten. Du kannst diese Option später deaktivieren, um auf die zugehörige stabile (4-Punkt-)Version zurückzuwechseln. Fortfahren?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesEnable">Aktivieren</string>
+    <string name="MercurygramPreReleaseBadge">Vorabversion</string>
+    <string name="MercurygramCheckForUpdatesNow">Jetzt nach Updates suchen</string>
+    <string name="MercurygramCheckForUpdatesLastChecked">Zuletzt geprüft: %1$s</string>
+    <string name="MercurygramCheckForUpdatesNever">Nie</string>
+    <string name="MercurygramCheckForUpdatesToast">Suche nach Updates…</string>
+    <string name="MercurygramDisableUnifiedPush">UnifiedPush deaktivieren</string>
+    <string name="MercurygramDisableUnifiedPushAbout">Wenn deaktiviert, fällt Mercurygram auf Polling neuer Nachrichten zurück. Die App wird neu gestartet, um die Änderung anzuwenden.</string>
+    <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram muss neu gestartet werden, um diese Änderung anzuwenden. Fortfahren?</string>
+    <string name="MercurygramRestart">Neu starten</string>
     <string name="NtfyDefaultServerDisableUP">UnifiedPush deaktivieren</string>
     <string name="NtfyDefaultServerMessage">Der Standard-ntfy.sh-Server hat sehr niedrige Ratenlimits und blockiert das Push-Gateway von Mercurygram. Push-Benachrichtigungen funktionieren nicht zuverlässig.</string>
     <string name="NtfyDefaultServerNoAlternative">Es sind keine alternativen Distributoren installiert. UnifiedPush wird deaktiviert. Du kannst es wieder aktivieren, nachdem du einen kompatiblen Distributor mit einem selbst gehosteten Server installiert hast.</string>
