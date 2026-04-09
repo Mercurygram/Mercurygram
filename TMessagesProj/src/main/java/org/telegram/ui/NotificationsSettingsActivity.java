@@ -161,6 +161,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     private int repeatRow;
     private int unifiedPushDistributorRow;
     private int unifiedPushGatewayRow;
+    private int unifiedPushNtfyWarningRow;
     private int resetSection2Row;
     private int resetSectionRow;
     @Keep
@@ -178,6 +179,17 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     public boolean onFragmentCreate() {
         MessagesController.getInstance(currentAccount).loadSignUpNotificationsSettings();
         loadExceptions(null);
+        rebuildRows();
+
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.notificationsSettingsUpdated);
+
+        getMessagesController().reloadReactionsNotifySettings();
+
+        return super.onFragmentCreate();
+    }
+
+    private void rebuildRows() {
+        rowCount = 0;
 
         if (UserConfig.getActivatedAccountsCount() > 1) {
             accountsSectionRow = rowCount++;
@@ -232,20 +244,18 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
         repeatRow = rowCount++;
         unifiedPushDistributorRow = -1;
         unifiedPushGatewayRow = -1;
+        unifiedPushNtfyWarningRow = -1;
         if (!SharedConfig.disableUnifiedPush) {
             unifiedPushDistributorRow = rowCount++;
             unifiedPushGatewayRow = rowCount++;
+            if (SharedConfig.isNtfyDefaultServer()) {
+                unifiedPushNtfyWarningRow = rowCount++;
+            }
         }
         resetSection2Row = rowCount++;
         resetSectionRow = rowCount++;
         resetNotificationsRow = rowCount++;
         resetNotificationsSectionRow = rowCount++;
-
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.notificationsSettingsUpdated);
-
-        getMessagesController().reloadReactionsNotifySettings();
-
-        return super.onFragmentCreate();
     }
 
     public void loadExceptions(Runnable onDone) {
@@ -838,6 +848,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     cell.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL));
                     linearLayout.addView(cell);
                     cell.setOnClickListener(v -> {
+                        SharedConfig.setUnifiedPushEndpointUrl("");
                         UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, items[index].toString());
                         UnifiedPush.register(ApplicationLoader.applicationContext, "default", "Mercurygram WebPush", null);
                         updateUnifiedPushDistributor = true;
@@ -1006,8 +1017,45 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.notificationsSettingsUpdated) {
+            rebuildRows();
             adapter.notifyDataSetChanged();
+            if (SharedConfig.isNtfyDefaultServer()) {
+                showNtfyDefaultServerDialog(getParentActivity());
+            }
         }
+    }
+
+    public static void showNtfyDefaultServerDialog(android.app.Activity activity) {
+        if (activity == null || activity.isFinishing()) return;
+
+        List<String> allDistributors = UnifiedPush.getDistributors(activity);
+        List<String> alternatives = new ArrayList<>(allDistributors);
+        alternatives.remove("io.heckel.ntfy");
+
+        String baseMessage = activity.getString(R.string.NtfyDefaultServerMessage);
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(activity);
+        builder.setTitle(activity.getString(R.string.NtfyDefaultServerTitle));
+        builder.setCancelable(false);
+
+        if (!alternatives.isEmpty()) {
+            String alt = alternatives.get(0);
+            UnifiedPush.saveDistributor(activity, alt);
+            UnifiedPush.register(activity, "default", "Mercurygram WebPush", null);
+            SharedConfig.setUnifiedPushEndpointUrl("");
+            builder.setMessage(baseMessage + "\n\n" + activity.getString(R.string.NtfyDefaultServerSwitched, alt));
+            builder.setPositiveButton(activity.getString(R.string.OK), null);
+        } else {
+            builder.setMessage(baseMessage + "\n\n" + activity.getString(R.string.NtfyDefaultServerNoAlternative));
+            builder.setPositiveButton(activity.getString(R.string.NtfyDefaultServerDisableUP), (dialog, which) -> {
+                UnifiedPush.forceRemoveDistributor(activity);
+                if (!SharedConfig.disableUnifiedPush) {
+                    SharedConfig.toggleDisableUnifiedPush();
+                }
+                SharedConfig.setUnifiedPushEndpointUrl("");
+            });
+        }
+        builder.show();
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
@@ -1026,7 +1074,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     position == badgeNumberSection || position == otherSection2Row || position == resetSection2Row ||
                     position == callsSection2Row || position == callsSectionRow || position == badgeNumberSection2Row ||
                     position == accountsSectionRow || position == accountsInfoRow || position == resetNotificationsSectionRow ||
-                    position == eventsSection2Row);
+                    position == eventsSection2Row || position == unifiedPushNtfyWarningRow);
         }
 
         @Override
@@ -1280,6 +1328,8 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     TextInfoPrivacyCell textCell = (TextInfoPrivacyCell) holder.itemView;
                     if (position == accountsInfoRow) {
                         textCell.setText(getString("ShowNotificationsForInfo", R.string.ShowNotificationsForInfo));
+                    } else if (position == unifiedPushNtfyWarningRow) {
+                        textCell.setText(getString("NtfyDefaultServerWarningRow", R.string.NtfyDefaultServerWarningRow));
                     }
                     break;
                 }
@@ -1306,7 +1356,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     position == resetSection2Row || position == callsSection2Row || position == badgeNumberSection2Row ||
                     position == resetNotificationsSectionRow) {
                 return 4;
-            } else if (position == accountsInfoRow) {
+            } else if (position == accountsInfoRow || position == unifiedPushNtfyWarningRow) {
                 return 6;
             } else {
                 return 5;

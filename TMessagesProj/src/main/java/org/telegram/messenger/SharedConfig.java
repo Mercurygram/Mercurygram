@@ -184,6 +184,27 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void setUnifiedPushEndpointUrl(String url) {
+        unifiedPushEndpointUrl = url != null ? url : "";
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putString("mg_unifiedPushEndpointUrl", unifiedPushEndpointUrl)
+                .apply();
+    }
+
+    /** Returns true if the user is on the default gateway AND their UP endpoint uses the default ntfy.sh server.
+     *  Custom-gateway users are unaffected by the public gateway's ntfy.sh block, so we skip the warning. */
+    public static boolean isNtfyDefaultServer() {
+        if (!unifiedPushGateway.equals("https://p2p.belloworld.it/")) {
+            return false;
+        }
+        if (!unifiedPushEndpointUrl.isEmpty()) {
+            return unifiedPushEndpointUrl.contains("ntfy.sh");
+        }
+        // Fallback for existing users: check the token sent to Telegram (gateway URL contains encoded endpoint)
+        return pushString != null && pushString.contains("ntfy.sh");
+    }
+
     public static synchronized void ensureWebPushKeys() {
         if (webPushPrivateKey != null && webPushPublicKey != null && webPushAuthSecret != null) {
             return;
@@ -293,6 +314,7 @@ public class SharedConfig {
     // Mercurygram: UnifiedPush
     public static boolean disableUnifiedPush = false;
     public static String unifiedPushGateway = "https://p2p.belloworld.it/";
+    public static String unifiedPushEndpointUrl = "";   // raw UP endpoint URL from last onNewEndpoint
     public static volatile byte[] webPushPrivateKey;    // PKCS#8-encoded P-256 private key
     public static volatile byte[] webPushPublicKey;     // Raw 65-byte uncompressed P-256 point (04||X||Y)
     public static volatile byte[] webPushAuthSecret;    // 16-byte random auth secret
@@ -598,6 +620,7 @@ public class SharedConfig {
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
+                editor.putString("mg_unifiedPushEndpointUrl", unifiedPushEndpointUrl);
                 editor.apply();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -806,6 +829,7 @@ public class SharedConfig {
             if (!TextUtils.isEmpty(wpPub)) webPushPublicKey = Base64.decode(wpPub, Base64.DEFAULT);
             String wpAuth = preferences.getString("mg_webPushAuthSecret", "");
             if (!TextUtils.isEmpty(wpAuth)) webPushAuthSecret = Base64.decode(wpAuth, Base64.DEFAULT);
+            unifiedPushEndpointUrl = preferences.getString("mg_unifiedPushEndpointUrl", "");
 
             loadDebugConfig(preferences);
 
