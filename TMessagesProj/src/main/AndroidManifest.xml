@@ -3,6 +3,8 @@
           xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="auto">
 
+    <uses-sdk tools:overrideLibrary="org.maplibre.android"/>
+
     <supports-screens android:anyDensity="true"
                       android:largeScreens="true"
                       android:normalScreens="true"
