@@ -1,12 +1,18 @@
-git clone https://github.com/tdlib/td
-cd td/example/android
-# copy build-tdlib.sh and CMakeLists.txt into this folder
-./fetch-sdk.sh
-# copy boringssl from TMessagesProj/jni/boringssl into td/example/android/third-party/openssl with such structure:
-# third-party/
-#   openssl/
-#     $ARCH/
-#       include/ <- TMessagesProj/jni/boringssl/include
-#       lib/ <- TMessagesProj/jni/boringssl/lib/$ARCH
-./build-tdlib.sh
-# gather libtde2e.a and libtdutils.a into TMessagesProj/jni/tde2e/$ARCH
+tde2e is built from source using the tdlib/td submodule at TMessagesProj/jni/td.
+
+The build is automated via the buildNativeLibs Gradle task (see TMessagesProj/build.gradle).
+To build manually, from TMessagesProj/jni/:
+
+  git submodule update --init TMessagesProj/jni/td
+  export NDK=/path/to/ndk
+  export NINJA_PATH=$(which ninja)
+  bash build_tde2e.sh
+
+build_tde2e.sh requires BoringSSL to be already built (run build_boringssl.sh first).
+Output: tde2e/build/{arm64-v8a,armeabi-v7a,x86_64,x86}/libtde2e.a and libtdutils.a
+
+Files in this directory:
+  bridge.cpp       -- JNI bridge compiled into the main .so (source)
+  include/         -- Public API header (e2e_api.h)
+  build/           -- Built static libraries (generated, not in git)
+  README           -- This file

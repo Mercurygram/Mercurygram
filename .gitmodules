@@ -1,0 +1,21 @@
+[submodule "TMessagesProj/jni/libvpx"]
+	path = TMessagesProj/jni/libvpx
+	url = https://github.com/webmproject/libvpx
+	ignore = all
+[submodule "TMessagesProj/jni/ffmpeg"]
+	path = TMessagesProj/jni/ffmpeg
+	url = https://github.com/FFmpeg/FFmpeg
+	ignore = all
+[submodule "TMessagesProj/jni/dav1d"]
+	path = TMessagesProj/jni/dav1d
+	url = https://code.videolan.org/videolan/dav1d.git
+	ignore = all
+[submodule "TMessagesProj/jni/boringssl"]
+	path = TMessagesProj/jni/boringssl
+	url = https://github.com/google/boringssl
+	ignore = all
+[submodule "TMessagesProj/jni/td"]
+	path = TMessagesProj/jni/td
+	url = https://github.com/tdlib/td
+	shallow = true
+	ignore = all
