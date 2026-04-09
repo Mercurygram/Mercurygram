@@ -4628,7 +4628,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 "Reload app config",
                                 !SharedConfig.forceForumTabs ? "Force Forum Tabs" : "Do Not Force Forum Tabs",
                             "Make Memory Dump",
-                                BuildVars.DEBUG_PRIVATE_VERSION ? (SharedConfig.fastWallpaperDisabled ? "enable wallpaper shader" : "disable wallpaper shader") : null
+                                BuildVars.DEBUG_PRIVATE_VERSION ? (SharedConfig.fastWallpaperDisabled ? "enable wallpaper shader" : "disable wallpaper shader") : null,
+                                // [MG] Mercurygram Debug items
+                                !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu",
+                                SharedConfig.disableUnifiedPush ? "Enable Unified Push" : "Disable Unified Push",
+                                SharedConfig.disableSecureFlags ? "Enable Secure Flags" : "Disable Secure Flags",
+                                SharedConfig.removeAdsAndProxySponsor ? "Enable Ads & Proxy Sponsor" : "Remove Ads & Proxy Sponsor"
                         };
 
                         builder.setItems(items, (dialog, which) -> {
@@ -4924,6 +4929,20 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 FileLog.getInstance().dumpMemory(true);
                             } else if (which == 38) {
                                 SharedConfig.toggleFastWallpaperDisabled();
+                            } else if (which == 39) {
+                                SharedConfig.toggleMessageDetailsMenu();
+                            } else if (which == 40) {
+                                SharedConfig.toggleDisableUnifiedPush();
+                                Activity activity = AndroidUtilities.findActivity(context);
+                                final PackageManager pm = activity.getPackageManager();
+                                final Intent intent = pm.getLaunchIntentForPackage(activity.getPackageName());
+                                activity.finishAffinity();
+                                activity.startActivity(intent);
+                                System.exit(0);
+                            } else if (which == 41) {
+                                SharedConfig.toggleDisableSecureFlags();
+                            } else if (which == 42) {
+                                SharedConfig.toggleRemoveAdsAndProxySponsor();
                             }
                         });
                         builder.setNegativeButton(getString("Cancel", R.string.Cancel), null);

@@ -2885,7 +2885,9 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                         fragment.getParentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
                         AndroidUtilities.logFlagSecure();
                     } else {
-                        fragment.getParentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                        if (!SharedConfig.disableSecureFlags) {
+                            fragment.getParentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                        }
                         AndroidUtilities.logFlagSecure();
                     }
                 }
@@ -2894,7 +2896,9 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                     windowLayoutParams.flags &= ~WindowManager.LayoutParams.FLAG_SECURE;
                     AndroidUtilities.logFlagSecure();
                 } else {
-                    windowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SECURE;
+                    if (!SharedConfig.disableSecureFlags) {
+                        windowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SECURE;
+                    }
                     AndroidUtilities.logFlagSecure();
                 }
                 try {

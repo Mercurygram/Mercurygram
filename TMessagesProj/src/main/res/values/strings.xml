@@ -10578,6 +10578,11 @@
     <string name="RelativeDateMenuSetAReminder">Set a Reminder</string>
     <string name="RelativeDateCopied">Date copied to clipboard</string>
     <string name="GiftResaleStarsOnly">Show listings for stars only</string>
+    <string name="MessageDetails">Message Details</string>
+    <string name="ExportAsJson">Export as JSON</string>
+    <string name="Date">Date</string>
+    <string name="Filename">File name</string>
+    <string name="Filesize">File size</string>
     <string name="SendLargePhotos">Send larger photos (2560px)</string>
     <string name="RearRoundVideos">Use rear camera for video messages</string>
     <string name="HideChatKeyboard">Hide keyboard on chat scroll</string>
