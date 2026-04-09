@@ -31,9 +31,9 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingFlowParams;
-import com.android.billingclient.api.ProductDetails;
+import it.belloworld.mercurygram.compat.billing.BillingClient;
+import it.belloworld.mercurygram.compat.billing.BillingFlowParams;
+import it.belloworld.mercurygram.compat.billing.ProductDetails;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
