@@ -15,4 +15,9 @@
     <string name="HideChatKeyboard">Toetsenbord verbergen bij scrollen in chat</string>
     <string name="HideAllTab">Tabblad \"Alle chats\" verbergen</string>
     <string name="HideAllTabAbout">Houd de titelbalk ingedrukt om deze tijdelijk weer te geven</string>
+    <string name="MessageDetails">Berichtdetails</string>
+    <string name="ExportAsJson">Exporteren als JSON</string>
+    <string name="Date">Datum</string>
+    <string name="Filename">Bestandsnaam</string>
+    <string name="Filesize">Bestandsgrootte</string>
 </resources>

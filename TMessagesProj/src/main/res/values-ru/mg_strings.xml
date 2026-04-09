@@ -15,4 +15,9 @@
     <string name="HideChatKeyboard">Скрывать клавиатуру при прокрутке чата</string>
     <string name="HideAllTab">Скрыть вкладку \"Все чаты\"</string>
     <string name="HideAllTabAbout">Нажмите и удерживайте панель заголовка, чтобы временно показать её</string>
+    <string name="MessageDetails">Сведения о сообщении</string>
+    <string name="ExportAsJson">Экспортировать как JSON</string>
+    <string name="Date">Дата</string>
+    <string name="Filename">Имя файла</string>
+    <string name="Filesize">Размер файла</string>
 </resources>
