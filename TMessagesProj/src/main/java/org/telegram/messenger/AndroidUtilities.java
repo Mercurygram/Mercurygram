@@ -2987,7 +2987,7 @@ public class AndroidUtilities {
             return highQualityPhotoSize;
         } else {
             if (photoSize == null) {
-                photoSize = 1280;
+                photoSize = UserConfig.getInstance(UserConfig.selectedAccount).mg.sendLargePhotos ? 2560 : 1280;
             }
             return photoSize;
         }
