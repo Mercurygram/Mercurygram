@@ -49,6 +49,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
@@ -56,6 +57,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 
 public class LocaleController {
@@ -412,6 +414,13 @@ public class LocaleController {
     private PluralRules currentPluralRules;
     private LocaleInfo currentLocaleInfo;
     private HashMap<String, String> localeValues = new HashMap<>();
+
+    // [MG] Keys we re-branded in local strings.xml. The Telegram cloud language
+    // pack still serves the upstream values for these (e.g. "Telegram per Android"
+    // in it.lang), so cloud lookup must be bypassed or our local strings.xml
+    // override never wins on non-English locales.
+    private static final Set<String> MG_LOCAL_ONLY_KEYS = new HashSet<>(Arrays.asList(
+            "AppName", "TelegramVersion"));
     private String languageOverride;
     private boolean changingConfiguration = false;
     private boolean reloadLastFile;
@@ -1431,9 +1440,9 @@ public class LocaleController {
     }
 
     private String getStringInternal(String key, String fallback, int fallbackRes, int res) {
-        String value = BuildVars.USE_CLOUD_STRINGS ? localeValues.get(key) : null;
+        String value = (BuildVars.USE_CLOUD_STRINGS && !MG_LOCAL_ONLY_KEYS.contains(key)) ? localeValues.get(key) : null;
         if (value == null) {
-            if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
+            if (BuildVars.USE_CLOUD_STRINGS && fallback != null && !MG_LOCAL_ONLY_KEYS.contains(fallback)) {
                 value = localeValues.get(fallback);
             }
             if (value == null) {
@@ -1456,7 +1465,7 @@ public class LocaleController {
     }
 
     public static String getServerString(String key) {
-        String value = getInstance().localeValues.get(key);
+        String value = MG_LOCAL_ONLY_KEYS.contains(key) ? null : getInstance().localeValues.get(key);
         if (value == null) {
             int resourceId = ApplicationLoader.applicationContext.getResources().getIdentifier(key, "string", ApplicationLoader.applicationContext.getPackageName());
             if (resourceId != 0) {
@@ -1561,6 +1570,10 @@ public class LocaleController {
         return formatPluralStringComma(key, plural, ',');
     }
 
+    public static String formatPluralStringComma(String key, int plural, Object... args) {
+        return formatPluralStringComma(key, plural, ',', args);
+    }
+
     public static String formatPluralStringSpaced(String key, int plural) {
         return formatPluralStringComma(key, plural, ' ');
     }
@@ -1569,24 +1582,9 @@ public class LocaleController {
         return formatPluralStringComma(key, plural, ' ', args);
     }
 
-    public static String formatPluralStringComma(String key, int plural, Object... args) {
-        return formatPluralStringComma(key, plural, ',', args);
-    }
-
 
     public static String formatPluralStringComma(String key, int plural, char symbol) {
         return formatPluralStringComma(key, plural, symbol, new Object[] {});
-    }
-
-    public static CharSequence bold(CharSequence text) {
-        if (text instanceof Spannable) {
-            ((Spannable) text).setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            return text;
-        } else {
-            SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-            ssb.setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            return ssb;
-        }
     }
 
     public static String formatPluralStringComma(String key, int plural, char symbol, Object... args) {
@@ -1633,6 +1631,17 @@ public class LocaleController {
         }
     }
 
+    public static CharSequence bold(CharSequence text) {
+        if (text instanceof Spannable) {
+            ((Spannable) text).setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            return text;
+        } else {
+            SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+            ssb.setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            return ssb;
+        }
+    }
+
     public static String formatNumber(long count, char symbol) {
         if (count < 0) {
             return "-" + formatNumber(-count, symbol);
@@ -1669,9 +1678,9 @@ public class LocaleController {
 
     public static String formatString(String key, String fallback, int res, int fallbackRes, Object... args) {
         try {
-            String value = BuildVars.USE_CLOUD_STRINGS ? getInstance().localeValues.get(key) : null;
+            String value = (BuildVars.USE_CLOUD_STRINGS && !MG_LOCAL_ONLY_KEYS.contains(key)) ? getInstance().localeValues.get(key) : null;
             if (value == null) {
-                if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
+                if (BuildVars.USE_CLOUD_STRINGS && fallback != null && !MG_LOCAL_ONLY_KEYS.contains(fallback)) {
                     value = getInstance().localeValues.get(fallback);
                 }
                 if (value == null) {
@@ -1718,9 +1727,9 @@ public class LocaleController {
 
     public static CharSequence formatSpannable(String key, String fallback, int res, int fallbackRes, Object... args) {
         try {
-            String value = BuildVars.USE_CLOUD_STRINGS ? getInstance().localeValues.get(key) : null;
+            String value = (BuildVars.USE_CLOUD_STRINGS && !MG_LOCAL_ONLY_KEYS.contains(key)) ? getInstance().localeValues.get(key) : null;
             if (value == null) {
-                if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
+                if (BuildVars.USE_CLOUD_STRINGS && fallback != null && !MG_LOCAL_ONLY_KEYS.contains(fallback)) {
                     value = getInstance().localeValues.get(fallback);
                 }
                 if (value == null) {
