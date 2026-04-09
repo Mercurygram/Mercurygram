@@ -15,4 +15,9 @@
     <string name="HideChatKeyboard">Nascondi tastiera durante lo scorrimento della chat</string>
     <string name="HideAllTab">Nascondi scheda \"Tutte le chat\"</string>
     <string name="HideAllTabAbout">Tieni premuta la barra del titolo per mostrarla temporaneamente</string>
+    <string name="MessageDetails">Dettagli messaggio</string>
+    <string name="ExportAsJson">Esporta come JSON</string>
+    <string name="Date">Data</string>
+    <string name="Filename">Nome file</string>
+    <string name="Filesize">Dimensione file</string>
 </resources>
