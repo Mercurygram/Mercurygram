@@ -12,10 +12,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
-import com.android.billingclient.api.ProductDetails;
-
-import java.util.Objects;
-
 public class BuildVars {
 
     public static boolean DEBUG_VERSION = BuildConfig.DEBUG_VERSION;
@@ -38,10 +34,10 @@ public class BuildVars {
     public static String HUAWEI_APP_ID = "101184875";
 
     // You can use this flag to disable Google Play Billing (If you're making fork and want it to be in Google Play)
-    public static boolean IS_BILLING_UNAVAILABLE = false;
+    public static boolean IS_BILLING_UNAVAILABLE = true;
 
     // works only on official app ids, disable on your forks
-    public static boolean SUPPORTS_PASSKEYS = true;
+    public static boolean SUPPORTS_PASSKEYS = false;
 
     static {
         if (ApplicationLoader.applicationContext != null) {
@@ -60,23 +56,7 @@ public class BuildVars {
     }
 
     public static boolean useInvoiceBilling() {
-        return BillingController.billingClientEmpty || DEBUG_VERSION && false || ApplicationLoader.isStandaloneBuild() || isBetaApp() && false || isHuaweiStoreApp() || hasDirectCurrency();
-    }
-
-    private static boolean hasDirectCurrency() {
-        if (!BillingController.getInstance().isReady() || BillingController.PREMIUM_PRODUCT_DETAILS == null) {
-            return false;
-        }
-        for (ProductDetails.SubscriptionOfferDetails offerDetails : BillingController.PREMIUM_PRODUCT_DETAILS.getSubscriptionOfferDetails()) {
-            for (ProductDetails.PricingPhase phase : offerDetails.getPricingPhases().getPricingPhaseList()) {
-                for (String cur : MessagesController.getInstance(UserConfig.selectedAccount).directPaymentsCurrency) {
-                    if (Objects.equals(phase.getPriceCurrencyCode(), cur)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        return true;
     }
 
     private static Boolean betaApp;
