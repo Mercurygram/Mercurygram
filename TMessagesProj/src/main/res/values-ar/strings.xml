@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">تيليجرام</string>
-    <string name="AppNameBeta">(Beta) تيليجرام</string>
     <string name="LanguageName">العربية</string>
     <string name="English">الإنجليزية</string>
     <string name="LanguageNameInEnglish">Arabic</string>
@@ -556,7 +554,7 @@
     <string name="DirectShareInfo">إظهار آخر المحادثات في قائمة المشاركة</string>
     <string name="Emoji">الرموز التعبيرية</string>
     <string name="LargeEmoji">رموز تعبيرية كبيرة</string>
-    <string name="TelegramVersion">تيليجرام للأندرويد %1$s</string>
+    <string name="TelegramVersion">ميركوريجرام للأندرويد %1$s</string>
     <string name="ChangeLanguageLater">يمكنك تغيير لغة التطبيق لاحقًا من الإعدادات.</string>
     <string name="ChooseYourLanguage">اختيار اللغة</string>
     <string name="ChooseYourLanguageOther">أخرى</string>
