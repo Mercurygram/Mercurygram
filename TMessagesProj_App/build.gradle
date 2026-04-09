@@ -27,14 +27,13 @@ configurations {
 }
 
 configurations.all {
-    exclude group: 'com.google.firebase', module: 'firebase-core'
     exclude group: 'androidx.recyclerview', module: 'recyclerview'
 }
 
 dependencies {
     implementation project(':TMessagesProj')
+    implementation 'androidx.multidex:multidex:2.0.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
-    implementation files('../TMessagesProj/libs/libgsaverification-client.aar')
 }
 
 android {
@@ -42,6 +41,11 @@ android {
     buildToolsVersion '35.0.0'
 
     defaultConfig.applicationId = APP_PACKAGE
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 
     sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
 
@@ -215,4 +219,3 @@ android {
     }
 }
 
-apply plugin: 'com.google.gms.google-services'
