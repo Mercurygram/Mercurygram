@@ -1,0 +1,8 @@
+[Unit]
+Description=Mercurygram WebPush gateway socket
+
+[Socket]
+ListenStream=127.0.0.1:8001
+
+[Install]
+WantedBy=sockets.target

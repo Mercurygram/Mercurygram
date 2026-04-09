@@ -1,0 +1,54 @@
+[Unit]
+Description=Mercurygram WebPush gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/p2p-gateway
+Restart=on-failure
+RestartSec=5
+
+# Identity
+DynamicUser=true
+
+# Filesystem
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+ProtectClock=true
+ProtectHostname=true
+
+# Capabilities
+CapabilityBoundingSet=
+AmbientCapabilities=
+NoNewPrivileges=true
+LockPersonality=true
+RestrictSUIDSGID=true
+PrivateUsers=true
+
+# Memory
+MemoryDenyWriteExecute=true
+
+# Syscalls
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+
+# Network — AF_UNIX required for the journald socket (/run/systemd/journal/socket)
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Misc
+RestrictRealtime=true
+RestrictNamespaces=true
+UMask=0077
+
+[Install]
+WantedBy=default.target
