@@ -1,0 +1,30 @@
+# Build-entry keys the Mercurygram tree owns, applied on top of the fdroiddata
+# recipe entry by .github/scripts/fdroid_sync.py (new merge-request entries)
+# and by scripts/check-reproducibility.sh (local and CI rebuilds). Replace
+# semantics: the listed keys overwrite whatever the previous release's entry
+# carried, so a path that changed in the tree is fixed here, once, instead of
+# being hand-edited into the merge request afterwards -- which does not work
+# anyway, since the reproducibility check reads fdroiddata master.
+# Keys not listed (sudo, subdir, scandelete, submodules, ndk) still ride along
+# from the previous entry, so edits made during upstream review survive.
+it.belloworld.mercurygram:
+  rm:
+    - TMessagesProj_AppHockeyApp
+    - TMessagesProj_AppHuawei
+    - TMessagesProj_PluginTor
+    # media3 modules whose only reason to exist is a proprietary Google
+    # dependency (cast framework, cronet, IMA ads). Nothing in the app
+    # depends on them; deleting the build file leaves an empty project that
+    # Gradle configures and ignores.
+    - TMessagesProj_Modules/media/libraries/cast/build.gradle
+    - TMessagesProj_Modules/media/libraries/datasource_cronet/build.gradle
+    - TMessagesProj_Modules/media/libraries/exoplayer_ima/build.gradle
+  prebuild:
+    - echo -e 'APP_ID = 575730\nAPP_HASH = 723c7927097f8487d229438af766e329' > API_KEYS
+    - echo 'QUIET_NATIVE_BUILD=true' >> ../local.properties
+    # media3's publishing config is dead weight here (its body is gated on
+    # media3 being the root project) but its maven URL is a findProperty()
+    # call the scanner cannot resolve. 20 libraries apply the file, so empty
+    # it rather than delete it.
+    - printf '' > ../TMessagesProj_Modules/media/publish.gradle
+    - printf '\nMG_BUILD_TAG=$$VERSION$$\n' >> ../gradle.properties
