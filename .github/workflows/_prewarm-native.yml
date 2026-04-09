@@ -1,0 +1,151 @@
+name: Prewarm JNI native build cache
+
+# Reusable workflow called by beta.yml and release.yml. Builds each ABI's
+# native libs (boringssl, ffmpeg, dav1d, libvpx, tde2e) once per push and
+# saves them under a deterministic cache key. The shared build-mg composite
+# then restores those artifacts so the per-APK assemble jobs short-circuit
+# at the sentinel in each build_*.sh.
+#
+# NDK + build-tools are NOT cached here: the ubuntu-24.04 runner image
+# already pre-installs ndk;27.2.12479018 + build-tools;35.0.0 under
+# /usr/local/lib/android/sdk, so sdkmanager is a no-op and any cache of
+# that tree fails to restore on a sibling runner ("Cannot utime: Operation
+# not permitted" — root-owned files in the prebaked SDK). If we ever pin
+# an NDK that ISN'T in the runner image, the sdkmanager step below
+# downloads it; the cost is per-job rather than per-push but only on the
+# first push after the bump.
+#
+# Callers should set `continue-on-error: true` on the calling job — a
+# prewarm flake should NOT block the actual APK builds (build-mg falls
+# back to rebuilding natives inline on cache miss).
+on:
+  workflow_call:
+    secrets:
+      APP_ID:
+        required: true
+      APP_HASH:
+        required: true
+
+jobs:
+  prewarm:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            task: buildNativeLibsArm64
+          - abi: armeabi-v7a
+            task: buildNativeLibsArm32
+          - abi: x86_64
+            task: buildNativeLibsX86_64
+          - abi: x86
+            task: buildNativeLibsX86
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Install host build tools
+        # apt-get update first: ubuntu-24.04 runner images carry a baked
+        # Packages.gz that can be hours-to-days stale, leading to 404 on
+        # newly-superseded package versions. nasm is needed by dav1d's
+        # x86/x86_64 SIMD assembly.
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gperf meson libuv1-dev nasm cmake
+
+      - name: Parse NDK and build-tools versions
+        run: |
+          set -euo pipefail
+          gradle_file=TMessagesProj/build.gradle
+          ndk=$(grep -oE 'ndkVersion[[:space:]]+"[0-9.]+"' "$gradle_file" | grep -oE '[0-9.]+')
+          bt=$(grep -oE "buildToolsVersion[[:space:]]+'[0-9.]+'" "$gradle_file" | grep -oE '[0-9.]+')
+          [ -n "$ndk" ] && [ -n "$bt" ] || { echo "could not parse versions from $gradle_file" >&2; exit 1; }
+          echo "NDK_VERSION=$ndk          BUILD_TOOLS_VERSION=$bt"
+          echo "NDK_VERSION=$ndk"          >> "$GITHUB_ENV"
+          echo "BUILD_TOOLS_VERSION=$bt"   >> "$GITHUB_ENV"
+
+      - name: Compute JNI cache fingerprint
+        uses: ./.github/actions/jni-cache-fingerprint
+
+      - name: Ensure NDK and build-tools installed
+        # Sentinel check: skip sdkmanager entirely when the runner image
+        # already shipped this NDK + build-tools pair (the pinned versions
+        # are pre-installed today). If a future bump lands BEFORE the
+        # runner image catches up, fall through to sdkmanager with the
+        # retry-cleanup loop to absorb the occasional corrupt-zip flake
+        # from dl.google.com.
+        run: |
+          set -euo pipefail
+          ndk_dir="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}"
+          bt_dir="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
+          if [ -f "$ndk_dir/source.properties" ] && [ -d "$bt_dir" ]; then
+            echo "ndk + build-tools already present (runner image)"
+            exit 0
+          fi
+          echo "missing — installing via sdkmanager"
+          ok=0
+          for i in 1 2 3; do
+            if "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+                "ndk;${NDK_VERSION}" "build-tools;${BUILD_TOOLS_VERSION}"; then
+              ok=1
+              break
+            fi
+            echo "sdkmanager attempt $i failed; cleaning partial state and retrying" >&2
+            rm -rf "$ndk_dir" "$bt_dir"
+            sleep $((i * 10))
+          done
+          [ "$ok" = 1 ] || { echo "sdkmanager exhausted retries" >&2; exit 1; }
+
+      - name: Create API_KEYS
+        # TMessagesProj/build.gradle:157-158 reads ./API_KEYS via
+        # FileInputStream eagerly during gradle configuration (inside
+        # defaultConfig.buildConfigField). Without this step the gradle
+        # invocation below crashes with FileNotFoundException before the
+        # native build task can run.
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_HASH: ${{ secrets.APP_HASH }}
+        run: printf 'APP_ID = %s\nAPP_HASH = %s\n' "$APP_ID" "$APP_HASH" > API_KEYS
+
+      - name: Cache JNI native build outputs (${{ matrix.abi }})
+        # td/td/generate/auto + td/tdutils/generate/auto: TL-generated
+        # source files. Caching them skips build_tde2e.sh's host-build
+        # step (~30-60s) on every cache hit. Determinism is fine — the
+        # generators are pure functions of `td/scheme/*.tl` (pinned by
+        # the td submodule SHA in the fingerprint).
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            TMessagesProj/jni/boringssl/build/${{ matrix.abi }}
+            TMessagesProj/jni/ffmpeg/${{ matrix.abi }}
+            TMessagesProj/jni/ffmpeg/include
+            TMessagesProj/jni/ffmpeg/.ndk-${{ env.NDK_VERSION }}-${{ matrix.abi }}
+            TMessagesProj/jni/td/build/${{ matrix.abi }}
+            TMessagesProj/jni/td/td/generate/auto
+            TMessagesProj/jni/td/tdutils/generate/auto
+          key: jni-native-${{ runner.os }}-${{ matrix.abi }}-ndk${{ env.NDK_VERSION }}-${{ hashFiles('.jni-cache-fingerprint') }}
+
+      - name: Build native libs for ${{ matrix.abi }}
+        # On cache hit, every build_*.sh sentinel-skips (checks
+        # `<output>.a` + `.ndk-${NDK_VERSION}`) and the gradle task
+        # completes in seconds.
+        # MG_BUILD_TAG is required at configure-time by gradle/mg-version.gradle
+        # (TMessagesProj_App applies it; org.gradle.configureondemand=false
+        # forces it to configure even though we only run TMessagesProj tasks).
+        # Native libs don't read the tag — any well-formed placeholder works.
+        run: ./gradlew ${{ matrix.task }} --no-daemon -PMG_BUILD_TAG=0.0.0.0
