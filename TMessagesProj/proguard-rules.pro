@@ -2,7 +2,7 @@
 -keep @androidx.annotation.Keep class * { *; }
 -keepclasseswithmembers class * { @androidx.annotation.Keep *; }
 
--keep class it.belloworld.mercurygram.compat.** { *; }
+-keep class it.belloworld.mercurygram.** { *; }
 -keep class org.webrtc.* { *; }
 -keep class org.webrtc.audio.* { *; }
 -keep class org.webrtc.voiceengine.* { *; }
