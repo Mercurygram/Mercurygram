@@ -1,5 +1,22 @@
 apply plugin: 'com.android.application'
 
+// Wire each variant's merge*JniLibFolders task to the matching per-ABI native build task.
+// F-Droid per-ABI flavors only need one ABI compiled; fat flavors need all four.
+afterEvaluate {
+    def flavorToNativeTask = [
+        'AfatFdArm64'  : 'buildNativeLibsArm64',
+        'AfatFdArm32'  : 'buildNativeLibsArm32',
+        'AfatFdX86_64' : 'buildNativeLibsX86_64',
+        'AfatFdX86'    : 'buildNativeLibsX86',
+    ]
+    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach { task ->
+        def matched = flavorToNativeTask.find { flavor, _ -> task.name.contains(flavor) }
+        dependsOn project(':TMessagesProj').tasks.named(
+            matched ? matched.value : 'buildNativeLibs'
+        )
+    }
+}
+
 repositories {
     mavenCentral()
     google()
