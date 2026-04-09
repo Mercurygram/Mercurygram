@@ -453,6 +453,9 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
         mapTypeButton.addSubItem(map_list_menu_satellite, R.drawable.msg_satellite, getString(R.string.Satellite));
         mapTypeButton.addSubItem(map_list_menu_hybrid, R.drawable.msg_hybrid, getString(R.string.Hybrid));
         mapTypeButton.setContentDescription(getString(R.string.AccDescrMoreOptions));
+        if (!ApplicationLoader.getMapsProvider().supportsMapTypes()) {
+            mapTypeButton.setVisibility(View.GONE);
+        }
         if (chatLocation != null) {
             simpleActionBar.setTitle(getString(R.string.ChatLocation));
         } else if (messageObject != null) {
