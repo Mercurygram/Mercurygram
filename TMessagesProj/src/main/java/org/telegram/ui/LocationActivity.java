@@ -781,6 +781,9 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
                 map.setMapType(IMapsProvider.MAP_TYPE_HYBRID);
             }
         });
+        if (!ApplicationLoader.getMapsProvider().supportsMapTypes()) {
+            mapTypeButton.setVisibility(View.GONE);
+        }
 
         locationButton = new ImageView(context);
         drawable = Theme.createSimpleSelectorCircleDrawable(dp(40), getThemedColor(Theme.key_location_actionBackground), getThemedColor(Theme.key_location_actionPressedBackground));
