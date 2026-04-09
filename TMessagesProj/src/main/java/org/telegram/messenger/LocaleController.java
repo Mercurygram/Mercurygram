@@ -53,6 +53,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
@@ -61,6 +62,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TimeZone;
 
 public class LocaleController {
@@ -413,6 +415,12 @@ public class LocaleController {
     private Locale systemDefaultLocale;
     private PluralRules currentPluralRules;
     private LocaleInfo currentLocaleInfo;
+    // [MG] Keys we re-branded in local strings.xml. The Telegram cloud language
+    // pack still serves the upstream values for these (e.g. "Telegram per Android"
+    // in it.lang), so cloud lookup must be bypassed or our local strings.xml
+    // override never wins on non-English locales.
+    private static final Set<String> MG_LOCAL_ONLY_KEYS = new HashSet<>(Arrays.asList(
+            "AppName", "TelegramVersion"));
     private String languageOverride;
     private boolean changingConfiguration = false;
     private boolean reloadLastFile;
@@ -1452,7 +1460,7 @@ public class LocaleController {
     }
 
     public static String getServerString(String key) {
-        String value = getInstance().localizationExternal.getByResName(key);
+        String value = MG_LOCAL_ONLY_KEYS.contains(key) ? null : getInstance().localizationExternal.getByResName(key);
         if (value == null) {
             value = getInstance().getLocalizedString(key);
         }
@@ -1524,6 +1532,10 @@ public class LocaleController {
         return formatPluralStringComma(key, plural, ',');
     }
 
+    public static String formatPluralStringComma(String key, int plural, Object... args) {
+        return formatPluralStringComma(key, plural, ',', args);
+    }
+
     public static String formatPluralStringSpaced(String key, int plural) {
         return formatPluralStringComma(key, plural, ' ');
     }
@@ -1532,24 +1544,9 @@ public class LocaleController {
         return formatPluralStringComma(key, plural, ' ', args);
     }
 
-    public static String formatPluralStringComma(String key, int plural, Object... args) {
-        return formatPluralStringComma(key, plural, ',', args);
-    }
-
 
     public static String formatPluralStringComma(String key, int plural, char symbol) {
         return formatPluralStringComma(key, plural, symbol, new Object[] {});
-    }
-
-    public static CharSequence bold(CharSequence text) {
-        if (text instanceof Spannable) {
-            ((Spannable) text).setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            return text;
-        } else {
-            SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-            ssb.setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            return ssb;
-        }
     }
 
     public static String formatPluralStringComma(String key, int plural, char symbol, Object... args) {
@@ -1591,6 +1588,17 @@ public class LocaleController {
         } catch (Exception e) {
             FileLog.e(e);
             return "LOC_ERR: " + key;
+        }
+    }
+
+    public static CharSequence bold(CharSequence text) {
+        if (text instanceof Spannable) {
+            ((Spannable) text).setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            return text;
+        } else {
+            SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+            ssb.setSpan(new TypefaceSpan(AndroidUtilities.bold()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            return ssb;
         }
     }
 
@@ -4445,7 +4453,7 @@ public class LocaleController {
         final Context context = ApplicationLoader.applicationContext;
         String value;
 
-        if (BuildVars.USE_CLOUD_STRINGS) {
+        if (BuildVars.USE_CLOUD_STRINGS && !MG_LOCAL_ONLY_KEYS.contains(key)) {
             value = localizationExternal.getByResNameOrResId(context, key, stringRes);
             if (value != null) {
                 return value;
