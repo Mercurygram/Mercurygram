@@ -2990,7 +2990,7 @@ public class AndroidUtilities {
             return highQualityPhotoSize;
         } else {
             if (photoSize == null) {
-                photoSize = 1280;
+                photoSize = UserConfig.getInstance(UserConfig.selectedAccount).sendLargePhotos ? 2560 : 1280;
             }
             return photoSize;
         }
