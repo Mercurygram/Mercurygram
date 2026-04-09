@@ -23,3 +23,5 @@ TMessagesProj/jni/prebuild/pkgconfig/
 TMessagesProj/jni/prebuild/build/
 # Call core wasm module as a C array, built by jni/build_wasm_core.sh.
 TMessagesProj/jni/voip/ReferenceCoreEmbedded.cpp
+API_KEYS
+
