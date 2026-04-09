@@ -53,10 +53,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingFlowParams;
-import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.Purchase;
+import it.belloworld.mercurygram.compat.billing.BillingClient;
+import it.belloworld.mercurygram.compat.billing.BillingFlowParams;
+import it.belloworld.mercurygram.compat.billing.ProductDetails;
+import it.belloworld.mercurygram.compat.billing.Purchase;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
