@@ -35,14 +35,6 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
-import com.google.mlkit.common.MlKitException;
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.label.ImageLabeling;
-import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
-import com.google.mlkit.vision.segmentation.subject.Subject;
-import com.google.mlkit.vision.segmentation.subject.SubjectSegmentation;
-import com.google.mlkit.vision.segmentation.subject.SubjectSegmenter;
-import com.google.mlkit.vision.segmentation.subject.SubjectSegmenterOptions;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Emoji;
@@ -908,14 +900,8 @@ public class StickerMakerView extends FrameLayout implements NotificationCenter.
     private static class SubjectMock {
         public Bitmap bitmap;
         public int startX, startY, width, height;
-        public static SubjectMock of(Subject subject) {
-            SubjectMock m = new SubjectMock();
-            m.bitmap = subject.getBitmap();
-            m.startX = subject.getStartX();
-            m.startY = subject.getStartY();
-            m.width = subject.getWidth();
-            m.height = subject.getHeight();
-            return m;
+        public static SubjectMock of(Object subject) {
+            return new SubjectMock();
         }
         public static SubjectMock mock(Bitmap source) {
             SubjectMock m = new SubjectMock();
@@ -929,63 +915,7 @@ public class StickerMakerView extends FrameLayout implements NotificationCenter.
     }
 
     private void segment(Bitmap bitmap, int orientation, Utilities.Callback<List<SubjectMock>> whenDone, Utilities.Callback<SegmentedObject> whenEmpty) {
-        segmentingLoading = true;
-        SubjectSegmenter segmenter = SubjectSegmentation.getClient(
-            new SubjectSegmenterOptions.Builder()
-                .enableMultipleSubjects(
-                    new SubjectSegmenterOptions.SubjectResultOptions.Builder()
-                        .enableSubjectBitmap()
-                        .build()
-                )
-                .build()
-        );
-        if (EmuDetector.with(getContext()).detect()) {
-            ArrayList<SubjectMock> list = new ArrayList<>();
-            list.add(SubjectMock.mock(sourceBitmap));
-            whenDone.run(list);
-            return;
-        }
-        InputImage inputImage = InputImage.fromBitmap(bitmap, orientation);
-        segmenter.process(inputImage)
-            .addOnSuccessListener(result -> {
-                ArrayList<SubjectMock> list = new ArrayList<>();
-                for (int i = 0; i < result.getSubjects().size(); ++i) {
-                    list.add(SubjectMock.of(result.getSubjects().get(i)));
-                }
-                whenDone.run(list);
-            })
-            .addOnFailureListener(error -> {
-                segmentingLoading = false;
-                FileLog.e(error);
-                if (isWaitingMlKitError(error) && isAttachedToWindow()) {
-                    AndroidUtilities.runOnUIThread(() -> segmentImage(bitmap, orientation, containerWidth, containerHeight, whenEmpty), 2000);
-                } else {
-                    whenDone.run(new ArrayList<>());
-                }
-            });
-
-
-        if (detectedEmoji == null) {
-            ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
-                .process(inputImage)
-                .addOnSuccessListener(labels -> {
-                    if (labels.size() <= 0) {
-                        FileLog.d("objimg: no objects");
-                        return;
-                    }
-                    detectedEmoji = ObjectDetectionEmojis.labelToEmoji(labels.get(0).getIndex());
-                    FileLog.d("objimg: detected #" + labels.get(0).getIndex() + " " + detectedEmoji + " " + labels.get(0).getText());
-                    Emoji.getEmojiDrawable(detectedEmoji); // preload
-                })
-                .addOnFailureListener(e -> {
-                });
-        }
-
-        // preload emojis
-        List<TLRPC.TL_availableReaction> defaultReactions = MediaDataController.getInstance(currentAccount).getEnabledReactionsList();
-        for (int i = 0; i < Math.min(defaultReactions.size(), 9); ++i) {
-            Emoji.getEmojiDrawable(defaultReactions.get(i).reaction);
-        }
+        whenDone.run(new ArrayList<>());
     }
 
     private void createSegmentImagePath(SegmentedObject object, int containerWidth, int containerHeight) {
@@ -1234,7 +1164,7 @@ public class StickerMakerView extends FrameLayout implements NotificationCenter.
     }
 
     public static boolean isWaitingMlKitError(Exception e) {
-        return e instanceof MlKitException && e.getMessage() != null && e.getMessage().contains("segmentation optional module to be downloaded");
+        return false;
     }
 
     public void setCurrentAccount(int account) {
