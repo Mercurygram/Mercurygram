@@ -589,6 +589,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int edit_profile = 41;
     private final static int copy_link_profile = 42;
     private final static int set_username = 43;
+    private final static int show_admins = 200;
     private final static int bot_privacy = 44;
     private final static int delete_group = 45;
     private final static int enable_no_forwards = 46;
@@ -2615,6 +2616,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 } else if (id == report) {
                     ReportBottomSheet.openChat(ProfileActivity.this, getDialogId());
+                } else if (id == show_admins) {
+                    Bundle args = new Bundle();
+                    args.putLong("chat_id", chatId);
+                    args.putInt("type", ChatUsersActivity.TYPE_ADMIN);
+                    ChatUsersActivity fragment = new ChatUsersActivity(args);
+                    fragment.setInfo(chatInfo);
+                    presentFragment(fragment);
                 } else if (id == edit_channel) {
                     if (isTopic) {
                         presentFragment(TopicCreateFragment.create(chatId, topicId));
@@ -12041,6 +12049,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     voiceChatAction = call != null || voiceChatAction;
                 }
                 if (chat.megagroup) {
+                    if (!chat.left && !chat.kicked) {
+                        otherItem.addSubItem(show_admins, R.drawable.msg_admins, LocaleController.getString(R.string.ChannelAdministrators));
+                    }
                     if (chatInfo == null || !chatInfo.participants_hidden || ChatObject.hasAdminRights(chat)) {
                         canSearchMembers = true;
                         otherItem.addSubItem(search_members, R.drawable.msg_search, LocaleController.getString(R.string.SearchMembers));
@@ -12115,6 +12126,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (!ChatObject.isKickedFromChat(chat) && !ChatObject.isLeftFromChat(chat)) {
                     if (chatInfo == null || !chatInfo.participants_hidden || ChatObject.hasAdminRights(chat)) {
                         canSearchMembers = true;
+                        otherItem.addSubItem(show_admins, R.drawable.msg_admins, LocaleController.getString(R.string.ChannelAdministrators));
                         otherItem.addSubItem(search_members, R.drawable.msg_search, LocaleController.getString(R.string.SearchMembers));
                     }
                 }
