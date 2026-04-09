@@ -54,6 +54,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Emoji;
 import org.telegram.messenger.LocaleController;
@@ -1192,6 +1193,9 @@ public class FilterTabsView extends FrameLayout {
             delegate.onPageSelected(tab, scrollingForward);
         }
         scrollToChild(position);
+        if (UserConfig.getInstance(UserConfig.selectedAccount).hideAllTab && !currentTabIsDefault()) {
+            toggleAllTabs(false);
+        }
     }
 
     public void selectFirstTab() {
@@ -1199,6 +1203,13 @@ public class FilterTabsView extends FrameLayout {
             return;
         }
         scrollToTab(tabs.get(0), 0);
+    }
+
+    public void selectDefaultTab() {
+        Tab defaultTab = findDefaultTab();
+        if (defaultTab == null) return;
+        if (defaultTab.id == getCurrentTabId()) return;
+        scrollToTab(defaultTab, defaultTab.id);
     }
 
     public boolean isFirstTab() {
@@ -1544,12 +1555,16 @@ public class FilterTabsView extends FrameLayout {
         if (!tabs.isEmpty()) {
             final int width = MeasureSpec.getSize(widthMeasureSpec) - listViewPaddingH * 2;
             Tab firstTab = findDefaultTab();
-            if (firstTab != null) {
+            int tabWidth = 0;
+            int trueTabsWidth = allTabsWidth;
+            if (showAllChatsTab && firstTab != null) {
                 firstTab.setTitle(LocaleController.getString(R.string.FilterAllChats), null, false);
-                int tabWidth = firstTab.getWidth(false);
+                tabWidth = firstTab.getWidth(false);
                 firstTab.setTitle(allTabsWidth > width ? LocaleController.getString(R.string.FilterAllChatsShort) : LocaleController.getString(R.string.FilterAllChats), null, false);
-                int trueTabsWidth = allTabsWidth - tabWidth;
+                trueTabsWidth = allTabsWidth - tabWidth;
                 trueTabsWidth += firstTab.getWidth(false);
+            }
+            if (firstTab != null) {
                 int prevWidth = additionalTabWidth;
                 additionalTabWidth = trueTabsWidth < width ? (width - trueTabsWidth) / tabs.size() : 0;
                 if (prevWidth != additionalTabWidth) {
@@ -1716,7 +1731,9 @@ public class FilterTabsView extends FrameLayout {
                 invalidated = true;
                 requestLayout();
                 allTabsWidth = 0;
-                findDefaultTab().setTitle(LocaleController.getString(R.string.FilterAllChats), null, false);
+                if (showAllChatsTab) {
+                    findDefaultTab().setTitle(LocaleController.getString(R.string.FilterAllChats), null, false);
+                }
                 for (int b = 0; b < N; b++) {
                     allTabsWidth += tabs.get(b).getWidth(true) + dp(TAB_PADDING_WIDTH);
                 }
@@ -1747,7 +1764,9 @@ public class FilterTabsView extends FrameLayout {
             listView.setItemAnimator(itemAnimator);
             adapter.notifyDataSetChanged();
             allTabsWidth = 0;
-            findDefaultTab().setTitle(LocaleController.getString(R.string.FilterAllChats), null, false);
+            if (showAllChatsTab) {
+                findDefaultTab().setTitle(LocaleController.getString(R.string.FilterAllChats), null, false);
+            }
             for (int b = 0, N = tabs.size(); b < N; b++) {
                 allTabsWidth += tabs.get(b).getWidth(true) + dp(TAB_PADDING_WIDTH);
             }
@@ -1802,6 +1821,11 @@ public class FilterTabsView extends FrameLayout {
             int idx1 = fromIndex;
             int idx2 = toIndex;
             int count = tabs.size();
+            if (!showAllChatsTab) {
+                idx1++;
+                idx2++;
+                count++;
+            }
             if (idx1 < 0 || idx2 < 0 || idx1 >= count || idx2 >= count) {
                 return;
             }
@@ -2016,6 +2040,27 @@ public class FilterTabsView extends FrameLayout {
 
     protected void onDefaultTabMoved() {
 
+    }
+
+    // [MG] hide all chats tab
+    public boolean showAllChatsTab = !UserConfig.getInstance(UserConfig.selectedAccount).hideAllTab;
+
+    public void toggleAllTabs(boolean show) {
+        if (show == showAllChatsTab) return;
+        showAllChatsTab = show;
+        ArrayList<MessagesController.DialogFilter> filters = AccountInstance.getInstance(UserConfig.selectedAccount).getMessagesController().dialogFilters;
+        removeTabs();
+        for (int a = 0, N = filters.size(); a < N; a++) {
+            MessagesController.DialogFilter dialogFilter = filters.get(a);
+            if (dialogFilter.isDefault()) {
+                if (showAllChatsTab) {
+                    addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), false, true, false);
+                }
+            } else {
+                addTab(a, dialogFilter.localId, dialogFilter.name, false, false, false);
+            }
+        }
+        finishAddingTabs(true);
     }
 
 }

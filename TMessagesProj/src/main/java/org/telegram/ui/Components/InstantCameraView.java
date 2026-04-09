@@ -144,7 +144,7 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
     private ImageView muteImageView;
     private float progress;
     private CameraInfo selectedCamera;
-    private boolean isFrontface = true;
+    private boolean isFrontface = !UserConfig.getInstance(UserConfig.selectedAccount).rearRoundCamera;
     private volatile boolean cameraReady;
     private AnimatorSet muteAnimation;
     private TLRPC.InputFile file;
@@ -183,7 +183,7 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
     private Size aspectRatio = SharedConfig.roundCamera16to9 ? new Size(16, 9) : new Size(4, 3);
     private TextureView textureView;
     private BackupImageView textureOverlayView;
-    private final boolean useCamera2 = SharedConfig.isUsingCamera2(currentAccount);
+    private final boolean useCamera2 = SharedConfig.isUsingCamera2(currentAccount) && !UserConfig.getInstance(currentAccount).rearRoundCamera;
     private CameraSession cameraSession;
     private boolean bothCameras;
     private Camera2Session[] camera2Sessions = new Camera2Session[2];
@@ -732,7 +732,7 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
         selectedCamera = null;
         if (!fromPaused) {
             if (!useCamera2) {
-                isFrontface = true;
+                isFrontface = !UserConfig.getInstance(currentAccount).rearRoundCamera;
             }
             updateFlash();
             recordedTime = 0;

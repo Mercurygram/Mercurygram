@@ -159,6 +159,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int raiseToListenRow;
     private int nextMediaTapRow;
     private int sendByEnterRow;
+    private int hideChatKeyboardRow;
     private int saveToGalleryOption1Row;
     private int saveToGalleryOption2Row;
     private int saveToGallerySectionRow;
@@ -225,6 +226,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     @Keep
     private int stickersRow;
     private int sendLargePhotosRow;
+    private int rearRoundVideosRow;
+    private int hideAllTabRow;
     private int stickersInfoRow;
     private int stickersSectionRow, mediaSoundSectionRow, otherSectionRow;
     private int mediaSoundHeaderRow, otherHeaderRow;
@@ -571,6 +574,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         pauseOnMediaRow = -1;
         stickersRow = -1;
         sendLargePhotosRow = -1;
+        rearRoundVideosRow = -1;
+        hideAllTabRow = -1;
         stickersInfoRow = -1;
         stickersSectionRow = -1;
         mediaSoundHeaderRow = -1;
@@ -591,6 +596,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         raiseToListenRow = -1;
         nextMediaTapRow = -1;
         sendByEnterRow = -1;
+        hideChatKeyboardRow = -1;
         saveToGalleryOption1Row = -1;
         saveToGalleryOption2Row = -1;
         saveToGallerySectionRow = -1;
@@ -705,7 +711,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 sensitiveContentRow = rowCount++;
             }
             sendByEnterRow = rowCount++;
+            hideChatKeyboardRow = rowCount++;
             sendLargePhotosRow = rowCount++;
+            rearRoundVideosRow = rowCount++;
+            hideAllTabRow = rowCount++;
             distanceRow = rowCount++;
             otherSectionRow = rowCount++;
         } else {
@@ -1123,12 +1132,33 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(!send);
                 }
+            } else if (position == hideChatKeyboardRow) {
+                SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+                boolean hide = preferences.getBoolean("hide_chat_keyboard", false);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean("hide_chat_keyboard", !hide);
+                editor.commit();
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(!hide);
+                }
             } else if (position == sendLargePhotosRow) {
                 getUserConfig().sendLargePhotos = !getUserConfig().sendLargePhotos;
                 AndroidUtilities.photoSize = null; // clear cache so getPhotoSize() re-evaluates
                 getUserConfig().saveConfig(false);
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(getUserConfig().sendLargePhotos);
+                }
+            } else if (position == rearRoundVideosRow) {
+                getUserConfig().rearRoundCamera = !getUserConfig().rearRoundCamera;
+                getUserConfig().saveConfig(false);
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(getUserConfig().rearRoundCamera);
+                }
+            } else if (position == hideAllTabRow) {
+                getUserConfig().hideAllTab = !getUserConfig().hideAllTab;
+                getUserConfig().saveConfig(false);
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(getUserConfig().hideAllTab);
                 }
             } else if (position == raiseToSpeakRow) {
                 SharedConfig.toggleRaiseToSpeak();
@@ -2607,8 +2637,15 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == sendByEnterRow) {
                         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                         textCheckCell.setTextAndCheck(getString("SendByEnter", R.string.SendByEnter), preferences.getBoolean("send_by_enter", false), true);
+                    } else if (position == hideChatKeyboardRow) {
+                        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+                        textCheckCell.setTextAndCheck(getString(R.string.HideChatKeyboard), preferences.getBoolean("hide_chat_keyboard", false), true);
                     } else if (position == sendLargePhotosRow) {
                         textCheckCell.setTextAndCheck(getString(R.string.SendLargePhotos), getUserConfig().sendLargePhotos, true);
+                    } else if (position == rearRoundVideosRow) {
+                        textCheckCell.setTextAndCheck(getString(R.string.RearRoundVideos), getUserConfig().rearRoundCamera, true);
+                    } else if (position == hideAllTabRow) {
+                        textCheckCell.setTextAndValueAndCheck(getString(R.string.HideAllTab), getString(R.string.HideAllTabAbout), getUserConfig().hideAllTab, false, true);
                     } else if (position == raiseToSpeakRow) {
                         textCheckCell.setTextAndValueAndCheck(getString("RaiseToSpeak", R.string.RaiseToSpeak), getString("RaiseToSpeakInfo", R.string.RaiseToSpeakInfo), SharedConfig.raiseToSpeak, true, true);
                     } else if (position == raiseToListenRow) {
@@ -2756,10 +2793,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 return TYPE_HEADER;
             } else if (position == automaticBrightnessRow) {
                 return TYPE_BRIGHTNESS;
-            } else if (position == scheduleLocationRow || position == sendByEnterRow ||
+            } else if (position == scheduleLocationRow || position == sendByEnterRow || position == hideChatKeyboardRow ||
                     position == raiseToSpeakRow || position == raiseToListenRow || position == pauseOnRecordRow ||
                     position == directShareRow || position == chatBlurRow || position == pauseOnMediaRow || position == nextMediaTapRow || position == sensitiveContentRow ||
-                    position == sendLargePhotosRow) {
+                    position == sendLargePhotosRow || position == rearRoundVideosRow || position == hideAllTabRow) {
                 return TYPE_TEXT_CHECK;
             } else if (position == textSizeRow) {
                 return TYPE_TEXT_SIZE;
