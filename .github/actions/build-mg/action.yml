@@ -1,0 +1,205 @@
+name: Build Mercurygram APK
+description: >-
+  Composite action that prepares the JDK + NDK + build-tools, writes API_KEYS
+  and the signing keystore, runs a single gradle assemble task, and renames the
+  output APK. Shared by release.yml, beta.yml, and prerelease.yml so all three
+  pipelines produce byte-identical artifacts.
+
+inputs:
+  flavor:
+    description: 'Gradle product flavor (e.g. afatFdArm64).'
+    required: true
+  task:
+    description: 'Gradle task to run (e.g. assembleAfatFdArm64Release).'
+    required: true
+  abi:
+    description: 'ABI suffix for the output APK name (e.g. arm64-v8a).'
+    required: true
+  build-type:
+    description: 'release or debug — selects the output directory.'
+    required: true
+  artifact-version:
+    description: 'Version string for the renamed APK filename (Mercurygram-<ver>-<abi>.apk).'
+    required: true
+  name-infix:
+    description: 'Optional infix between "Mercurygram-" and the version (e.g. "-debug" for the beta debug variant). Empty by default.'
+    required: false
+    default: ''
+  beta-version-code:
+    description: 'Optional MG_BETA_VERSION_CODE override (beta workflow only).'
+    required: false
+    default: ''
+  beta-version-name:
+    description: 'Optional MG_BETA_VERSION_NAME override (beta workflow only).'
+    required: false
+    default: ''
+  build-tag:
+    description: 'MG_BUILD_TAG (real GitHub tag baked into versionName/versionCode by gradle/mg-version.gradle). Required for every build path — the gradle build fails at configure if MG_BUILD_TAG is absent (no git-describe fallback). CI passes it explicitly; release.sh requires it as $1; the F-Droid recipe writes it via a prebuild step added by .github/scripts/fdroid_sync.py.'
+    required: true
+  app-id:
+    description: 'Telegram APP_ID (from secrets).'
+    required: true
+  app-hash:
+    description: 'Telegram APP_HASH (from secrets).'
+    required: true
+  release-keystore-b64:
+    description: 'Base64-encoded release keystore (from secrets).'
+    required: true
+  release-keystore-password:
+    description: 'Keystore password (from secrets).'
+    required: true
+  release-key-alias:
+    description: 'Key alias (from secrets).'
+    required: true
+  release-key-password:
+    description: 'Key password (from secrets).'
+    required: true
+
+outputs:
+  apk_path:
+    description: 'Path to the renamed signed APK.'
+    value: ${{ steps.rename.outputs.apk_path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Install host build tools
+      shell: bash
+      run: |
+        # nasm is needed by dav1d's x86/x86_64 SIMD assembly (meson errors out
+        # otherwise — ARM builds don't hit this path). cmake is queried by the
+        # jni-cache-fingerprint composite (host pkg version drift detection)
+        # and is NOT pre-installed on ubuntu-24.04 despite older comments —
+        # missing it → "dpkg-query: no packages found matching cmake" → step 1.
+        sudo apt-get install -y --no-install-recommends gperf meson libuv1-dev nasm cmake
+
+    - name: Parse NDK and build-tools versions from gradle
+      shell: bash
+      # Source the versions from TMessagesProj/build.gradle so upstream
+      # rebases that bump ndkVersion / buildToolsVersion don't require a
+      # parallel CI edit. Same approach as scripts/check-reproducibility.sh
+      # and .github/scripts/fdroid_sync.py.
+      run: |
+        gradle_file=TMessagesProj/build.gradle
+        ndk=$(grep -oE 'ndkVersion[[:space:]]+"[0-9.]+"' "$gradle_file" | grep -oE '[0-9.]+')
+        bt=$(grep -oE "buildToolsVersion[[:space:]]+'[0-9.]+'" "$gradle_file" | grep -oE '[0-9.]+')
+        [ -n "$ndk" ] && [ -n "$bt" ] || { echo "could not parse versions from $gradle_file" >&2; exit 1; }
+        echo "NDK_VERSION=$ndk          BUILD_TOOLS_VERSION=$bt"
+        echo "NDK_VERSION=$ndk"          >> "$GITHUB_ENV"
+        echo "BUILD_TOOLS_VERSION=$bt"   >> "$GITHUB_ENV"
+
+    - name: Ensure NDK and build-tools installed
+      # Sentinel check + sdkmanager-with-retry fallback. ubuntu-24.04 already
+      # ships ndk;27.2.12479018 + build-tools;35.0.0, so this is a no-op on
+      # the current pin. Falls through to sdkmanager (with cleanup-retry for
+      # the occasional corrupt-zip from dl.google.com) only when an upstream
+      # rebase bumps to a version the runner image hasn't picked up yet.
+      shell: bash
+      run: |
+        set -euo pipefail
+        ndk_dir="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}"
+        bt_dir="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
+        if [ -f "$ndk_dir/source.properties" ] && [ -d "$bt_dir" ]; then
+          echo "ndk + build-tools already present (runner image)"
+          exit 0
+        fi
+        echo "missing — installing via sdkmanager"
+        ok=0
+        for i in 1 2 3; do
+          if "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+              "ndk;${NDK_VERSION}" "build-tools;${BUILD_TOOLS_VERSION}"; then
+            ok=1
+            break
+          fi
+          echo "sdkmanager attempt $i failed; cleaning partial state and retrying" >&2
+          rm -rf "$ndk_dir" "$bt_dir"
+          sleep $((i * 10))
+        done
+        [ "$ok" = 1 ] || { echo "sdkmanager exhausted retries" >&2; exit 1; }
+
+    - name: Compute JNI cache fingerprint
+      uses: ./.github/actions/jni-cache-fingerprint
+
+    - name: Restore JNI native build outputs (${{ inputs.abi }})
+      # restore-only: the _prewarm-native reusable workflow is the
+      # authoritative writer for this key. On cache hit, every build_*.sh
+      # sentinel-skips (.a + .ndk-${NDK_VERSION}) and the assemble task
+      # completes without rebuilding natives. On miss, gradle rebuilds
+      # them inline — graceful degradation.
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          TMessagesProj/jni/boringssl/build/${{ inputs.abi }}
+          TMessagesProj/jni/ffmpeg/${{ inputs.abi }}
+          TMessagesProj/jni/ffmpeg/include
+          TMessagesProj/jni/ffmpeg/.ndk-${{ env.NDK_VERSION }}-${{ inputs.abi }}
+          TMessagesProj/jni/td/build/${{ inputs.abi }}
+          TMessagesProj/jni/td/td/generate/auto
+          TMessagesProj/jni/td/tdutils/generate/auto
+        key: jni-native-${{ runner.os }}-${{ inputs.abi }}-ndk${{ env.NDK_VERSION }}-${{ hashFiles('.jni-cache-fingerprint') }}
+
+    - name: Create API_KEYS
+      shell: bash
+      env:
+        APP_ID: ${{ inputs.app-id }}
+        APP_HASH: ${{ inputs.app-hash }}
+      run: printf 'APP_ID = %s\nAPP_HASH = %s\n' "$APP_ID" "$APP_HASH" > API_KEYS
+
+    - name: Setup signing
+      shell: bash
+      env:
+        KEYSTORE_B64: ${{ inputs.release-keystore-b64 }}
+      run: echo "$KEYSTORE_B64" | base64 -d > TMessagesProj/config/release.keystore
+
+    - name: Build APK
+      shell: bash
+      env:
+        KS_PASS: ${{ inputs.release-keystore-password }}
+        KS_KEY_ALIAS: ${{ inputs.release-key-alias }}
+        KS_KEY_PASS: ${{ inputs.release-key-password }}
+        BETA_VC: ${{ inputs.beta-version-code }}
+        BETA_VN: ${{ inputs.beta-version-name }}
+        BUILD_TAG: ${{ inputs.build-tag }}
+      run: |
+        set -euo pipefail
+        EXTRA=()
+        if [ -n "$BETA_VC" ]; then
+            EXTRA+=("-PMG_BETA_VERSION_CODE=$BETA_VC")
+        fi
+        if [ -n "$BETA_VN" ]; then
+            EXTRA+=("-PMG_BETA_VERSION_NAME=$BETA_VN")
+        fi
+        if [ -n "$BUILD_TAG" ]; then
+            EXTRA+=("-PMG_BUILD_TAG=$BUILD_TAG")
+        fi
+        echo "Task:       ${{ inputs.task }}"
+        echo "Flavor:     ${{ inputs.flavor }}"
+        echo "Build type: ${{ inputs.build-type }}"
+        echo "ABI:        ${{ inputs.abi }}"
+        echo "Overrides:  ${EXTRA[*]:-(none)}"
+        ./gradlew "${{ inputs.task }}" \
+            -PRELEASE_STORE_PASSWORD="$KS_PASS" \
+            -PRELEASE_KEY_PASSWORD="$KS_KEY_PASS" \
+            -PRELEASE_KEY_ALIAS="$KS_KEY_ALIAS" \
+            "${EXTRA[@]}" \
+            --no-daemon
+
+    - name: Rename artifact
+      id: rename
+      shell: bash
+      run: |
+        set -euo pipefail
+        APK_DIR=TMessagesProj_App/build/outputs/apk/${{ inputs.flavor }}/${{ inputs.build-type }}
+        DEST="$APK_DIR/Mercurygram${{ inputs.name-infix }}-${{ inputs.artifact-version }}-${{ inputs.abi }}.apk"
+        cp "$APK_DIR/${{ inputs.flavor }}.apk" "$DEST"
+        echo "APK: ${DEST}"
+        echo "Size: $(du -h "$DEST" | cut -f1) ($(stat -c%s "$DEST") bytes)"
+        echo "SHA256: $(sha256sum "$DEST" | cut -d' ' -f1)"
+        echo "apk_path=${DEST}" >> "$GITHUB_OUTPUT"
