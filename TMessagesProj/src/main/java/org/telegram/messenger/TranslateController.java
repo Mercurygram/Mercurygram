@@ -90,19 +90,15 @@ public class TranslateController extends BaseController {
         AndroidUtilities.runOnUIThread(this::loadTranslatingDialogsCached, 150);
     }
 
+    // Mercurygram: Premium is a Telegram monetization gate, not a technical
+    // requirement. Unlocked so the chat-translate bar and dialog
+    // translatability surface for every user.
     public boolean isFeatureAvailable() {
-        return isChatTranslateEnabled() && UserConfig.getInstance(currentAccount).isPremium();
+        return isChatTranslateEnabled();
     }
 
     public boolean isFeatureAvailable(long dialogId) {
-        if (!isChatTranslateEnabled()) {
-            return false;
-        }
-        final TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-        return (
-            UserConfig.getInstance(currentAccount).isPremium() ||
-            chat != null && chat.autotranslation
-        );
+        return isChatTranslateEnabled();
     }
 
     private Boolean chatTranslateEnabled;
@@ -1943,14 +1939,12 @@ public class TranslateController extends BaseController {
     }
 
     private boolean isLanguageRestricted(String lng) {
-        if (getUserConfig().isPremium()) {
-            return RestrictedLanguagesSelectActivity.getRestrictedLanguages().contains(lng);
-        }
-        try {
-            return TextUtils.equals(LocaleController.getInstance().getCurrentLocaleInfo().pluralLangCode, lng);
-        } catch (Exception ignore) {
-            return false;
-        }
+        // Mercurygram: Premium is a Telegram monetization gate, not a technical
+        // requirement. The per-language "Do Not Translate" list is enforced for
+        // everyone. The list is local (translate_button_restricted_languages) and
+        // its default already contains the device locale, so non-premium behavior
+        // is preserved when the user hasn't added anything.
+        return RestrictedLanguagesSelectActivity.getRestrictedLanguages().contains(lng);
     }
 
     private void loadTranslatingDialogsCached() {
