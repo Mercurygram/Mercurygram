@@ -10,4 +10,5 @@
     <string name="UnifiedPushGateway">URL шлюзу</string>
     <string name="UnifiedPushGatewayInfo">Префікс URL для шлюзу UnifiedPush</string>
     <string name="NotSet">Не встановлено</string>
+    <string name="SendLargePhotos">Надсилати фото більшого розміру (2560px)</string>
 </resources>
