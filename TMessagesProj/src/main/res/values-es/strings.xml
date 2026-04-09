@@ -1314,4 +1314,27 @@
     <string name="RemindDayYearAt">\'Recordar el\' d \'de\' MMM \'de\' yyyy \'a las\' HH:mm</string>
     <string name="BotsMenuTitle">Menu</string>
     <string name="Understood">👍 Entendido</string>
+    <string name="MercurygramSettings">Mercurygram</string>
+    <string name="MercurygramSettingsInfo">Funciones específicas de Mercurygram</string>
+    <string name="MercurygramSettingsGeneral">General</string>
+    <string name="MercurygramSettingsMedia">Multimedia</string>
+    <string name="MercurygramSettingsUpdates">Actualizaciones</string>
+    <string name="MercurygramSettingsNotifications">Notificaciones</string>
+    <string name="MercurygramMessageDetailsMenu">Mostrar \"Detalles del mensaje\"</string>
+    <string name="MercurygramDisableAutoUpdate">Desactivar actualizador interno</string>
+    <string name="MercurygramDisableAutoUpdateAbout">Mercurygram dejará de comprobar actualizaciones en GitHub al iniciar. Aún puedes iniciar una comprobación manual con el botón de abajo.</string>
+    <string name="MercurygramAcceptPreReleaseUpdates">Aceptar actualizaciones de pre-lanzamiento</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesAbout">Recibe compilaciones de pre-lanzamiento de 5 puntos (por ejemplo, 12.6.4.4.42) mediante el actualizador interno. Son capturas de desarrollo entre versiones estables; pueden contener fallos, funciones parcialmente operativas u otras regresiones. Puedes desactivar esta opción más tarde para volver a la versión estable (de 4 puntos) correspondiente.</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningTitle">¿Activar actualizaciones de pre-lanzamiento?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningMessage">Las compilaciones de pre-lanzamiento de Mercurygram (de 5 puntos, como 12.6.4.4.42) son capturas de desarrollo entre versiones estables. Pueden contener fallos no descubiertos, funciones parcialmente operativas u otras regresiones. Puedes desactivar esta opción más tarde para volver a la versión estable (de 4 puntos) correspondiente. ¿Continuar?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesEnable">Activar</string>
+    <string name="MercurygramPreReleaseBadge">Versión preliminar</string>
+    <string name="MercurygramCheckForUpdatesNow">Buscar actualizaciones ahora</string>
+    <string name="MercurygramCheckForUpdatesLastChecked">Última comprobación: %1$s</string>
+    <string name="MercurygramCheckForUpdatesNever">Nunca</string>
+    <string name="MercurygramCheckForUpdatesToast">Buscando actualizaciones…</string>
+    <string name="MercurygramDisableUnifiedPush">Desactivar UnifiedPush</string>
+    <string name="MercurygramDisableUnifiedPushAbout">Cuando está desactivado, Mercurygram vuelve al sondeo de nuevos mensajes. La aplicación se reiniciará para aplicar el cambio.</string>
+    <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram debe reiniciarse para aplicar este cambio. ¿Continuar?</string>
+    <string name="MercurygramRestart">Reiniciar</string>
 </resources>

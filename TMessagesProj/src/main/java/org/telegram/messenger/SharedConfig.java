@@ -168,6 +168,22 @@ public class SharedConfig {
                 .commit();
     }
 
+    public static void toggleDisableAutoUpdate() {
+        disableAutoUpdate = !disableAutoUpdate;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_disableAutoUpdate", disableAutoUpdate)
+                .apply();
+    }
+
+    public static void toggleAcceptPreReleaseUpdates() {
+        acceptPreReleaseUpdates = !acceptPreReleaseUpdates;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_acceptPreReleaseUpdates", acceptPreReleaseUpdates)
+                .apply();
+    }
+
     public static void setUnifiedPushGateway(String gateway) {
         unifiedPushGateway = gateway;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
@@ -314,6 +330,8 @@ public class SharedConfig {
     // Mercurygram: UI settings
     public static boolean disableSecureFlags = false;
     public static boolean removeAdsAndProxySponsor = false;
+    public static boolean disableAutoUpdate = false;
+    public static boolean acceptPreReleaseUpdates = false;
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -436,6 +454,11 @@ public class SharedConfig {
     public static TLRPC.TL_help_appUpdate pendingAppUpdate;
     public static int pendingAppUpdateBuildVersion;
     public static long lastUpdateCheckTime;
+
+    public static String mgPendingUpdate = null;
+    public static long mgLastUpdateCheckTime;
+    public static String mgUpdateApkPath = null;
+    public static String mgDismissedPendingTag = null;
 
     public static boolean hasEmailLogin;
 
@@ -600,9 +623,27 @@ public class SharedConfig {
                 editor.putString("mg_unifiedPushGateway2", unifiedPushGateway);
                 editor.putBoolean("mg_disableSecureFlags", disableSecureFlags);
                 editor.putBoolean("mg_removeAdsAndProxySponsor", removeAdsAndProxySponsor);
+                editor.putBoolean("mg_disableAutoUpdate", disableAutoUpdate);
+                editor.putBoolean("mg_acceptPreReleaseUpdates", acceptPreReleaseUpdates);
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
+                if (mgPendingUpdate != null) {
+                    editor.putString("mg_pendingUpdate", mgPendingUpdate);
+                } else {
+                    editor.remove("mg_pendingUpdate");
+                }
+                editor.putLong("mg_lastUpdateCheckTime", mgLastUpdateCheckTime);
+                if (mgUpdateApkPath != null) {
+                    editor.putString("mg_updateApkPath", mgUpdateApkPath);
+                } else {
+                    editor.remove("mg_updateApkPath");
+                }
+                if (mgDismissedPendingTag != null) {
+                    editor.putString("mg_dismissedPendingTag", mgDismissedPendingTag);
+                } else {
+                    editor.remove("mg_dismissedPendingTag");
+                }
                 editor.putString("mg_unifiedPushEndpointUrl", unifiedPushEndpointUrl);
                 editor.apply();
             } catch (Exception e) {
@@ -802,6 +843,8 @@ public class SharedConfig {
             unifiedPushGateway = preferences.getString("mg_unifiedPushGateway2", unifiedPushGateway);
             disableSecureFlags = preferences.getBoolean("mg_disableSecureFlags", false);
             removeAdsAndProxySponsor = preferences.getBoolean("mg_removeAdsAndProxySponsor", false);
+            disableAutoUpdate = preferences.getBoolean("mg_disableAutoUpdate", false);
+            acceptPreReleaseUpdates = preferences.getBoolean("mg_acceptPreReleaseUpdates", false);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
             String wpPub = preferences.getString("mg_webPushPublicKey", "");
@@ -809,6 +852,21 @@ public class SharedConfig {
             String wpAuth = preferences.getString("mg_webPushAuthSecret", "");
             if (!TextUtils.isEmpty(wpAuth)) webPushAuthSecret = Base64.decode(wpAuth, Base64.DEFAULT);
             unifiedPushEndpointUrl = preferences.getString("mg_unifiedPushEndpointUrl", "");
+            mgPendingUpdate = preferences.getString("mg_pendingUpdate", null);
+            mgLastUpdateCheckTime = preferences.getLong("mg_lastUpdateCheckTime", 0);
+            mgUpdateApkPath = preferences.getString("mg_updateApkPath", null);
+            mgDismissedPendingTag = preferences.getString("mg_dismissedPendingTag", null);
+            if (mgPendingUpdate != null) {
+                try {
+                    it.belloworld.mercurygram.MgUpdateInfo info = it.belloworld.mercurygram.MgUpdateInfo.fromJson(mgPendingUpdate);
+                    if (info != null) {
+                        String currentVersion = it.belloworld.mercurygram.MgUpdateChecker.currentInstallVersion();
+                        if (currentVersion != null && versionBiggerOrEqual(currentVersion, info.versionName)) {
+                            clearMgPendingUpdate();
+                        }
+                    }
+                } catch (Exception ignore) {}
+            }
 
             loadDebugConfig(preferences);
 
@@ -941,18 +999,63 @@ public class SharedConfig {
         return true;
     }
 
-    // returns a >= b
+    public static boolean isMgUpdateAvailable() {
+        return mgPendingUpdate != null && !it.belloworld.mercurygram.MgUpdateChecker.isFdroidBuild();
+    }
+
+    public static it.belloworld.mercurygram.MgUpdateInfo getMgPendingUpdate() {
+        return it.belloworld.mercurygram.MgUpdateInfo.fromJson(mgPendingUpdate);
+    }
+
+    public static void setMgPendingUpdate(it.belloworld.mercurygram.MgUpdateInfo info) {
+        if (info == null) {
+            clearMgPendingUpdate();
+            return;
+        }
+        // Tag change → the previously downloaded APK is stale; drop it so
+        // the next download replaces it cleanly instead of the side-menu
+        // "Install" shortcut firing the old cached APK from disk.
+        it.belloworld.mercurygram.MgUpdateInfo prev = getMgPendingUpdate();
+        if (prev != null && !info.tagName.equals(prev.tagName)) {
+            deleteCachedUpdateApk();
+        }
+        mgPendingUpdate = info.toJson();
+        // A different tag arrived — the user must be re-prompted.
+        if (!info.tagName.equals(mgDismissedPendingTag)) {
+            mgDismissedPendingTag = null;
+        }
+        saveConfig();
+    }
+
+    public static void setMgDismissedPendingTag(String tag) {
+        mgDismissedPendingTag = tag;
+        saveConfig();
+    }
+
+    public static void clearMgPendingUpdate() {
+        deleteCachedUpdateApk();
+        mgPendingUpdate = null;
+        mgDismissedPendingTag = null;
+        saveConfig();
+    }
+
+    private static void deleteCachedUpdateApk() {
+        if (mgUpdateApkPath != null) {
+            try { new java.io.File(mgUpdateApkPath).delete(); } catch (Exception ignore) {}
+            mgUpdateApkPath = null;
+        }
+    }
+
+    // returns a >= b. Missing trailing parts are treated as 0 so
+    // "12.7.3.0" < "12.7.3.0.1" and "12.7.3.0" == "12.7.3.0.0".
     public static boolean versionBiggerOrEqual(String a, String b) {
         String[] partsA = a.split("\\.");
         String[] partsB = b.split("\\.");
-        for (int i = 0; i < Math.min(partsA.length, partsB.length); ++i) {
-            int numA = Integer.parseInt(partsA[i]);
-            int numB = Integer.parseInt(partsB[i]);
-            if (numA < numB) {
-                return false;
-            } else if (numA > numB) {
-                return true;
-            }
+        int len = Math.max(partsA.length, partsB.length);
+        for (int i = 0; i < len; i++) {
+            int numA = i < partsA.length ? Integer.parseInt(partsA[i]) : 0;
+            int numB = i < partsB.length ? Integer.parseInt(partsB[i]) : 0;
+            if (numA != numB) return numA > numB;
         }
         return true;
     }

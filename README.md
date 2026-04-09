@@ -187,7 +187,7 @@ Tag shape encodes the release channel (see the [Install](#install) section for t
 
 Pure lex compare on the dotted integer vector (shorter padded with zero) gives the right chronology: `12.7.3.0.5 < 12.7.3.1 < 12.7.3.1.42 < 12.7.3.2`.
 
-`MgUpdateChecker` records the tag the in-app updater last installed in `SharedConfig.mgLastInstalledTag` and uses that for comparisons — runtime `versionName`/`versionCode` alone can't distinguish a 5-part snapshot from the stable it's a snapshot of.
+`MgUpdateChecker` reads the GitHub tag from `PackageInfo.versionName` — the manifest carries the tag verbatim (see `gradle/mg-version.gradle`), so the canonical tag is available for every install path (in-app updater, sideload, F-Droid).
 
 ## API, Protocol documentation
 

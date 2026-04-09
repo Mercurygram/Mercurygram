@@ -1,30 +1,32 @@
 # org.telegram.messenger — App Architecture
 
-## MG feature flags (SharedConfig.java, ~line 238)
+## MG feature flags (SharedConfig.java)
 
-All MG-specific settings use the `mg_` prefix in SharedPreferences:
+All MG-specific settings use the `mg_` prefix in SharedPreferences. User-toggleable settings live in `MercurygramSettingsActivity` (Settings → Mercurygram); two advanced toggles remain in the debug menu.
 
-| Field | Default | Pref key | What it does |
-|---|---|---|---|
-| `disableUnifiedPush` | false | `mg_disableUnifiedPush` | Disables UnifiedPush entirely, falls back to polling |
-| `unifiedPushGateway` | `"https://p2p.belloworld.it/"` | `mg_unifiedPushGateway2` | Base URL of the WebPush gateway |
-| `unifiedPushEndpointUrl` | `""` | `mg_unifiedPushEndpointUrl` | Raw UP distributor endpoint, saved on `onNewEndpoint()` |
-| `pushStringSimple` | `""` | `mg_pushStringSimple` | type-4 Simple Push token URL (secret chat wake-ups) |
-| `messageDetailsMenu` | false | `mg_messageDetailsMenu` | Adds "Message Details" item to long-press message menu |
-| `disableSecureFlags` | false | `mg_disableSecureFlags` | Removes `FLAG_SECURE` from windows — allows screenshots and shows app content in recents |
-| `removeAdsAndProxySponsor` | false | `mg_removeAdsAndProxySponsor` | Hides sponsored messages and proxy sponsor banners |
-| `useRearRoundVideos` | false | `mg_useRearRoundVideos` | Uses rear-facing camera by default for round video messages |
-| `hideKeyboardOnScroll` | false | `mg_hideKeyboardOnScroll` | Hides soft keyboard when scrolling up in a chat |
-| `hideAllTab` | false | `mg_hideAllTab` | Hides the "All" tab from the chat list filter bar |
-| `sendLargePhotos` | false | `mg_sendLargePhotos` | Sends photos at original resolution instead of compressed (bypasses the 1280px resize) |
+| Field | Default | Pref key | What it does | Exposed in |
+|---|---|---|---|---|
+| `disableUnifiedPush` | false | `mg_disableUnifiedPush` | Disables UnifiedPush entirely, falls back to polling | MG settings (Notifications) |
+| `unifiedPushGateway` | `"https://p2p.belloworld.it/"` | `mg_unifiedPushGateway2` | Base URL of the WebPush gateway | MG settings (Notifications) |
+| `unifiedPushEndpointUrl` | `""` | `mg_unifiedPushEndpointUrl` | Raw UP distributor endpoint, saved on `onNewEndpoint()` | internal |
+| `pushStringSimple` | `""` | `mg_pushStringSimple` | type-4 Simple Push token URL (secret chat wake-ups) | internal |
+| `messageDetailsMenu` | false | `mg_messageDetailsMenu` | Adds "Message Details" item to long-press message menu | MG settings (General) |
+| `disableSecureFlags` | false | `mg_disableSecureFlags` | Removes `FLAG_SECURE` from windows — allows screenshots and shows app content in recents | debug menu |
+| `removeAdsAndProxySponsor` | false | `mg_removeAdsAndProxySponsor` | Hides sponsored messages and proxy sponsor banners | debug menu |
+| `disableAutoUpdate` | false | `mg_disableAutoUpdate` | Skips the GitHub update check at startup. Forced/manual checks (debug menu) still run. Auto-hidden on F-Droid builds. | MG settings (Updates) |
+| `acceptPreReleaseUpdates` | false | `mg_acceptPreReleaseUpdates` | Stable-channel opt-in for 5-dotted pre-release updates. When set (or when `PackageInfo.versionName` is already a 5-dotted tag), `MgUpdateChecker` queries `/releases` instead of `/releases/latest`. Enabling shows a warning dialog; the row is locked on (greyed) while the install is on a 5-dotted tag. Hidden on the `.beta` package and on F-Droid builds. | MG settings (Updates) |
+| `mgDismissedPendingTag` | null | `mg_dismissedPendingTag` | Last pending tag the user dismissed via "Remind me later" / tap-outside on `MgUpdateAlertDialog`. While this matches the current pending tag, `MgUpdateChecker.checkInternal` suppresses re-showing the bottom sheet (the side-menu strip still tracks the pending). Auto-cleared by `setMgPendingUpdate` whenever a strictly different tag arrives, so the next genuine bump pops the dialog again. | internal |
+
+Per-account settings (UserConfig, not SharedConfig): `sendLargePhotos`, `rearRoundCamera`, `hideAllTab`. Chat-keyboard-on-scroll uses the `hide_chat_keyboard` key in `MessagesController.getGlobalMainSettings()`. All exposed in MG settings.
 
 ## Debug menu (ProfileActivity.java)
 
-Long-press on version in Profile → debug items array. MG items at indices 39–42:
-- 39: Message Details menu toggle
-- 40: UnifiedPush disable toggle
-- 41: Secure Flags disable toggle
-- 42: Remove Ads & Proxy Sponsor toggle
+Long-press on version in Profile → debug items array. MG items at indices 39–41:
+- 39: Secure Flags disable toggle
+- 40: Remove Ads & Proxy Sponsor toggle
+- 41: Force-check for Mercurygram update (also bypasses `mg_disableAutoUpdate`)
+
+`SettingsActivity.java` carries the same two toggles at indices 42–43.
 
 ## UnifiedPush
 
