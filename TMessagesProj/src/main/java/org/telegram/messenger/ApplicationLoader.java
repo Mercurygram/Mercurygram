@@ -32,8 +32,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import org.json.JSONObject;
 import org.telegram.messenger.voip.VideoCapturerDevice;
@@ -91,7 +89,7 @@ public class ApplicationLoader extends Application {
     }
 
     protected ILocationServiceProvider onCreateLocationServiceProvider() {
-        return new GoogleLocationProvider();
+        return new AndroidLocationProvider();
     }
 
     public static IMapsProvider getMapsProvider() {
@@ -113,7 +111,7 @@ public class ApplicationLoader extends Application {
     }
 
     protected PushListenerController.IPushListenerServiceProvider onCreatePushProvider() {
-        return PushListenerController.GooglePushListenerServiceProvider.INSTANCE;
+        return PushListenerController.UnifiedPushListenerServiceProvider.INSTANCE;
     }
 
     public static String getApplicationId() {
@@ -145,7 +143,7 @@ public class ApplicationLoader extends Application {
     }
 
     protected boolean isStandalone() {
-        return false;
+        return true;
     }
 
     protected boolean isBeta() {
@@ -390,16 +388,6 @@ public class ApplicationLoader extends Application {
                 PushListenerController.sendRegistrationToServer(getPushProvider().getPushType(), null);
             }
         }, 1000);
-    }
-
-    private boolean checkPlayServices() {
-        try {
-            int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-            return resultCode == ConnectionResult.SUCCESS;
-        } catch (Exception e) {
-            FileLog.e(e);
-        }
-        return true;
     }
 
     private static long lastNetworkCheck = -1;

@@ -54,9 +54,6 @@ import androidx.dynamicanimation.animation.FloatValueHolder;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.barcode.Barcode;
-import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.LuminanceSource;
 import com.google.zxing.PlanarYUVLuminanceSource;
@@ -149,7 +146,6 @@ public class CameraScanActivity extends BaseFragment {
     private boolean qrLoaded = false;
 
     private QRCodeReader qrReader = null;
-    private BarcodeDetector visionQrReader = null;
 
     private boolean needGalleryButton;
 
@@ -256,7 +252,6 @@ public class CameraScanActivity extends BaseFragment {
         if (isQr()) {
             Utilities.globalQueue.postRunnable(() -> {
                 qrReader = new QRCodeReader();
-                visionQrReader = new BarcodeDetector.Builder(ApplicationLoader.applicationContext).setBarcodeFormats(Barcode.QR_CODE).build();
             });
         }
 
@@ -279,9 +274,6 @@ public class CameraScanActivity extends BaseFragment {
         destroy(false, null);
         if (getParentActivity() != null) {
             getParentActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-        }
-        if (visionQrReader != null) {
-            visionQrReader.release();
         }
     }
 
@@ -1238,97 +1230,7 @@ public class CameraScanActivity extends BaseFragment {
             RectF bounds = new RectF();
             PointF[] cornerPoints = null;
             int width = 1, height = 1;
-            if (visionQrReader != null && visionQrReader.isOperational()) {
-                Frame frame;
-                if (bitmap != null) {
-                    frame = new Frame.Builder().setBitmap(bitmap).build();
-                    width = bitmap.getWidth();
-                    height = bitmap.getHeight();
-                } else {
-                    frame = new Frame.Builder().setImageData(ByteBuffer.wrap(data), size.getWidth(), size.getHeight(), ImageFormat.NV21).build();
-                    width = size.getWidth();
-                    height = size.getWidth();
-                }
-                SparseArray<Barcode> codes = visionQrReader.detect(frame);
-                if (codes != null && codes.size() > 0) {
-                    Barcode code = codes.valueAt(0);
-                    text = code.rawValue;
-                    cornerPoints = toPointF(code.cornerPoints, width, height);
-                    if (code.cornerPoints == null || code.cornerPoints.length == 0) {
-                        bounds = null;
-                    } else {
-                        float minX = Float.MAX_VALUE,
-                              maxX = Float.MIN_VALUE,
-                              minY = Float.MAX_VALUE,
-                              maxY = Float.MIN_VALUE;
-                        for (Point point : code.cornerPoints) {
-                            minX = Math.min(minX, point.x);
-                            maxX = Math.max(maxX, point.x);
-                            minY = Math.min(minY, point.y);
-                            maxY = Math.max(maxY, point.y);
-                        }
-                        bounds.set(minX, minY, maxX, maxY);
-                    }
-                } else if (bitmap != null) {
-                    Bitmap inverted = invert(bitmap);
-                    bitmap.recycle();
-                    frame = new Frame.Builder().setBitmap(inverted).build();
-                    width = inverted.getWidth();
-                    height = inverted.getHeight();
-                    codes = visionQrReader.detect(frame);
-                    if (codes != null && codes.size() > 0) {
-                        Barcode code = codes.valueAt(0);
-                        text = code.rawValue;
-                        cornerPoints = toPointF(code.cornerPoints, width, height);
-                        if (code.cornerPoints == null || code.cornerPoints.length == 0) {
-                            bounds = null;
-                        } else {
-                            float minX = Float.MAX_VALUE,
-                                    maxX = Float.MIN_VALUE,
-                                    minY = Float.MAX_VALUE,
-                                    maxY = Float.MIN_VALUE;
-                            for (Point point : code.cornerPoints) {
-                                minX = Math.min(minX, point.x);
-                                maxX = Math.max(maxX, point.x);
-                                minY = Math.min(minY, point.y);
-                                maxY = Math.max(maxY, point.y);
-                            }
-                            bounds.set(minX, minY, maxX, maxY);
-                        }
-                    } else {
-                        Bitmap monochrome = monochrome(inverted, 90);
-                        inverted.recycle();
-                        frame = new Frame.Builder().setBitmap(monochrome).build();
-                        width = inverted.getWidth();
-                        height = inverted.getHeight();
-                        codes = visionQrReader.detect(frame);
-                        if (codes != null && codes.size() > 0) {
-                            Barcode code = codes.valueAt(0);
-                            text = code.rawValue;
-                            cornerPoints = toPointF(code.cornerPoints, width, height);
-                            if (code.cornerPoints == null || code.cornerPoints.length == 0) {
-                                bounds = null;
-                            } else {
-                                float minX = Float.MAX_VALUE,
-                                        maxX = Float.MIN_VALUE,
-                                        minY = Float.MAX_VALUE,
-                                        maxY = Float.MIN_VALUE;
-                                for (Point point : code.cornerPoints) {
-                                    minX = Math.min(minX, point.x);
-                                    maxX = Math.max(maxX, point.x);
-                                    minY = Math.min(minY, point.y);
-                                    maxY = Math.max(maxY, point.y);
-                                }
-                                bounds.set(minX, minY, maxX, maxY);
-                            }
-                        } else {
-                            text = null;
-                        }
-                    }
-                } else {
-                    text = null;
-                }
-            } else if (qrReader != null) {
+            if (qrReader != null) {
                 LuminanceSource source;
                 if (bitmap != null) {
                     int[] intArray = new int[bitmap.getWidth() * bitmap.getHeight()];
