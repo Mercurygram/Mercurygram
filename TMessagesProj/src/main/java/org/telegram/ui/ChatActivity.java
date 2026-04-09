@@ -9819,12 +9819,10 @@ public class ChatActivity extends BaseFragment implements
         translateButton = new TranslateButton(getContext(), this, themeDelegate) {
             @Override
             protected void onButtonClick() {
-                if (getUserConfig().isPremium() || currentChat != null && currentChat.autotranslation) {
-                    getMessagesController().getTranslateController().toggleTranslatingDialog(getDialogId());
-                } else {
-                    MessagesController.getNotificationsSettings(currentAccount).edit().putInt("dialog_show_translate_count" + getDialogId(), 14).commit();
-                    showDialog(new PremiumFeatureBottomSheet(ChatActivity.this, PremiumPreviewFragment.PREMIUM_FEATURE_TRANSLATIONS, false));
-                }
+                // Mercurygram: Premium is a Telegram monetization gate, not a
+                // technical requirement. The chat translate bar is available for
+                // every user — see commit "[MG] unlock premium account limits".
+                getMessagesController().getTranslateController().toggleTranslatingDialog(getDialogId());
                 updateTopPanel(true);
             }
 
