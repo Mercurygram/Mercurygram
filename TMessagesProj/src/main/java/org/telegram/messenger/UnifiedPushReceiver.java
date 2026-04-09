@@ -211,6 +211,7 @@ public class UnifiedPushReceiver extends PushService {
                     }
                 }
             });
+            it.belloworld.mercurygram.push.UnifiedPushListenerServiceProvider.notifyStateChanged();
         });
     }
 
@@ -330,6 +331,9 @@ public class UnifiedPushReceiver extends PushService {
         log(reason);
         SharedConfig.pushStringStatus = "__UNIFIEDPUSH_FAILED__";
         setLastRegistrationFailure(reason);
+        // Without this the settings screen keeps claiming it is waiting for an endpoint that
+        // will never arrive.
+        it.belloworld.mercurygram.push.UnifiedPushListenerServiceProvider.notifyStateChanged();
         Utilities.globalQueue.postRunnable(() -> {
             SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
             PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_WEB, null);
