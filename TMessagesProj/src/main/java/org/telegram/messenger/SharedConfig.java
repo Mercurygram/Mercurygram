@@ -152,6 +152,22 @@ public class SharedConfig {
                 .commit();
     }
 
+    public static void toggleDisableSecureFlags() {
+        disableSecureFlags = !disableSecureFlags;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_disableSecureFlags", disableSecureFlags)
+                .commit();
+    }
+
+    public static void toggleRemoveAdsAndProxySponsor() {
+        removeAdsAndProxySponsor = !removeAdsAndProxySponsor;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_removeAdsAndProxySponsor", removeAdsAndProxySponsor)
+                .commit();
+    }
+
     public static void setUnifiedPushGateway(String gateway) {
         unifiedPushGateway = gateway;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
@@ -294,6 +310,10 @@ public class SharedConfig {
     public static volatile byte[] webPushPrivateKey;    // PKCS#8-encoded P-256 private key
     public static volatile byte[] webPushPublicKey;     // Raw 65-byte uncompressed P-256 point (04||X||Y)
     public static volatile byte[] webPushAuthSecret;    // 16-byte random auth secret
+
+    // Mercurygram: UI settings
+    public static boolean disableSecureFlags = false;
+    public static boolean removeAdsAndProxySponsor = false;
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -578,6 +598,8 @@ public class SharedConfig {
                 // Mercurygram settings
                 editor.putBoolean("mg_disableUnifiedPush", disableUnifiedPush);
                 editor.putString("mg_unifiedPushGateway2", unifiedPushGateway);
+                editor.putBoolean("mg_disableSecureFlags", disableSecureFlags);
+                editor.putBoolean("mg_removeAdsAndProxySponsor", removeAdsAndProxySponsor);
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -778,6 +800,8 @@ public class SharedConfig {
             // Mercurygram settings
             disableUnifiedPush = preferences.getBoolean("mg_disableUnifiedPush", false);
             unifiedPushGateway = preferences.getString("mg_unifiedPushGateway2", unifiedPushGateway);
+            disableSecureFlags = preferences.getBoolean("mg_disableSecureFlags", false);
+            removeAdsAndProxySponsor = preferences.getBoolean("mg_removeAdsAndProxySponsor", false);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
             String wpPub = preferences.getString("mg_webPushPublicKey", "");

@@ -1173,6 +1173,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_OPEN_PROFILE = 104;
     public final static int OPTION_FACT_CHECK = 106;
     public final static int OPTION_EDIT_PRICE = 107;
+    public final static int OPTION_DETAILS = 200;
     public final static int OPTION_GIFT = 108;
     public final static int OPTION_EDIT_TODO = 109;
     public final static int OPTION_ADD_TO_TODO = 110;
@@ -33502,6 +33503,10 @@ public class ChatActivity extends BaseFragment implements
                 FactCheckController.getInstance(currentAccount).openFactCheckEditor(getContext(), getResourceProvider(), msg, false);
                 break;
             }
+            case OPTION_DETAILS: {
+                presentFragment(new it.belloworld.mercurygram.ui.MessageDetailsActivity(selectedObject));
+                break;
+            }
             case OPTION_SUGGESTION_ADD_OFFER:
             case OPTION_SUGGESTION_EDIT_PRICE: {
                 final MessageObject msg = selectedObjectGroup != null ? selectedObjectGroup.findPrimaryMessageObject() : selectedObject;
@@ -45120,6 +45125,11 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(chatMode == MODE_SAVED && threadMessageId != getUserConfig().getClientUserId() ? R.string.Remove : R.string.Delete));
                     options.add(OPTION_DELETE);
                     icons.add(deleteIconRes);
+                }
+                if (getUserConfig().messageDetailsMenu) {
+                    items.add(LocaleController.getString(R.string.MessageDetails));
+                    options.add(OPTION_DETAILS);
+                    icons.add(R.drawable.menu_info);
                 }
             } else {
                 if (allowChatActions && !isInsideContainer) {
