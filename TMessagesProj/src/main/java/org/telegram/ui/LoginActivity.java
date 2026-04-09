@@ -99,22 +99,22 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingFlowParams;
-import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.QueryProductDetailsParams;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.safetynet.SafetyNet;
-import com.google.android.gms.tasks.Task;
-import com.google.android.play.core.integrity.IntegrityManager;
-import com.google.android.play.core.integrity.IntegrityManagerFactory;
-import com.google.android.play.core.integrity.IntegrityTokenRequest;
-import com.google.android.play.core.integrity.IntegrityTokenResponse;
+import it.belloworld.mercurygram.compat.billing.BillingClient;
+import it.belloworld.mercurygram.compat.billing.BillingFlowParams;
+import it.belloworld.mercurygram.compat.billing.ProductDetails;
+import it.belloworld.mercurygram.compat.billing.Purchase;
+import it.belloworld.mercurygram.compat.billing.QueryProductDetailsParams;
+import it.belloworld.mercurygram.compat.gms.auth.GoogleSignIn;
+import it.belloworld.mercurygram.compat.gms.auth.GoogleSignInAccount;
+import it.belloworld.mercurygram.compat.gms.auth.GoogleSignInClient;
+import it.belloworld.mercurygram.compat.gms.auth.GoogleSignInOptions;
+import it.belloworld.mercurygram.compat.gms.common.ApiException;
+import it.belloworld.mercurygram.compat.gms.safetynet.SafetyNet;
+import it.belloworld.mercurygram.compat.gms.tasks.Task;
+import it.belloworld.mercurygram.compat.integrity.IntegrityManager;
+import it.belloworld.mercurygram.compat.integrity.IntegrityManagerFactory;
+import it.belloworld.mercurygram.compat.integrity.IntegrityTokenRequest;
+import it.belloworld.mercurygram.compat.integrity.IntegrityTokenResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1768,7 +1768,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             return;
         }
         if (res.type instanceof TLRPC.TL_auth_sentCodeTypeFirebaseSms && !res.type.verifiedFirebase && !isRequestingFirebaseSms) {
-            if (PushListenerController.GooglePushListenerServiceProvider.INSTANCE.hasServices()) {
+            if (false) {
                 TLRPC.TL_auth_sentCodeTypeFirebaseSms r = (TLRPC.TL_auth_sentCodeTypeFirebaseSms) res.type;
                 needShowProgress(0);
                 isRequestingFirebaseSms = true;
@@ -3079,7 +3079,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             TLRPC.TL_codeSettings settings = new TLRPC.TL_codeSettings();
             settings.allow_flashcall = simcardAvailable && allowCall && allowCancelCall && allowReadCallLog;
             settings.allow_missed_call = simcardAvailable && allowCall;
-            settings.allow_app_hash = settings.allow_firebase = PushListenerController.GooglePushListenerServiceProvider.INSTANCE.hasServices();
+            settings.allow_app_hash = settings.allow_firebase = false;
             if (forceDisableSafetyNet || TextUtils.isEmpty(BuildVars.SAFETYNET_KEY)) {
                 settings.allow_firebase = false;
             }
@@ -5964,9 +5964,11 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             signInWithGoogleView.setMaxLines(2);
 
             SpannableStringBuilder str = new SpannableStringBuilder("d ");
-            Drawable dr = ContextCompat.getDrawable(context, R.drawable.googleg_standard_color_18);
-            dr.setBounds(0, AndroidUtilities.dp(9), AndroidUtilities.dp(18), AndroidUtilities.dp(18 + 9));
-            str.setSpan(new ImageSpan(dr, ImageSpan.ALIGN_BOTTOM), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Drawable dr = null;
+            if (dr != null) {
+                dr.setBounds(0, AndroidUtilities.dp(9), AndroidUtilities.dp(18), AndroidUtilities.dp(18 + 9));
+                str.setSpan(new ImageSpan(dr, ImageSpan.ALIGN_BOTTOM), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
             str.setSpan(new ReplacementSpan() {
                 @Override
                 public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
@@ -6058,7 +6060,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             requestPhone = currentParams.getString("phoneFormated");
             phoneHash = currentParams.getString("phoneHash");
 
-            int v = params.getBoolean("googleSignInAllowed") && PushListenerController.GooglePushListenerServiceProvider.INSTANCE.hasServices() ? VISIBLE : GONE;
+            int v = params.getBoolean("googleSignInAllowed") && false ? VISIBLE : GONE;
             loginOrView.setVisibility(v);
             signInWithGoogleView.setVisibility(v);
 
@@ -6310,9 +6312,11 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             signInWithGoogleView.setMaxLines(2);
 
             SpannableStringBuilder str = new SpannableStringBuilder("d ");
-            Drawable dr = ContextCompat.getDrawable(context, R.drawable.googleg_standard_color_18);
-            dr.setBounds(0, AndroidUtilities.dp(9), AndroidUtilities.dp(18), AndroidUtilities.dp(18 + 9));
-            str.setSpan(new ImageSpan(dr, ImageSpan.ALIGN_BOTTOM), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Drawable dr = null;
+            if (dr != null) {
+                dr.setBounds(0, AndroidUtilities.dp(9), AndroidUtilities.dp(18), AndroidUtilities.dp(18 + 9));
+                str.setSpan(new ImageSpan(dr, ImageSpan.ALIGN_BOTTOM), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
             str.setSpan(new ReplacementSpan() {
                 @Override
                 public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
@@ -6673,7 +6677,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 confirmTextView.setText(AndroidUtilities.formatSpannable(getString(R.string.CheckYourEmailSubtitle), confirmText));
             }
 
-            int v = params.getBoolean("googleSignInAllowed") && PushListenerController.GooglePushListenerServiceProvider.INSTANCE.hasServices() ? VISIBLE : GONE;
+            int v = params.getBoolean("googleSignInAllowed") && false ? VISIBLE : GONE;
             loginOrView.setVisibility(v);
             signInWithGoogleView.setVisibility(v);
 

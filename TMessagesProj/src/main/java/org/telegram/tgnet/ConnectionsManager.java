@@ -15,11 +15,6 @@ import android.util.Base64;
 import androidx.annotation.Keep;
 
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.gms.tasks.Task;
-import com.google.android.play.core.integrity.IntegrityManager;
-import com.google.android.play.core.integrity.IntegrityManagerFactory;
-import com.google.android.play.core.integrity.IntegrityTokenRequest;
-import com.google.android.play.core.integrity.IntegrityTokenResponse;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -876,11 +871,11 @@ public class ConnectionsManager extends BaseController {
                     currentTask = task;
                 } else {
                     if (BuildVars.LOGS_ENABLED) {
-                        FileLog.d("start google txt task");
+                        FileLog.d("start mozilla txt task (fallback)");
                     }
-                    GoogleDnsLoadTask task = new GoogleDnsLoadTask(currentAccount);
+                    MozillaDnsLoadTask task = new MozillaDnsLoadTask(currentAccount);
                     task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null, null, null);
-                    FileLog.d("11. currentTask = dnstxt");
+                    FileLog.d("11. currentTask = mozilla-fallback");
                     currentTask = task;
                 }
             });
@@ -1002,6 +997,11 @@ public class ConnectionsManager extends BaseController {
     public static native void native_failNotRunningRequest(int currentAccount, int token);
     public static native void native_receivedIntegrityCheckClassic(int currentAccount, int requestToken, String nonce, String token);
     public static native void native_receivedCaptchaResult(int currentAccount, int[] requestTokens, String token);
+
+    // Called from native (JNI) — no-op stub since Play Integrity is removed
+    public static void onIntegrityCheckClassic(int currentAccount, int requestToken, String project, String nonce) {
+        native_receivedIntegrityCheckClassic(currentAccount, requestToken, nonce, "");
+    }
     public static native boolean native_isGoodPrime(byte[] prime, int g);
 
 
@@ -1133,73 +1133,13 @@ public class ConnectionsManager extends BaseController {
         }
 
         protected ResolvedDomain doInBackground(Void... voids) {
-            ByteArrayOutputStream outbuf = null;
-            InputStream httpConnectionStream = null;
-            boolean done = false;
             try {
-                URL downloadUrl = new URL("https://www.google.com/resolve?name=" + currentHostName + "&type=A");
-                URLConnection httpConnection = downloadUrl.openConnection();
-                httpConnection.addRequestProperty("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 10_0 like Mac OS X) AppleWebKit/602.1.38 (KHTML, like Gecko) Version/10.0 Mobile/14A5297c Safari/602.1");
-                httpConnection.addRequestProperty("Host", "dns.google.com");
-                httpConnection.setConnectTimeout(1000);
-                httpConnection.setReadTimeout(2000);
-                httpConnection.connect();
-                httpConnectionStream = httpConnection.getInputStream();
-
-                outbuf = new ByteArrayOutputStream();
-
-                byte[] data = new byte[1024 * 32];
-                while (true) {
-                    int read = httpConnectionStream.read(data);
-                    if (read > 0) {
-                        outbuf.write(data, 0, read);
-                    } else if (read == -1) {
-                        break;
-                    } else {
-                        break;
-                    }
-                }
-
-                JSONObject jsonObject = new JSONObject(new String(outbuf.toByteArray()));
-                if (jsonObject.has("Answer")) {
-                    JSONArray array = jsonObject.getJSONArray("Answer");
-                    int len = array.length();
-                    if (len > 0) {
-                        ArrayList<String> addresses = new ArrayList<>(len);
-                        for (int a = 0; a < len; a++) {
-                            addresses.add(array.getJSONObject(a).getString("data"));
-                        }
-                        return new ResolvedDomain(addresses, SystemClock.elapsedRealtime());
-                    }
-                }
-                done = true;
-            } catch (Throwable e) {
+                InetAddress address = InetAddress.getByName(currentHostName);
+                ArrayList<String> addresses = new ArrayList<>(1);
+                addresses.add(address.getHostAddress());
+                return new ResolvedDomain(addresses, SystemClock.elapsedRealtime());
+            } catch (Exception e) {
                 FileLog.e(e, false);
-            } finally {
-                try {
-                    if (httpConnectionStream != null) {
-                        httpConnectionStream.close();
-                    }
-                } catch (Throwable e) {
-                    FileLog.e(e, false);
-                }
-                try {
-                    if (outbuf != null) {
-                        outbuf.close();
-                    }
-                } catch (Exception ignore) {
-
-                }
-            }
-            if (!done) {
-                try {
-                    InetAddress address = InetAddress.getByName(currentHostName);
-                    ArrayList<String> addresses = new ArrayList<>(1);
-                    addresses.add(address.getHostAddress());
-                    return new ResolvedDomain(addresses, SystemClock.elapsedRealtime());
-                } catch (Exception e) {
-                    FileLog.e(e, false);
-                }
             }
             return null;
         }
@@ -1217,126 +1157,6 @@ public class ConnectionsManager extends BaseController {
                 }
             }
             resolvingHostnameTasks.remove(currentHostName);
-        }
-    }
-
-    private static class GoogleDnsLoadTask extends AsyncTask<Void, Void, NativeByteBuffer> {
-
-        private int currentAccount;
-        private int responseDate;
-
-        public GoogleDnsLoadTask(int instance) {
-            super();
-            currentAccount = instance;
-        }
-
-        protected NativeByteBuffer doInBackground(Void... voids) {
-            ByteArrayOutputStream outbuf = null;
-            InputStream httpConnectionStream = null;
-            try {
-                String domain = native_isTestBackend(currentAccount) != 0 ? "tapv3.stel.com" : AccountInstance.getInstance(currentAccount).getMessagesController().dcDomainName;
-                int len = Utilities.random.nextInt(116) + 13;
-                final String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-                StringBuilder padding = new StringBuilder(len);
-                for (int a = 0; a < len; a++) {
-                    padding.append(characters.charAt(Utilities.random.nextInt(characters.length())));
-                }
-                URL downloadUrl = new URL("https://dns.google.com/resolve?name=" + domain + "&type=ANY&random_padding=" + padding);
-                URLConnection httpConnection = downloadUrl.openConnection();
-                httpConnection.addRequestProperty("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 10_0 like Mac OS X) AppleWebKit/602.1.38 (KHTML, like Gecko) Version/10.0 Mobile/14A5297c Safari/602.1");
-                httpConnection.setConnectTimeout(5000);
-                httpConnection.setReadTimeout(5000);
-                httpConnection.connect();
-                httpConnectionStream = httpConnection.getInputStream();
-                responseDate = (int) (httpConnection.getDate() / 1000);
-
-                outbuf = new ByteArrayOutputStream();
-
-                byte[] data = new byte[1024 * 32];
-                while (true) {
-                    if (isCancelled()) {
-                        break;
-                    }
-                    int read = httpConnectionStream.read(data);
-                    if (read > 0) {
-                        outbuf.write(data, 0, read);
-                    } else if (read == -1) {
-                        break;
-                    } else {
-                        break;
-                    }
-                }
-
-                JSONObject jsonObject = new JSONObject(new String(outbuf.toByteArray()));
-                JSONArray array = jsonObject.getJSONArray("Answer");
-                len = array.length();
-                ArrayList<String> arrayList = new ArrayList<>(len);
-                for (int a = 0; a < len; a++) {
-                    JSONObject object = array.getJSONObject(a);
-                    int type = object.getInt("type");
-                    if (type != 16) {
-                        continue;
-                    }
-                    arrayList.add(object.getString("data"));
-                }
-                Collections.sort(arrayList, (o1, o2) -> {
-                    int l1 = o1.length();
-                    int l2 = o2.length();
-                    if (l1 > l2) {
-                        return -1;
-                    } else if (l1 < l2) {
-                        return 1;
-                    }
-                    return 0;
-                });
-                StringBuilder builder = new StringBuilder();
-                for (int a = 0; a < arrayList.size(); a++) {
-                    builder.append(arrayList.get(a).replace("\"", ""));
-                }
-                byte[] bytes = Base64.decode(builder.toString(), Base64.DEFAULT);
-                NativeByteBuffer buffer = new NativeByteBuffer(bytes.length);
-                buffer.writeBytes(bytes);
-                return buffer;
-            } catch (Throwable e) {
-                FileLog.e(e, !(e instanceof SocketTimeoutException || e instanceof SSLException));
-            } finally {
-                try {
-                    if (httpConnectionStream != null) {
-                        httpConnectionStream.close();
-                    }
-                } catch (Throwable e) {
-                    FileLog.e(e);
-                }
-                try {
-                    if (outbuf != null) {
-                        outbuf.close();
-                    }
-                } catch (Exception ignore) {
-
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(final NativeByteBuffer result) {
-            Utilities.stageQueue.postRunnable(() -> {
-                FileLog.d("3. currentTask = null, result = " + result);
-                currentTask = null;
-                if (result != null) {
-                    native_applyDnsConfig(currentAccount, result.address, AccountInstance.getInstance(currentAccount).getUserConfig().getClientPhone(), responseDate);
-                } else {
-                    if (BuildVars.LOGS_ENABLED) {
-                        FileLog.d("failed to get google result");
-                        FileLog.d("start mozilla task");
-                    }
-                    MozillaDnsLoadTask task = new MozillaDnsLoadTask(currentAccount);
-                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null, null, null);
-                    FileLog.d("4. currentTask = mozilla");
-                    currentTask = task;
-                }
-            });
         }
     }
 
@@ -1483,45 +1303,6 @@ public class ConnectionsManager extends BaseController {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.premiumFloodWaitReceived);
                 }
             });
-        });
-    }
-
-    @Keep
-    public static void onIntegrityCheckClassic(final int currentAccount, final int requestToken, final String project, final String nonce) {
-        AndroidUtilities.runOnUIThread(() -> {
-            long start = System.currentTimeMillis();
-            FileLog.d("account"+currentAccount+": server requests integrity classic check with project = "+project+" nonce = " + nonce);
-            IntegrityManager integrityManager = IntegrityManagerFactory.create(ApplicationLoader.applicationContext);
-            final long project_id;
-            try {
-                project_id = Long.parseLong(project);
-            } catch (Exception e) {
-                FileLog.d("account"+currentAccount+": integrity check failes to parse project id");
-                native_receivedIntegrityCheckClassic(currentAccount, requestToken, nonce, "PLAYINTEGRITY_FAILED_EXCEPTION_NOPROJECT");
-                return;
-            }
-            Task<IntegrityTokenResponse> integrityTokenResponse = integrityManager.requestIntegrityToken(IntegrityTokenRequest.builder().setNonce(nonce).setCloudProjectNumber(project_id).build());
-            integrityTokenResponse
-                .addOnSuccessListener(r -> {
-                    final String token = r.token();
-
-                    if (token == null) {
-                        FileLog.e("account"+currentAccount+": integrity check gave null token in " + (System.currentTimeMillis() - start) + "ms");
-                        native_receivedIntegrityCheckClassic(currentAccount, requestToken, nonce, "PLAYINTEGRITY_FAILED_EXCEPTION_NULL");
-                        return;
-                    }
-
-                    FileLog.d("account"+currentAccount+": integrity check successfully gave token: " + token + " in " + (System.currentTimeMillis() - start) + "ms");
-                    try {
-                        native_receivedIntegrityCheckClassic(currentAccount, requestToken, nonce, token);
-                    } catch (Exception e) {
-                        FileLog.e("receivedIntegrityCheckClassic failed", e);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    FileLog.e("account"+currentAccount+": integrity check failed to give a token in " + (System.currentTimeMillis() - start) + "ms", e);
-                    native_receivedIntegrityCheckClassic(currentAccount, requestToken, nonce, "PLAYINTEGRITY_FAILED_EXCEPTION_" + LoginActivity.errorString(e));
-                });
         });
     }
 

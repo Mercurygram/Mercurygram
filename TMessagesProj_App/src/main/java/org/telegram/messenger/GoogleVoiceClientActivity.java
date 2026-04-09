@@ -8,12 +8,8 @@
 
 package org.telegram.messenger;
 
-import com.google.android.search.verification.client.SearchActionVerificationClientActivity;
-import com.google.android.search.verification.client.SearchActionVerificationClientService;
+import android.app.Activity;
 
-public class GoogleVoiceClientActivity extends SearchActionVerificationClientActivity {
-
-    public Class<? extends SearchActionVerificationClientService> getServiceClass() {
-        return GoogleVoiceClientService.class;
-    }
+// [TF] Google Voice removed — stub implementation
+public class GoogleVoiceClientActivity extends Activity {
 }
