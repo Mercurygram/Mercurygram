@@ -239,6 +239,8 @@ import java.util.zip.GZIPOutputStream;
 
 import me.vkryl.core.BitwiseUtils;
 
+import it.belloworld.mercurygram.MgUpdateChecker;
+
 public class AndroidUtilities {
     public final static int LIGHT_STATUS_BAR_OVERLAY = 0x0f000000, DARK_STATUS_BAR_OVERLAY = 0x33000000;
 
@@ -6659,7 +6661,7 @@ public class AndroidUtilities {
                     }
                     break;
             }
-            return formatString("TelegramVersion", R.string.TelegramVersion, String.format(Locale.US, "v%s (%d) %s", pInfo.versionName, code, abi));
+            return formatString("TelegramVersion", R.string.TelegramVersion, String.format(Locale.US, "v%s (%d) %s", MgUpdateChecker.currentInstallVersion(), code, abi));
         } catch (Exception e) {
             FileLog.e(e);
         }

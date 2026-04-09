@@ -274,4 +274,27 @@
     <string name="RemindTodayAt">\'Нагадати сьогодні,\' HH:mm</string>
     <string name="RemindDayAt">\'Нагадати\' d MMM\',\' HH:mm</string>
     <string name="RemindDayYearAt">\'Нагадати\' d MMM yyyy\',\' HH:mm</string>
+    <string name="MercurygramSettings">Mercurygram</string>
+    <string name="MercurygramSettingsInfo">Функції, властиві Mercurygram</string>
+    <string name="MercurygramSettingsGeneral">Загальні</string>
+    <string name="MercurygramSettingsMedia">Медіа</string>
+    <string name="MercurygramSettingsUpdates">Оновлення</string>
+    <string name="MercurygramSettingsNotifications">Сповіщення</string>
+    <string name="MercurygramMessageDetailsMenu">Показати «Деталі повідомлення»</string>
+    <string name="MercurygramDisableAutoUpdate">Вимкнути вбудований оновлювач</string>
+    <string name="MercurygramDisableAutoUpdateAbout">Mercurygram більше не перевірятиме оновлення на GitHub під час запуску. Ручну перевірку можна запустити кнопкою нижче.</string>
+    <string name="MercurygramAcceptPreReleaseUpdates">Отримувати попередні оновлення</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesAbout">Отримуйте 5-крапкові попередні збірки (наприклад, 12.6.4.4.42) через вбудований оновлювач. Це знімки розробки між стабільними випусками; вони можуть містити збої, частково працюючі функції або інші регресії. Ви можете вимкнути цей параметр пізніше, щоб повернутися до відповідного стабільного (4-крапкового) випуску.</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningTitle">Увімкнути попередні оновлення?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesWarningMessage">Попередні збірки Mercurygram (5-крапкові, наприклад 12.6.4.4.42) — це знімки розробки між стабільними випусками. Вони можуть містити ще не виявлені збої, частково працюючі функції або інші регресії. Ви можете вимкнути цей параметр пізніше, щоб повернутися до відповідного стабільного (4-крапкового) випуску. Продовжити?</string>
+    <string name="MercurygramAcceptPreReleaseUpdatesEnable">Увімкнути</string>
+    <string name="MercurygramPreReleaseBadge">Попередній випуск</string>
+    <string name="MercurygramCheckForUpdatesNow">Перевірити оновлення зараз</string>
+    <string name="MercurygramCheckForUpdatesLastChecked">Остання перевірка: %1$s</string>
+    <string name="MercurygramCheckForUpdatesNever">Ніколи</string>
+    <string name="MercurygramCheckForUpdatesToast">Перевірка оновлень…</string>
+    <string name="MercurygramDisableUnifiedPush">Вимкнути UnifiedPush</string>
+    <string name="MercurygramDisableUnifiedPushAbout">Якщо вимкнено, Mercurygram повертається до опитування нових повідомлень. Програму буде перезапущено для застосування змін.</string>
+    <string name="MercurygramUnifiedPushRestartConfirm">Щоб застосувати цю зміну, Mercurygram потрібно перезапустити. Продовжити?</string>
+    <string name="MercurygramRestart">Перезапустити</string>
 </resources>
