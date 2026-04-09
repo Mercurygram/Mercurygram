@@ -3,20 +3,19 @@ apply plugin: 'com.android.application'
 // Derive rootProject.ext.MG_VERSION_NAME / MG_VERSION_CODE from MG_BUILD_TAG.
 apply from: "$rootDir/gradle/mg-version.gradle"
 
-// Wire each variant's merge*JniLibFolders task to the matching per-ABI native build task.
-// F-Droid per-ABI flavors only need one ABI compiled; fat flavors need all four.
+// Wire each variant's merge*JniLibFolders task to run after all per-ABI native build
+// tasks that are scheduled. jniLibs.srcDirs points to jni/ but contributes no .so files
+// (no ABI-named subdirs exist there); mustRunAfter is sufficient to prevent the race
+// where a concurrent native build creates/deletes intermediate files (.d, .o) while
+// the merge task walks the tree. Native builds are scheduled by CMake task dependencies
+// (already per-ABI aware), so this ordering does not force unneeded ABIs to build.
 afterEvaluate {
-    def flavorToNativeTask = [
-        'AfatFdArm64'  : 'buildNativeLibsArm64',
-        'AfatFdArm32'  : 'buildNativeLibsArm32',
-        'AfatFdX86_64' : 'buildNativeLibsX86_64',
-        'AfatFdX86'    : 'buildNativeLibsX86',
-    ]
-    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach { task ->
-        def matched = flavorToNativeTask.find { flavor, _ -> task.name.contains(flavor) }
-        dependsOn project(':TMessagesProj').tasks.named(
-            matched ? matched.value : 'buildNativeLibs'
-        )
+    def nativeTasks = ['buildNativeLibsArm64', 'buildNativeLibsArm32',
+                       'buildNativeLibsX86_64', 'buildNativeLibsX86']
+    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach { mergeTask ->
+        nativeTasks.each { taskName ->
+            mergeTask.mustRunAfter(project(':TMessagesProj').tasks.named(taskName))
+        }
     }
 }
 
@@ -45,12 +44,24 @@ android {
 
     defaultConfig.applicationId = APP_PACKAGE
 
+    // [MG] compress native .so in the APK (AGP default since 4.1 is uncompressed).
+    // ~13 MB smaller download on the single-ABI F-Droid build. Deterministic.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
     }
 
     sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
+
+    aaptOptions {
+        cruncherEnabled = false
+    }
 
     lintOptions {
         disable 'MissingTranslation'
@@ -176,20 +187,93 @@ android {
             }
             buildConfigField "boolean", "BUNDLE", "false"
         }
+        afatFdArm32 {
+            ndk {
+                abiFilters "armeabi-v7a"
+            }
+            minSdkVersion 24
+            sourceSets.debug {
+                manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
+            }
+            sourceSets.release {
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_SDK23.xml'
+            }
+            ext {
+                abiVersionCode = 7
+            }
+            buildConfigField "boolean", "BUNDLE", "false"
+        }
+        afatFdArm64 {
+            ndk {
+                abiFilters "arm64-v8a"
+            }
+            minSdkVersion 24
+            sourceSets.debug {
+                manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
+            }
+            sourceSets.release {
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_SDK23.xml'
+            }
+            ext {
+                abiVersionCode = 8
+            }
+            buildConfigField "boolean", "BUNDLE", "false"
+        }
+        afatFdX86 {
+            ndk {
+                abiFilters "x86"
+            }
+            minSdkVersion 24
+            sourceSets.debug {
+                manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
+            }
+            sourceSets.release {
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_SDK23.xml'
+            }
+            ext {
+                abiVersionCode = 3
+            }
+            buildConfigField "boolean", "BUNDLE", "false"
+        }
+        afatFdX86_64 {
+            ndk {
+                abiFilters "x86_64"
+            }
+            minSdkVersion 24
+            sourceSets.debug {
+                manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
+            }
+            sourceSets.release {
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_SDK23.xml'
+            }
+            ext {
+                abiVersionCode = 4
+            }
+            buildConfigField "boolean", "BUNDLE", "false"
+        }
     }
 
     defaultConfig.versionCode = rootProject.ext.MG_VERSION_CODE
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "app.apk"
-            output.versionCodeOverride = defaultConfig.versionCode * 10 + variant.productFlavors.get(0).abiVersionCode
+            def flavorName = variant.productFlavors.get(0).name
+            def isBeta = variant.buildType.name == "debug" && project.hasProperty("MG_BETA_VERSION_CODE")
+            if (isBeta) {
+                outputFileName = "${flavorName}.apk"
+                output.versionCodeOverride = Integer.parseInt(MG_BETA_VERSION_CODE)
+                output.versionNameOverride = MG_BETA_VERSION_NAME
+            } else {
+                outputFileName = flavorName.startsWith("afatFd") ? "${flavorName}.apk" : "app.apk"
+                output.versionCodeOverride = defaultConfig.versionCode * 10 + variant.productFlavors.get(0).abiVersionCode
+            }
         }
     }
 
     variantFilter { variant ->
         def names = variant.flavors*.name
-        if (variant.buildType.name != "release" && !names.contains("afat")) {
+        def isFdFlavor = names.any { it.startsWith("afatFd") }
+        if (variant.buildType.name != "release" && !names.contains("afat") && !isFdFlavor) {
             setIgnore(true)
         }
     }
