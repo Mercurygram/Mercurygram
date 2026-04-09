@@ -14,4 +14,9 @@
     <string name="HideChatKeyboard">Приховувати клавіатуру під час прокручування чату</string>
     <string name="HideAllTab">Приховати вкладку \"Усі чати\"</string>
     <string name="HideAllTabAbout">Натисніть і утримуйте панель заголовка, щоб тимчасово показати її</string>
+    <string name="MessageDetails">Відомості про повідомлення</string>
+    <string name="ExportAsJson">Експортувати як JSON</string>
+    <string name="Date">Дата</string>
+    <string name="Filename">Ім\'я файлу</string>
+    <string name="Filesize">Розмір файлу</string>
 </resources>

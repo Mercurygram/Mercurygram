@@ -14,4 +14,9 @@
     <string name="HideChatKeyboard">채팅 스크롤 시 키보드 숨기기</string>
     <string name="HideAllTab">\"전체 채팅\" 탭 숨기기</string>
     <string name="HideAllTabAbout">제목 표시줄을 길게 눌러 일시적으로 표시</string>
+    <string name="MessageDetails">메시지 세부정보</string>
+    <string name="ExportAsJson">JSON으로 내보내기</string>
+    <string name="Date">날짜</string>
+    <string name="Filename">파일 이름</string>
+    <string name="Filesize">파일 크기</string>
 </resources>
