@@ -760,7 +760,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
         ttlRow = -1;
         ttlDivideRow = -1;
 
-        if (currentType == 0 && getMessagesController().qrLoginCamera) {
+        if (currentType == 0) { // qrLoginCamera check removed: QR login always available in FOSS builds
             qrCodeRow = rowCount++;
             qrCodeDividerRow = rowCount++;
         }

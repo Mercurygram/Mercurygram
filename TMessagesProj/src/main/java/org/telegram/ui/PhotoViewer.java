@@ -150,10 +150,6 @@ import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.video.VideoFrameMetadataListener;
 import com.google.android.exoplayer2.video.VideoSize;
-import com.google.android.gms.cast.framework.CastContext;
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.face.Face;
-import com.google.android.gms.vision.face.FaceDetector;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.AnimationNotificationsLocker;
@@ -5825,13 +5821,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
         };
-        boolean castAvailable = true;
-        try {
-            castItemButton.setRouteSelector(CastContext.getSharedInstance(activityContext).getMergedSelector());
-        } catch (Exception e) {
-            FileLog.e(e);
-            castAvailable = false;
-        }
+        boolean castAvailable = false;
         castItemButton.setVisibility(View.INVISIBLE);
         if (castAvailable) {
             castItem = videoItem.addSubItem(gallery_menu_chromecast, R.drawable.menu_video_chromecast, getString(R.string.VideoPlayerChromecast));
@@ -11848,61 +11838,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void detectFaces() {
-        if (centerImage.getAnimation() != null || imagesArrLocals.isEmpty() || sendPhotoType == SELECT_TYPE_AVATAR) {
-            return;
-        }
-        String key = centerImage.getImageKey();
-        if (currentImageFaceKey != null && currentImageFaceKey.equals(key)) {
-            return;
-        }
-        currentImageHasFace = 0;
-        ImageReceiver.BitmapHolder bitmap = centerImage.getBitmapSafe();
-        detectFaces(key, bitmap, centerImage.getOrientation());
     }
 
     private void detectFaces(String key, ImageReceiver.BitmapHolder bitmap, int orientation) {
-        if (key == null || bitmap == null || bitmap.bitmap == null) {
-            return;
-        }
-        Utilities.globalQueue.postRunnable(() -> {
-            FaceDetector faceDetector = null;
-            try {
-                faceDetector = new FaceDetector.Builder(ApplicationLoader.applicationContext)
-                        .setMode(FaceDetector.FAST_MODE)
-                        .setLandmarkType(FaceDetector.NO_LANDMARKS)
-                        .setTrackingEnabled(false).build();
-                if (faceDetector.isOperational()) {
-                    Frame frame = new Frame.Builder().setBitmap(bitmap.bitmap).setRotation(orientation).build();
-                    SparseArray<Face> faces = faceDetector.detect(frame);
-                    boolean hasFaces = faces != null && faces.size() != 0;
-                    AndroidUtilities.runOnUIThread(() -> {
-                        String imageKey = centerImage.getImageKey();
-                        if (key.equals(imageKey)) {
-                            currentImageHasFace = hasFaces ? 1 : 0;
-                            currentImageFaceKey = key;
-                        }
-                    });
-                } else {
-                    if (BuildVars.LOGS_ENABLED) {
-                        FileLog.e("face detection is not operational");
-                    }
-                    AndroidUtilities.runOnUIThread(() -> {
-                        bitmap.release();
-                        String imageKey = centerImage.getImageKey();
-                        if (key.equals(imageKey)) {
-                            currentImageHasFace = 2;
-                            currentImageFaceKey = key;
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                FileLog.e(e);
-            } finally {
-                if (faceDetector != null) {
-                    faceDetector.release();
-                }
-            }
-        });
     }
 
     private boolean wasCountViewShown;
