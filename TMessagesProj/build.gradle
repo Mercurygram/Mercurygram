@@ -77,6 +77,29 @@ def getAppHash() {
     return "\"" + properties.get("APP_HASH") + "\""
 }
 
+// If all requested tasks target the same single F-Droid per-ABI flavor, return that ABI
+// so the library's CMake build can be limited to just that ABI. Returns null otherwise
+// (fat builds, local development, multiple ABIs requested).
+// Note: flavors are matched longest-first so AfatFdX86_64 is matched before AfatFdX86.
+def detectSingleFdAbi() {
+    def fdFlavorToAbi = [
+        'AfatFdArm64'  : 'arm64-v8a',
+        'AfatFdArm32'  : 'armeabi-v7a',
+        'AfatFdX86_64' : 'x86_64',
+        'AfatFdX86'    : 'x86',
+    ]
+    def detectedAbis = [] as Set
+    gradle.startParameter.taskNames.each { taskName ->
+        // Match longest flavor name first to avoid AfatFdX86 matching inside AfatFdX86_64.
+        def matched = fdFlavorToAbi.sort { -it.key.length() }.find { flavor, _ ->
+            taskName.contains(flavor)
+        }
+        if (matched) detectedAbis << matched.value
+    }
+    return detectedAbis.size() == 1 ? detectedAbis.first() : null
+}
+def singleFdAbi = detectSingleFdAbi()
+
 def isWindows = String.valueOf(DefaultNativePlatform.currentOperatingSystem.toFamilyName() == OperatingSystemFamily.WINDOWS)
 android {
     compileSdkVersion 35
@@ -89,6 +112,10 @@ android {
         cmake {
             path 'jni/CMakeLists.txt'
         }
+    }
+
+    aaptOptions {
+        cruncherEnabled = false
     }
 
     lintOptions {
@@ -112,6 +139,9 @@ android {
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
 
         multiDexEnabled true
+
+        // Limit CMake to a single ABI for per-ABI F-Droid builds; has no effect otherwise.
+        if (singleFdAbi) ndk.abiFilters singleFdAbi
 
         externalNativeBuild {
             cmake {
@@ -279,8 +309,11 @@ task buildNativeLibs(description: 'Build native libraries for all ABIs.') {
 
 // Wire each CMake/JniLibFolders task to the matching per-ABI native build task.
 // CMake task names include the ABI in brackets, e.g. configureCMakeRelease[arm64-v8a].
-// merge*JniLibFolders tasks don't include the ABI but snapshot jni/; they depend on
-// the full buildNativeLibs to ensure all .so/.a files are present before snapshotting.
+// merge*JniLibFolders tasks use mustRunAfter (not dependsOn) for each per-ABI task:
+// jniLibs.srcDirs points to jni/ but contributes no .so files (no ABI-named subdirs
+// exist there); the ordering only prevents a race where a concurrent native build
+// creates/deletes intermediate files (.d, .o) while the merge task walks the tree.
+// mustRunAfter is sufficient — native builds are scheduled by CMake task dependencies.
 afterEvaluate {
     def abiToTask = [
         'arm64-v8a'   : 'buildNativeLibsArm64',
@@ -288,15 +321,18 @@ afterEvaluate {
         'x86_64'      : 'buildNativeLibsX86_64',
         'x86'         : 'buildNativeLibsX86',
     ]
+    def fallbackTask = singleFdAbi ? abiToTask[singleFdAbi] : 'buildNativeLibs'
     tasks.matching {
         it.name.matches('configureCMake.*') ||
             it.name.matches('buildCMake.*') ||
             it.name.matches('externalNativeBuild.*')
     }.configureEach { task ->
         def matched = abiToTask.find { abi, _ -> task.name.contains(abi) }
-        dependsOn tasks.named(matched ? matched.value : 'buildNativeLibs')
+        task.dependsOn tasks.named(matched ? matched.value : fallbackTask)
     }
-    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach {
-        dependsOn tasks.named('buildNativeLibs')
+    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach { mergeTask ->
+        abiToTask.each { _, nativeTaskName ->
+            mergeTask.mustRunAfter(tasks.named(nativeTaskName))
+        }
     }
 }
