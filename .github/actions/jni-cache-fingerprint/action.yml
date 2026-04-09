@@ -1,0 +1,84 @@
+name: Compute JNI cache fingerprint
+description: >-
+  Writes .jni-cache-fingerprint at the repo root. The fingerprint folds in
+  submodule HEAD SHAs (boringssl, dav1d, ffmpeg, libvpx, td), a
+  sha256sum of TMessagesProj/jni/build_*.sh / patch_*.sh, the host toolchain
+  versions, and the gradle-pinned NDK + build-tools versions. Both the
+  _prewarm-native reusable workflow and the build-mg composite invoke
+  this so the hashFiles() input is byte-identical and the cache keys
+  match. The verify-decide jobs in beta.yml / release.yml hash this same
+  file into the repro-verified marker key, so an NDK bump (or any other
+  input below) invalidates the marker and forces a full 4-ABI re-verify.
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+
+        # Use `git -C <sm> rev-parse HEAD` instead of `git submodule
+        # status`. The latter prepends a state char (' '/'+'/'-'/'U') and
+        # appends a `(<git describe>)` parenthetical whose value depends
+        # on which refs the runner happened to fetch — especially for the
+        # shallow `td` submodule, where describe can drift between two
+        # otherwise-identical checkouts and silently invalidate the cache.
+        # rev-parse is pure SHA, deterministic.
+        submodules=(
+          TMessagesProj/jni/boringssl
+          TMessagesProj/jni/dav1d
+          TMessagesProj/jni/ffmpeg
+          TMessagesProj/jni/libvpx
+          TMessagesProj/jni/td
+        )
+
+        scripts=( TMessagesProj/jni/build_*.sh TMessagesProj/jni/patch_*.sh )
+        [ "${#scripts[@]}" -gt 0 ] || { echo "no build_*.sh / patch_*.sh found under TMessagesProj/jni/" >&2; exit 1; }
+
+        # Host toolchain versions. nasm + gperf emit bytes that end up
+        # embedded in our .a outputs (libvpx/dav1d SIMD assembly, boringssl
+        # perfect-hash tables); cmake/meson/binutils orchestrate the build
+        # and version drift can also leak into compiled output. Fold them
+        # in so an ubuntu-24.04 runner image refresh that bumps any of
+        # these invalidates the cache cleanly. Callers must have already
+        # installed these via apt-get before invoking this action.
+        # libuv1t64 (not libuv1) — Ubuntu 24.04 t64 transition renamed the
+        # binary package; the old name only exists as a virtual Provides, and
+        # `dpkg-query -W libuv1` succeeds with an empty version, silently
+        # corrupting the fingerprint.
+        host_pkgs=( nasm gperf meson cmake binutils libuv1t64 )
+
+        # Gradle-pinned NDK + build-tools versions. NDK bumps change the
+        # codegen of SIMD assembly (especially x86) but the apt-installed
+        # host pkgs above don't see them (NDK is sdkmanager-installed).
+        # Without this line, an NDK bump leaves the repro-verified marker
+        # valid → next push drops back to arm64-only verify and silently
+        # misses any per-ABI regression the new NDK introduces.
+        gradle_file=TMessagesProj/build.gradle
+        ndk=$(grep -oE 'ndkVersion[[:space:]]+"[0-9.]+"' "$gradle_file" | grep -oE '[0-9.]+' || true)
+        bt=$(grep -oE "buildToolsVersion[[:space:]]+'[0-9.]+'" "$gradle_file" | grep -oE '[0-9.]+' || true)
+        [ -n "$ndk" ] && [ -n "$bt" ] || { echo "could not parse ndkVersion / buildToolsVersion from $gradle_file" >&2; exit 1; }
+
+        # dpkg-query without --no-pager succeeds even when a pattern matches
+        # nothing or matches a Provides record with empty Version — silently
+        # writes "<pkg> " to the fingerprint, so the marker no longer detects
+        # version drift for that pkg. Validate every line has a non-empty
+        # version and fail loud if not (caught the libuv1 → libuv1t64 t64
+        # transition rename on ubuntu-24.04).
+        host_pkg_lines=$(dpkg-query -W -f='${Package} ${Version}\n' "${host_pkgs[@]}")
+        while IFS=' ' read -r pkg ver; do
+          [ -n "$ver" ] || { echo "fingerprint: host pkg '$pkg' has empty version (renamed? virtual? not installed?)" >&2; exit 1; }
+        done <<< "$host_pkg_lines"
+
+        {
+          for sm in "${submodules[@]}"; do
+            printf '%s %s\n' "$(git -C "$sm" rev-parse HEAD)" "$sm"
+          done
+          sha256sum "${scripts[@]}"
+          printf '%s\n' "$host_pkg_lines"
+          printf 'ndkVersion %s\nbuildToolsVersion %s\n' "$ndk" "$bt"
+        } > .jni-cache-fingerprint
+
+        echo "── .jni-cache-fingerprint ──"
+        cat .jni-cache-fingerprint

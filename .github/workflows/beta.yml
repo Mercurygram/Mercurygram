@@ -1,0 +1,473 @@
+name: Beta
+
+on:
+  push:
+    branches:
+      - Mercurygram
+
+concurrency:
+  group: beta-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Prerelease tag policy + mode rules: see AGENTS.md "Prerelease channels".
+  # K resets per-prefix (X.Y.Z.0.K and X.Y.Z.M.K each have their own counter)
+  # so it stays bounded. .beta debug versionCodeOverride is github.run_number
+  # (globally monotonic) — PackageInstaller accepts beta-over-beta upgrades
+  # across mode switches and stable bumps.
+  version:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      name: ${{ steps.compute.outputs.name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          fetch-tags: true
+
+      - name: Compute beta version
+        id: compute
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APP_VN=$(grep '^APP_VERSION_NAME=' gradle.properties | cut -d= -f2)
+          APP_VN_ESC=${APP_VN//./\\.}
+          echo "APP_VERSION_NAME=${APP_VN}"
+
+          # Union of git tags + GitHub Releases tag names. Releases survive
+          # `git tag -d origin <tag>` (orphan-release state) and re-running
+          # the workflow on a branch whose stable tags got manually deleted
+          # would otherwise fall back to pre-stable and recompute an already-
+          # shipped K. The Releases list is authoritative for "what shipped".
+          # 2>/dev/null + || true: a gh outage shouldn't fail the build —
+          # we still have git tags, just lose the orphan-release safety net.
+          RELEASE_TAGS=$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate \
+            --jq '.[].tag_name' 2>/dev/null || true)
+          ALL_VERSIONS=$( {
+            git tag -l "${APP_VN}.*"
+            echo "$RELEASE_TAGS" | grep -E "^${APP_VN_ESC}\." || true
+          } | sort -u )
+
+          # Anchored regex enforces 4-dotted X.Y.Z.M (M >= 1) — the glob
+          # alone would match 5-dotted X.Y.Z.M.K too.
+          STABLE=$(echo "$ALL_VERSIONS" | grep -E "^${APP_VN_ESC}\.[1-9][0-9]*$" | sort -V | tail -1 || true)
+          if [ -n "$STABLE" ]; then
+            PREFIX="$STABLE"
+            MODE="post-stable snapshot (stable ${STABLE} exists)"
+          else
+            PREFIX="${APP_VN}.0"
+            MODE="pre-stable (no ${APP_VN}.M stable yet)"
+          fi
+          echo "Mode: ${MODE}"
+          echo "Prefix: ${PREFIX}"
+
+          # Anchored regex enforces a numeric trailing K (the glob alone would
+          # also match stray non-numeric snapshot tags, breaking the arithmetic).
+          PREFIX_ESC=${PREFIX//./\\.}
+          LAST=$(echo "$ALL_VERSIONS" | grep -E "^${PREFIX_ESC}\.[0-9]+$" | sort -V | tail -1 || true)
+          if [ -z "$LAST" ]; then
+            K=1
+            echo "Previous tag: none — starting K=1"
+          else
+            K=$(( ${LAST##*.} + 1 ))
+            echo "Previous tag: ${LAST} — next K=${K}"
+          fi
+          NAME="${PREFIX}.${K}"
+          echo "Computed beta version: ${NAME}"
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Beta version"
+            echo "- APP_VERSION_NAME: \`${APP_VN}\`"
+            echo "- Mode: ${MODE}"
+            echo "- Previous tag: \`${LAST:-none}\`"
+            echo "- Computed: **\`${NAME}\`**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Warm the JNI native-build cache once per push so the 8 build-matrix jobs
+  # below restore prebuilt boringssl/ffmpeg/dav1d/libvpx/tde2e archives
+  # instead of each rebuilding from source.
+  prewarm-native:
+    needs: version
+    uses: ./.github/workflows/_prewarm-native.yml
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_HASH: ${{ secrets.APP_HASH }}
+
+  build:
+    runs-on: ubuntu-24.04
+    needs: [version, prewarm-native]
+    # Graceful degradation: build runs even if prewarm-native failed. A
+    # prewarm flake (apt mirror hiccup, sdkmanager 503, …) just means the
+    # cache stays cold for this push and build-mg rebuilds natives inline.
+    # version is the only hard requirement — its output is the APK filename.
+    if: ${{ !cancelled() && needs.version.result == 'success' }}
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Release builds — reproducible, shares versionCode with the
+          # latest stable. Filename has no infix.
+          - flavor: afatFdArm32
+            task: assembleAfatFdArm32Release
+            abi: armeabi-v7a
+            build-type: release
+            name-infix: ''
+          - flavor: afatFdArm64
+            task: assembleAfatFdArm64Release
+            abi: arm64-v8a
+            build-type: release
+            name-infix: ''
+          - flavor: afatFdX86
+            task: assembleAfatFdX86Release
+            abi: x86
+            build-type: release
+            name-infix: ''
+          - flavor: afatFdX86_64
+            task: assembleAfatFdX86_64Release
+            abi: x86_64
+            build-type: release
+            name-infix: ''
+          # Debug builds — `.beta` applicationIdSuffix, side-by-side install
+          # with stable. Filename gets a "-debug" infix to distinguish from
+          # the Release APK.
+          - flavor: afatFdArm32
+            task: assembleAfatFdArm32Debug
+            abi: armeabi-v7a
+            build-type: debug
+            name-infix: '-debug'
+          - flavor: afatFdArm64
+            task: assembleAfatFdArm64Debug
+            abi: arm64-v8a
+            build-type: debug
+            name-infix: '-debug'
+          - flavor: afatFdX86
+            task: assembleAfatFdX86Debug
+            abi: x86
+            build-type: debug
+            name-infix: '-debug'
+          - flavor: afatFdX86_64
+            task: assembleAfatFdX86_64Debug
+            abi: x86_64
+            build-type: debug
+            name-infix: '-debug'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - name: Build APK
+        id: build
+        uses: ./.github/actions/build-mg
+        with:
+          flavor: ${{ matrix.flavor }}
+          task: ${{ matrix.task }}
+          abi: ${{ matrix.abi }}
+          build-type: ${{ matrix.build-type }}
+          artifact-version: ${{ needs.version.outputs.name }}
+          name-infix: ${{ matrix.name-infix }}
+          # MG_BETA_* only apply to the debug buildType (see
+          # TMessagesProj_App/build.gradle:274). For release, leave the inputs
+          # empty so build-mg skips the -P overrides and the variant takes the
+          # standard MG_VERSION_CODE*10+abi versionCode.
+          beta-version-code: ${{ matrix.build-type == 'debug' && github.run_number || '' }}
+          beta-version-name: ${{ matrix.build-type == 'debug' && needs.version.outputs.name || '' }}
+          # MG_BUILD_TAG: bake the real 5-dotted tag into versionName/versionCode
+          # for both Release and Debug variants. gradle/mg-version.gradle requires
+          # MG_BUILD_TAG at configure time — there is no git-describe fallback.
+          build-tag: ${{ needs.version.outputs.name }}
+          app-id: ${{ secrets.APP_ID }}
+          app-hash: ${{ secrets.APP_HASH }}
+          release-keystore-b64: ${{ secrets.RELEASE_KEYSTORE }}
+          release-keystore-password: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          release-key-alias: ${{ secrets.RELEASE_KEY_ALIAS }}
+          release-key-password: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apk-${{ matrix.abi }}-${{ matrix.build-type }}
+          path: ${{ steps.build.outputs.apk_path }}
+
+  # Cumulative AI-generated changelog covering last 4-dotted stable → HEAD.
+  # Runs in parallel with build/verify so the AI call doesn't extend wall
+  # time. Output is consumed by the release job as body_path. Mirrors the
+  # changelog job in release.yml.
+  changelog:
+    runs-on: ubuntu-24.04
+    needs: version
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Generate changelog
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          set -euo pipefail
+          # Prefer the latest 4-dotted X.Y.Z.M (M >= 1) stable at the CURRENT
+          # APP_VERSION_NAME so the diff stays bounded to one upstream cycle —
+          # a `git diff` spanning an upstream rebase would otherwise pull in
+          # the entire upstream-Telegram delta and blow past the AI context
+          # window. Falls back to the global newest stable when the current
+          # cycle hasn't shipped one yet; empty when the repo has never tagged
+          # a stable (changelog-ai.sh then takes its first-release branch).
+          APP_VN=$(grep '^APP_VERSION_NAME=' gradle.properties | cut -d= -f2)
+          APP_VN_ESC=${APP_VN//./\\.}
+          LAST_STABLE=$(git tag -l "${APP_VN}.*" --sort=-version:refname \
+            | grep -E "^${APP_VN_ESC}\.[1-9][0-9]*$" | head -1 || true)
+          if [ -z "$LAST_STABLE" ]; then
+            LAST_STABLE=$(git tag -l '[0-9]*' --sort=-version:refname \
+              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
+          fi
+
+          if [ -n "$LAST_STABLE" ]; then
+            echo "Last stable: ${LAST_STABLE} — $(git rev-list --count "${LAST_STABLE}..HEAD") commit(s) since"
+          else
+            echo "No 4-dotted stable tag yet — first-release enumeration"
+          fi
+
+          bash .github/scripts/changelog-ai.sh \
+            "$LAST_STABLE" "$GITHUB_SHA" "$RUNNER_TEMP/changelog.md"
+          printf '\n\ncommit: %s\n' "$GITHUB_SHA" >> "$RUNNER_TEMP/changelog.md"
+
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: changelog
+          path: ${{ runner.temp }}/changelog.md
+
+  # Reproducibility regression guard — runs before publishing so a mismatch
+  # blocks the GitHub Release (mirrors release.yml). Four-job pipeline:
+  #
+  #   verify-decide → verify-build (matrix N) ─┐
+  #                                            ├─> verify-diff (N) → verify-mark
+  #                                build (8) ──┘
+  #
+  # N = 1 (arm64 only) when a marker cache exists for the current JNI
+  # fingerprint + verification-script hash; N = 4 (all ABIs) otherwise.
+  # verify-build runs in parallel with the gradle build matrix; only the
+  # final diffoscope (verify-diff) needs both APKs — the F-Droid container
+  # build doesn't depend on the gradle output. Once 4-ABI verify passes for
+  # a given fingerprint, verify-mark saves a marker so subsequent same-
+  # fingerprint pushes drop back to arm64-only.
+  verify-decide:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      marker-key: ${{ steps.matrix.outputs.marker-key }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - name: Install host build tools
+        # Required by the jni-cache-fingerprint composite — it dpkg-queries
+        # these to fold host toolchain versions into the fingerprint. Same
+        # pinned set as _prewarm-native.yml.
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gperf meson libuv1-dev nasm cmake
+
+      - name: Compute JNI cache fingerprint
+        uses: ./.github/actions/jni-cache-fingerprint
+
+      - name: Check for repro-verified marker
+        id: marker
+        # lookup-only: existence check, no download. The cache exists iff a
+        # previous run verified all 4 ABIs for the current fingerprint +
+        # script hash.
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .repro-verified-marker
+          key: repro-verified-${{ hashFiles('.jni-cache-fingerprint', 'scripts/check-reproducibility.sh') }}
+          lookup-only: true
+
+      - name: Decide matrix
+        id: matrix
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.marker.outputs.cache-hit }}" = "true" ]; then
+            MATRIX='["arm64-v8a"]'
+            MODE='arm64-only (marker cached for current fingerprint)'
+          else
+            MATRIX='["arm64-v8a","armeabi-v7a","x86","x86_64"]'
+            MODE='4-ABI (no marker for current fingerprint)'
+          fi
+          echo "Mode: $MODE"
+          echo "Matrix: $MATRIX"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "marker-key=repro-verified-${{ hashFiles('.jni-cache-fingerprint', 'scripts/check-reproducibility.sh') }}" >> "$GITHUB_OUTPUT"
+
+  verify-build:
+    runs-on: ubuntu-24.04
+    needs: [verify-decide, version]
+    timeout-minutes: 90
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ${{ fromJSON(needs.verify-decide.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Build fdroid-container APK for ${{ matrix.abi }}
+        env:
+          # The CI gradle build bakes MG_BUILD_TAG via -PMG_BUILD_TAG=<tag>.
+          # verify-build passes $GITHUB_SHA (not a tag) so the script can't
+          # auto-derive it — pass the tag explicitly so the rebuilt APK
+          # matches byte-for-byte (otherwise diffoscope flags MG_BUILD_TAG).
+          MG_BUILD_TAG_OVERRIDE: ${{ needs.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/mg-repro" "$RUNNER_TEMP/out"
+          export MG_REPRO_WORK="$RUNNER_TEMP/mg-repro"
+          scripts/check-reproducibility.sh verify-build \
+            "${{ matrix.abi }}" "$GITHUB_SHA" \
+            -o "$RUNNER_TEMP/out/fdroid-${{ matrix.abi }}.apk"
+
+      - name: Upload fdroid-built APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fdroid-${{ matrix.abi }}
+          path: ${{ runner.temp }}/out/fdroid-${{ matrix.abi }}.apk
+
+  verify-diff:
+    runs-on: ubuntu-24.04
+    needs: [build, verify-build, verify-decide]
+    # No `needs.verify-build.result == 'success'` gate — in 4-ABI mode with
+    # fail-fast:false, a single bad leg would otherwise hide diff results
+    # for all the legs that built fine. Each per-ABI leg runs independently
+    # here; the download-artifact step fails its own leg if its
+    # corresponding fdroid-<abi> artifact is missing, leaving the other
+    # legs free to surface actionable diffoscope output. verify-mark still
+    # gates on the whole verify-diff being success(), so the marker only
+    # saves when every ABI passes — the desired all-or-nothing semantic.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ${{ fromJSON(needs.verify-decide.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download gradle-built Release APK (${{ matrix.abi }})
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: apk-${{ matrix.abi }}-release
+          path: apk-gradle/
+
+      - name: Download fdroid-built APK (${{ matrix.abi }})
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: fdroid-${{ matrix.abi }}
+          path: apk-fdroid/
+
+      - name: Diffoscope (gradle ↔ fdroid, signatures excluded)
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir -p "$RUNNER_TEMP/mg-repro"
+          export MG_REPRO_WORK="$RUNNER_TEMP/mg-repro"
+          gradle_apks=(apk-gradle/*.apk)
+          fdroid_apks=(apk-fdroid/*.apk)
+          [ "${#gradle_apks[@]}" -eq 1 ] && [ "${#fdroid_apks[@]}" -eq 1 ] \
+            || { echo "expected exactly 1 apk under each dir, got ${#gradle_apks[@]} / ${#fdroid_apks[@]}"; exit 1; }
+          scripts/check-reproducibility.sh verify-diff "${gradle_apks[0]}" "${fdroid_apks[0]}"
+
+  verify-mark:
+    runs-on: ubuntu-24.04
+    needs: [verify-decide, verify-diff]
+    if: ${{ success() }}
+    permissions:
+      contents: read
+    # Per-job concurrency override: the workflow-level
+    # `cancel-in-progress: true` would otherwise cancel verify-mark mid
+    # cache-save on a rapid follow-up push, leaving the marker missing and
+    # forcing the next push back to 4-ABI verify. Suppression here lets
+    # the cache save complete; the actual heavy work (verify-build /
+    # verify-diff) is still cancellable upstream.
+    concurrency:
+      group: beta-verify-mark-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Create marker
+        run: echo verified > .repro-verified-marker
+
+      - name: Save repro-verified marker
+        # Idempotent: re-saving the same key is a no-op. The marker's
+        # presence — not its content — is what verify-decide checks on the
+        # next push. `continue-on-error: true` so a transient GHA cache
+        # backend outage doesn't block the release — verify-diff already
+        # passed so reproducibility is confirmed; the worst case is the
+        # next push re-runs 4-ABI verify (self-healing).
+        continue-on-error: true
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .repro-verified-marker
+          key: ${{ needs.verify-decide.outputs.marker-key }}
+
+  release:
+    runs-on: ubuntu-24.04
+    needs: [version, build, changelog, verify-mark]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download APK artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: apk-*
+          merge-multiple: true
+          path: artifacts/
+
+      - name: Download changelog artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: changelog
+          path: artifacts/
+
+      - name: Create GitHub pre-release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          tag_name: ${{ needs.version.outputs.name }}
+          name: ${{ needs.version.outputs.name }}
+          prerelease: true
+          make_latest: false
+          body_path: artifacts/changelog.md
+          files: artifacts/*.apk
