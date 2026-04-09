@@ -1,0 +1,2 @@
+* Updated to Telegram 12.5.1
+* Upstream changelog at https://telegram.org/blog/todo
