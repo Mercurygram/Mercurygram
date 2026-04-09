@@ -1461,6 +1461,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 (SharedConfig.frameMetricsEnabled ? "hide frame metrics" : "show frame metrics"),
                 BuildVars.DEBUG_PRIVATE_VERSION ? (SharedConfig.shadowsInSections ? "disable shadows in settings" : "enable shadows in settings") : null,
                 BuildVars.DEBUG_PRIVATE_VERSION ? (SharedConfig.debugViewMetrics ? "disable debug view metrics" : "enable debug view metrics") : null,
+                // [MG] Mercurygram Debug items
+                SharedConfig.disableSecureFlags ? "Enable Secure Flags" : "Disable Secure Flags",
+                SharedConfig.removeAdsAndProxySponsor ? "Enable Ads & Proxy Sponsor" : "Remove Ads & Proxy Sponsor"
         };
 
         builder.setItems(items, (dialog, which) -> {
@@ -1770,6 +1773,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             } else if (which == 41) {
                 final SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
                 prefs.edit().putBoolean("debugViewMetrics", SharedConfig.debugViewMetrics = !SharedConfig.debugViewMetrics).apply();
+            } else if (which == 42) {
+                SharedConfig.toggleDisableSecureFlags();
+            } else if (which == 43) {
+                SharedConfig.toggleRemoveAdsAndProxySponsor();
             }
         });
         builder.setNegativeButton(getString(R.string.Cancel), null);
