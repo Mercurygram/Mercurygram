@@ -105,6 +105,9 @@ public class DebugSettingsActivity extends UniversalFragment {
     private static final int ID_WIDGET_STATIC_LAYERS = 44;
     private static final int ID_FORGET_HINTS = 45;
     private static final int ID_COMPACT_MODE = 46;
+    // [MG] Mercurygram debug items, numbered clear of upstream's
+    private static final int ID_MG_SECURE_FLAGS = 1001;
+    private static final int ID_MG_ADS_PROXY_SPONSOR = 1002;
 
     @Override
     protected boolean useSimpleActionBar() {
@@ -180,6 +183,8 @@ public class DebugSettingsActivity extends UniversalFragment {
             items.add(UItem.asCheck(ID_FLOATING_DEBUG, getString(R.string.FloatingDebugEnable)).setChecked(SharedConfig.isFloatingDebugActive));
         }
         items.add(UItem.asCheck(ID_EXPERIMENTAL, "Experimental settings").setChecked(SharedSettings.experimentalSettingsAllowed.get()));
+        items.add(UItem.asCheck(ID_MG_SECURE_FLAGS, "Disable Secure Flags").setChecked(SharedConfig.disableSecureFlags));
+        items.add(UItem.asCheck(ID_MG_ADS_PROXY_SPONSOR, "Remove Ads & Proxy Sponsor").setChecked(SharedConfig.removeAdsAndProxySponsor));
         items.add(UItem.asShadow(null));
 
         items.add(UItem.asHeader("Interface"));
@@ -448,6 +453,12 @@ public class DebugSettingsActivity extends UniversalFragment {
             case ID_WIDGET_STATIC_LAYERS:
                 // Frames drawn from now on follow it; one already in a layer keeps it until the next frame.
                 SharedConfig.toggleWidgetStaticLayers();
+                break;
+            case ID_MG_SECURE_FLAGS:
+                SharedConfig.toggleDisableSecureFlags();
+                break;
+            case ID_MG_ADS_PROXY_SPONSOR:
+                SharedConfig.toggleRemoveAdsAndProxySponsor();
                 break;
             default:
                 return;
