@@ -6,6 +6,9 @@ import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.R;
 import org.unifiedpush.android.embedded_fcm_distributor.EmbeddedDistributorReceiver;
 import org.unifiedpush.android.embedded_fcm_distributor.Gateway;
 
@@ -75,5 +78,12 @@ public class MgEmbeddedFcmDistributor extends EmbeddedDistributorReceiver {
     /** True when the given distributor package name is this built-in distributor. */
     public static boolean isSelf(Context context, String distributor) {
         return context.getPackageName().equals(distributor);
+    }
+
+    /** This distributor is our own package: show what it is, not the application id. */
+    public static CharSequence label(CharSequence distributor) {
+        return isSelf(ApplicationLoader.applicationContext, distributor.toString())
+                ? LocaleController.getString(R.string.MercurygramEmbeddedFcm)
+                : distributor;
     }
 }
