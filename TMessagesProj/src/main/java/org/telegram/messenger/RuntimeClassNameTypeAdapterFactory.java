@@ -174,7 +174,7 @@ public final class RuntimeClassNameTypeAdapterFactory<T> implements TypeAdapterF
 
     public <R> TypeAdapter<R> create(Gson gson, TypeToken<R> type) {
 
-        if (exclusionStrategy.shouldSkipClass(type.getRawType().getClass())) {
+        if (exclusionStrategy != null && exclusionStrategy.shouldSkipClass(type.getRawType())) {
             return null;
         }
         final Map<String, TypeAdapter<?>> labelToDelegate
