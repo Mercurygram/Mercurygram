@@ -9,7 +9,7 @@ public class LanguageDetector {
     }
 
     public static boolean hasSupport() {
-        return true;
+        return false;
     }
 
     public static void detectLanguage(String text, StringCallback onSuccess, ExceptionCallback onFail) {
@@ -17,41 +17,8 @@ public class LanguageDetector {
     }
 
     public static void detectLanguage(String text, StringCallback onSuccess, ExceptionCallback onFail, boolean initializeFirst) {
-        try {
-            if (initializeFirst) {
-                com.google.mlkit.common.sdkinternal.MlKitContext.zza(ApplicationLoader.applicationContext);
-            }
-            com.google.mlkit.nl.languageid.LanguageIdentification.getClient()
-                .identifyLanguage(text)
-                .addOnSuccessListener(str -> {
-                    if (onSuccess != null) {
-                        onSuccess.run(str);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    if (onFail != null) {
-                        onFail.run(e);
-                    }
-                });
-        } catch (IllegalStateException e) {
-            if (!initializeFirst) {
-                detectLanguage(text, onSuccess, onFail, true);
-            } else {
-                if (onFail != null) {
-                    onFail.run(e);
-                }
-                FileLog.e(e, false);
-            }
-        } catch (Exception e) {
-            if (onFail != null) {
-                onFail.run(e);
-            }
-            FileLog.e(e);
-        } catch (Throwable t) {
-            if (onFail != null) {
-                onFail.run(null);
-            }
-            FileLog.e(t, false);
+        if (onFail != null) {
+            onFail.run(new Exception("MLKit language detection not available"));
         }
     }
 }
