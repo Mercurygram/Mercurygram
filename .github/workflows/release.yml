@@ -1,0 +1,456 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+      # Beta tags are 5-part (X.Y.Z.W.N); stable are 4-part. Exclude betas
+      # since '[0-9]*' is a glob (not regex) — '*' matches '.' too.
+      - '!*.*.*.*.*'
+  workflow_dispatch:
+    inputs:
+      create_mr:
+        description: 'Open F-Droid merge request after syncing the branch'
+        type: boolean
+        default: true
+
+# Serialize per-tag runs without canceling them. If a maintainer deletes and
+# re-pushes the same tag (legitimate during the pre-stable → stable cleanup
+# described in AGENTS.md "Prerelease channels"), the second run queues
+# behind the first instead of racing it.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Warm the JNI native-build cache once per release so the 4 build-matrix
+  # jobs below restore prebuilt natives instead of each rebuilding from
+  # source.
+  prewarm-native:
+    uses: ./.github/workflows/_prewarm-native.yml
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_HASH: ${{ secrets.APP_HASH }}
+
+  build:
+    runs-on: ubuntu-24.04
+    needs: prewarm-native
+    # Graceful degradation: build runs even if prewarm-native failed. A
+    # prewarm flake just leaves the cache cold for this run — build-mg
+    # then rebuilds natives inline.
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: afatFdArm32
+            task: assembleAfatFdArm32Release
+            abi: armeabi-v7a
+          - flavor: afatFdArm64
+            task: assembleAfatFdArm64Release
+            abi: arm64-v8a
+          - flavor: afatFdX86
+            task: assembleAfatFdX86Release
+            abi: x86
+          - flavor: afatFdX86_64
+            task: assembleAfatFdX86_64Release
+            abi: x86_64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: recursive
+
+      - name: Build APK
+        id: build
+        uses: ./.github/actions/build-mg
+        with:
+          flavor: ${{ matrix.flavor }}
+          task: ${{ matrix.task }}
+          abi: ${{ matrix.abi }}
+          build-type: release
+          artifact-version: ${{ github.ref_name }}
+          # gradle/mg-version.gradle requires MG_BUILD_TAG to derive
+          # MG_VERSION_NAME / MG_VERSION_CODE.
+          build-tag: ${{ github.ref_name }}
+          app-id: ${{ secrets.APP_ID }}
+          app-hash: ${{ secrets.APP_HASH }}
+          release-keystore-b64: ${{ secrets.RELEASE_KEYSTORE }}
+          release-keystore-password: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          release-key-alias: ${{ secrets.RELEASE_KEY_ALIAS }}
+          release-key-password: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apk-${{ matrix.abi }}
+          path: ${{ steps.build.outputs.apk_path }}
+
+  changelog:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          set -euo pipefail
+          # `|| true` — both greps return 1 when nothing matches (e.g. a
+          # 3-dotted tag triggered the workflow but doesn't match the 4-part
+          # regex), and pipefail would otherwise abort before the
+          # `[ -z "$PREV_TAG" ]` first-release branch fires.
+          PREV_TAG=$(git tag -l '[0-9]*' --sort=-version:refname \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' \
+            | grep -A1 "^${GITHUB_REF_NAME}$" | tail -1) || true
+          echo "Current tag: ${GITHUB_REF_NAME}"
+
+          if [ "$PREV_TAG" = "$GITHUB_REF_NAME" ] || [ -z "$PREV_TAG" ]; then
+            echo "Previous stable tag: none — diffing against current tag only"
+            PREV_TAG=""
+          else
+            echo "Previous stable tag: ${PREV_TAG} — diffing ${PREV_TAG}..${GITHUB_REF_NAME}"
+          fi
+
+          bash .github/scripts/changelog-ai.sh "$PREV_TAG" "$GITHUB_REF_NAME" "$RUNNER_TEMP/changelog.md"
+
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: changelog
+          path: ${{ runner.temp }}/changelog.md
+
+  # Reproducibility regression guard — runs before publishing so a mismatch
+  # blocks the GitHub Release. Four-job pipeline:
+  #
+  #   verify-decide → verify-build (matrix N) ─┐
+  #                                            ├─> verify-diff (N) → verify-mark
+  #                                build (4) ──┘
+  #
+  # N = 1 (arm64 only) when a marker cache exists for the current JNI
+  # fingerprint + verification-script hash; N = 4 (all ABIs) otherwise.
+  # verify-build runs in parallel with the gradle build matrix; only the
+  # final diffoscope (verify-diff) needs both APKs. Mirrors beta.yml.
+  verify-decide:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      marker-key: ${{ steps.matrix.outputs.marker-key }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: recursive
+
+      - name: Install host build tools
+        # Required by the jni-cache-fingerprint composite — it dpkg-queries
+        # these to fold host toolchain versions into the fingerprint. Same
+        # pinned set as _prewarm-native.yml.
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gperf meson libuv1-dev nasm cmake
+
+      - name: Compute JNI cache fingerprint
+        uses: ./.github/actions/jni-cache-fingerprint
+
+      - name: Check for repro-verified marker
+        id: marker
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .repro-verified-marker
+          key: repro-verified-${{ hashFiles('.jni-cache-fingerprint', 'scripts/check-reproducibility.sh') }}
+          lookup-only: true
+
+      - name: Decide matrix
+        id: matrix
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.marker.outputs.cache-hit }}" = "true" ]; then
+            MATRIX='["arm64-v8a"]'
+            MODE='arm64-only (marker cached for current fingerprint)'
+          else
+            MATRIX='["arm64-v8a","armeabi-v7a","x86","x86_64"]'
+            MODE='4-ABI (no marker for current fingerprint)'
+          fi
+          echo "Mode: $MODE"
+          echo "Matrix: $MATRIX"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "marker-key=repro-verified-${{ hashFiles('.jni-cache-fingerprint', 'scripts/check-reproducibility.sh') }}" >> "$GITHUB_OUTPUT"
+
+  verify-build:
+    runs-on: ubuntu-24.04
+    needs: verify-decide
+    timeout-minutes: 360
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ${{ fromJSON(needs.verify-decide.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Build fdroid-container APK for ${{ matrix.abi }}
+        env:
+          # verify-build passes $GITHUB_SHA (not a tag) so the script can't
+          # auto-derive MG_BUILD_TAG_OVERRIDE from it — pass the tag explicitly
+          # so the rebuilt APK matches byte-for-byte (mirror of beta.yml).
+          MG_BUILD_TAG_OVERRIDE: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/mg-repro" "$RUNNER_TEMP/out"
+          export MG_REPRO_WORK="$RUNNER_TEMP/mg-repro"
+          scripts/check-reproducibility.sh verify-build \
+            "${{ matrix.abi }}" "$GITHUB_SHA" \
+            -o "$RUNNER_TEMP/out/fdroid-${{ matrix.abi }}.apk"
+
+      - name: Upload fdroid-built APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fdroid-${{ matrix.abi }}
+          path: ${{ runner.temp }}/out/fdroid-${{ matrix.abi }}.apk
+
+  verify-diff:
+    runs-on: ubuntu-24.04
+    needs: [build, verify-build, verify-decide]
+    # No `needs.verify-build.result == 'success'` gate — in 4-ABI mode with
+    # fail-fast:false, a single bad leg would otherwise hide diff results
+    # for all the legs that built fine. Each per-ABI leg runs independently
+    # here; the download-artifact step fails its own leg if its
+    # corresponding fdroid-<abi> artifact is missing, leaving the other
+    # legs free to surface actionable diffoscope output. verify-mark still
+    # gates on the whole verify-diff being success(), so the marker only
+    # saves when every ABI passes — the desired all-or-nothing semantic.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ${{ fromJSON(needs.verify-decide.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Download gradle-built Release APK (${{ matrix.abi }})
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: apk-${{ matrix.abi }}
+          path: apk-gradle/
+
+      - name: Download fdroid-built APK (${{ matrix.abi }})
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: fdroid-${{ matrix.abi }}
+          path: apk-fdroid/
+
+      - name: Diffoscope (gradle ↔ fdroid, signatures excluded)
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir -p "$RUNNER_TEMP/mg-repro"
+          export MG_REPRO_WORK="$RUNNER_TEMP/mg-repro"
+          gradle_apks=(apk-gradle/*.apk)
+          fdroid_apks=(apk-fdroid/*.apk)
+          [ "${#gradle_apks[@]}" -eq 1 ] && [ "${#fdroid_apks[@]}" -eq 1 ] \
+            || { echo "expected exactly 1 apk under each dir, got ${#gradle_apks[@]} / ${#fdroid_apks[@]}"; exit 1; }
+          scripts/check-reproducibility.sh verify-diff "${gradle_apks[0]}" "${fdroid_apks[0]}"
+
+  verify-mark:
+    runs-on: ubuntu-24.04
+    needs: [verify-decide, verify-diff]
+    if: ${{ success() }}
+    permissions:
+      contents: read
+    # Per-job concurrency override — release.yml has no workflow-level
+    # cancel-in-progress, but a tag re-push (legitimate during the
+    # pre-stable -> stable cleanup described in AGENTS.md) would queue
+    # behind, and the queueing alone is fine; explicit `cancel-in-progress:
+    # false` makes the no-cancel intent obvious here too.
+    concurrency:
+      group: release-verify-mark-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Create marker
+        run: echo verified > .repro-verified-marker
+
+      - name: Save repro-verified marker
+        # `continue-on-error: true` so a transient GHA cache backend
+        # outage doesn't block the release — verify-diff already passed so
+        # reproducibility is confirmed; worst case is the next push re-runs
+        # 4-ABI verify (self-healing).
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .repro-verified-marker
+          key: ${{ needs.verify-decide.outputs.marker-key }}
+
+  release:
+    runs-on: ubuntu-24.04
+    needs: [build, changelog, verify-mark]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download APK artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: apk-*
+          merge-multiple: true
+          path: artifacts/
+
+      - name: Download changelog artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: changelog
+          path: artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        with:
+          body_path: artifacts/changelog.md
+          files: artifacts/*.apk
+
+  fdroiddata-sync:
+    runs-on: ubuntu-24.04
+    needs: release
+    env:
+      APPID: it.belloworld.mercurygram
+      BRANCH: mercurygram-${{ github.ref_name }}
+    concurrency:
+      group: fdroiddata-sync-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Download signed APKs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: apk-*
+          merge-multiple: true
+          path: apks/
+
+      - name: Checkout Mercurygram at tag
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: mercurygram
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Install fdroidserver + ruamel.yaml
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends apksigner
+          python3 -m venv "$HOME/fdroid-venv"
+          "$HOME/fdroid-venv/bin/pip" install --quiet fdroidserver ruamel.yaml
+
+      - name: Clone fdroiddata
+        env:
+          GITLAB_TOKEN: ${{ secrets.FDROIDDATA_GITLAB_TOKEN }}
+        run: |
+          # --filter=blob:none: partial clone, ~50 MB instead of ~500 MB.
+          # GitLab refuses push from --depth=1 ("shallow update not allowed")
+          # but accepts it from a partial clone.
+          git clone --filter=blob:none \
+            "https://oauth2:${GITLAB_TOKEN}@gitlab.com/drizzt/fdroiddata.git"
+          cd fdroiddata
+          git config user.name 'Mercurygram CI'
+          git config user.email 'ci@belloworld.it'
+          git remote add upstream https://gitlab.com/fdroid/fdroiddata.git
+          git fetch --filter=blob:none upstream master
+          git checkout -B "$BRANCH" upstream/master
+
+      - name: Decide whether to open MR
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # manual run: honor the input verbatim
+            open="${{ inputs.create_mr }}"
+          elif [ "${{ vars.FDROID_AUTO_MR }}" = "false" ]; then
+            # tag push: default ON, opt out via repo variable
+            open=false
+          else
+            open=true
+          fi
+          echo "open=$open" >> "$GITHUB_OUTPUT"
+
+      - name: Sync metadata and extract per-vercode signature blocks
+        working-directory: fdroiddata
+        run: |
+          "$HOME/fdroid-venv/bin/python3" \
+            ../mercurygram/.github/scripts/fdroid_sync.py \
+            "$GITHUB_REF_NAME" ../apks . ../mercurygram
+
+      - name: Commit and push branch
+        working-directory: fdroiddata
+        run: |
+          git add "metadata/$APPID.yml" "metadata/$APPID/signatures/"
+          git commit -m "$APPID: update to ${GITHUB_REF_NAME}"
+          git push --force-with-lease -u origin "$BRANCH"
+
+      - name: Open merge request
+        if: steps.gate.outputs.open == 'true'
+        env:
+          GITLAB_TOKEN: ${{ secrets.FDROIDDATA_GITLAB_TOKEN }}
+        run: |
+          SRC_PID=$(curl -sf --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            'https://gitlab.com/api/v4/projects/drizzt%2Ffdroiddata' \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          curl -sf --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            --data-urlencode "source_branch=$BRANCH" \
+            --data-urlencode 'target_branch=master' \
+            --data-urlencode "title=$APPID: update to ${GITHUB_REF_NAME}" \
+            --data-urlencode 'target_project_id=36528' \
+            --data-urlencode 'remove_source_branch=true' \
+            "https://gitlab.com/api/v4/projects/${SRC_PID}/merge_requests" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("MR:", d.get("web_url") or d)'
+
+  # Tell the website (mercurygram.org) to show the just-released
+  # version. The site's bump-version workflow updates config.toml and
+  # redeploys. Tag pushes only; the full 4-part X.Y.Z.M is sent. The first
+  # three components are the upstream Telegram version; the 4th is the
+  # Mercurygram build counter that distinguishes our releases.
+
+      - name: Print manual MR link (MR creation skipped)
+        if: steps.recipe.outputs.present == 'true' && steps.gate.outputs.open != 'true'
+        run: |
+          echo "MR creation disabled — branch '$BRANCH' pushed to drizzt/fdroiddata."
+          echo "Open it manually:"
+          echo "https://gitlab.com/drizzt/fdroiddata/-/merge_requests/new?merge_request%5Bsource_branch%5D=$BRANCH&merge_request%5Btarget_project_id%5D=36528&merge_request%5Btarget_branch%5D=master"
+  notify-website:
+    runs-on: ubuntu-24.04
+    needs: release
+    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+    steps:
+      - name: Dispatch version to website
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+          version=$(printf '%s' "${GITHUB_REF_NAME}" | cut -d. -f1-4)
+          jq -n --arg v "$version" \
+            '{event_type:"android-release",client_payload:{version:$v}}' \
+            | gh api repos/Mercurygram/mercurygram.org/dispatches --input -
