@@ -27,8 +27,8 @@ public class BuildVars {
 
     // SafetyNet key for Google Identity SDK, disabled on FOSS builds
     public static String SAFETYNET_KEY = "";
-    public static String PLAYSTORE_APP_URL = "";
-    public static String HUAWEI_STORE_URL = "";
+    public static String PLAYSTORE_APP_URL = "https://github.com/Mercurygram/Mercurygram/releases";
+    public static String HUAWEI_STORE_URL = PLAYSTORE_APP_URL; // Huawei store not used; redirect to GitHub
     public static String GOOGLE_AUTH_CLIENT_ID = "";
 
     // You can use this flag to disable Google Play Billing (If you're making fork and want it to be in Google Play)

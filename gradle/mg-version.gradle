@@ -1,0 +1,82 @@
+// Single source of truth for MG_VERSION_NAME / MG_VERSION_CODE.
+//
+// Resolves MG_BUILD_TAG from one of (highest priority first):
+//   1. -PMG_BUILD_TAG=<tag>   project property (CI, release.sh,
+//      scripts/check-reproducibility.sh).
+//   2. gradle.properties      MG_BUILD_TAG=<tag> entry. The F-Droid
+//      recipe `prebuild` step in .github/scripts/fdroid_sync.py and
+//      scripts/check-reproducibility.sh appends this line inside the
+//      build container.
+//   3. local.properties       MG_BUILD_TAG=<tag> entry. Developer-machine
+//      override (gitignored).
+//   4. Fail the build with an actionable message.
+//
+// Parses the tag (X.Y.Z.M or X.Y.Z.M.K, numeric components) and derives:
+//   rootProject.ext.MG_VERSION_NAME  = <tag verbatim>   (Android only
+//        uses versionCode for upgrade/downgrade; versionName is cosmetic).
+//   rootProject.ext.MG_VERSION_CODE  = APP_VERSION_CODE * 100 + M
+//        where M is the 4th tag component verbatim. Pre-stable
+//        X.Y.Z.0.K therefore gets versionCode = APP_VERSION_CODE * 100
+//        (strictly less than any X.Y.Z.M stable, M >= 1), so the
+//        X.Y.Z.0.K → X.Y.Z.1 transition is a normal OTA upgrade.
+//        Post-stable snapshot X.Y.Z.M.K and stable X.Y.Z.M share one
+//        versionCode → PackageInstaller treats the toggle as a reinstall.
+//
+// See AGENTS.md "Prerelease channels" / "Versioning" for the full rules.
+
+def resolveMgBuildTag = {
+    def fromP = project.hasProperty('MG_BUILD_TAG')
+            ? project.property('MG_BUILD_TAG').toString().trim() : ''
+    if (!fromP.isEmpty()) return fromP
+
+    // gradle.properties is auto-imported, but the auto-import path throws
+    // MissingPropertyException when the key is absent. Read it as a
+    // Properties file so absence is just an empty value.
+    for (fname in ['gradle.properties', 'local.properties']) {
+        def f = rootProject.file(fname)
+        if (!f.exists()) continue
+        def p = new Properties()
+        f.withInputStream { p.load(it) }
+        def v = p.getProperty('MG_BUILD_TAG', '').trim()
+        if (!v.isEmpty()) return v
+    }
+
+    throw new GradleException(
+        'MG_BUILD_TAG not set. Pass -PMG_BUILD_TAG=<tag> or add ' +
+        'MG_BUILD_TAG=<tag> to local.properties ' +
+        '(format X.Y.Z.M or X.Y.Z.M.K, numeric).'
+    )
+}
+
+def parseMgBuildTag = { String tag ->
+    def m = tag =~ /^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$/
+    if (!m.matches()) {
+        throw new GradleException(
+            "MG_BUILD_TAG=${tag} is malformed — expected X.Y.Z.M or X.Y.Z.M.K (numeric components only)."
+        )
+    }
+    int mVal = m[0][4] as int
+    if (mVal < 0 || mVal > 99) {
+        throw new GradleException(
+            "MG_BUILD_TAG=${tag}: M=${mVal} outside the 0..99 slot in MG_VERSION_CODE."
+        )
+    }
+    return mVal
+}
+
+if (rootProject.findProperty('APP_VERSION_CODE') == null) {
+    throw new GradleException('APP_VERSION_CODE missing from gradle.properties')
+}
+int appVc
+try {
+    appVc = rootProject.property('APP_VERSION_CODE').toString().trim() as int
+} catch (NumberFormatException e) {
+    throw new GradleException(
+        "APP_VERSION_CODE=${rootProject.property('APP_VERSION_CODE')} is not an integer"
+    )
+}
+
+def mgTag = resolveMgBuildTag()
+def mVal  = parseMgBuildTag(mgTag)
+rootProject.ext.MG_VERSION_NAME = mgTag
+rootProject.ext.MG_VERSION_CODE = appVc * 100 + mVal
