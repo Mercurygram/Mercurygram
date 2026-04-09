@@ -7,6 +7,7 @@ local.properties
 TMessagesProj/.cxx/
 TMessagesProj/jniLibs/
 TMessagesProj/jniRes/
+TMessagesProj/jni.bak/
 **/.DS_Store
 TMessagesProj/afat/
 TMessagesProj_App/afat/
@@ -24,3 +25,8 @@ TMessagesProj/jni/ffmpeg/x86/
 TMessagesProj/jni/ffmpeg/x86_64/
 TMessagesProj/jni/ffmpeg/.ndk-*
 API_KEYS
+.env
+# Written at the repo root by .github/actions/jni-cache-fingerprint, hashed
+# into the native-cache keys by the job that generated it. Never committed.
+.jni-cache-fingerprint
+.jni-cache-fingerprint.tmp
