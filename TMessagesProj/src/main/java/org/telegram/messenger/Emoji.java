@@ -166,38 +166,6 @@ public class Emoji {
     private static SparseIntArray emojiAlphaMasks;
 
     private static SparseIntArray loadEmojiAlphaMasks() {
-        try (InputStream is = ApplicationLoader.applicationContext.getAssets().open("emoji/metadata.bin")) {
-            ArrayList<byte[]> chunks = new ArrayList<>();
-            int total = 0;
-            byte[] buf = new byte[8192];
-            int read;
-            while ((read = is.read(buf)) != -1) {
-                byte[] copy = new byte[read];
-                System.arraycopy(buf, 0, copy, 0, read);
-                chunks.add(copy);
-                total += read;
-            }
-
-            byte[] all = new byte[total];
-            int pos = 0;
-            for (byte[] c : chunks) {
-                System.arraycopy(c, 0, all, pos, c.length);
-                pos += c.length;
-            }
-
-            ByteBuffer bb = ByteBuffer.wrap(all).order(ByteOrder.LITTLE_ENDIAN);
-            int pairs = total / 4;
-
-            SparseIntArray map = new SparseIntArray(pairs);
-            for (int i = 0; i < pairs; i++) {
-                int emojiIndex = bb.getShort() & 0xFFFF;
-                int maskId     = bb.getShort() & 0xFFFF;
-                map.put(emojiIndex, maskId);
-            }
-            return map;
-        } catch (Exception e) {
-            FileLog.e(e);
-        }
         return null;
     }
 
