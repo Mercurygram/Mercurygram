@@ -25,3 +25,5 @@ TMessagesProj/jni/prebuild/build/
 TMessagesProj/jni/voip/ReferenceCoreEmbedded.cpp
 # Widget sandbox QuickJS bytecode, built by jni/build_widget_bytecode.sh.
 TMessagesProj/src/main/assets/WidgetSandbox/WidgetJS/*.qbc
+API_KEYS
+
