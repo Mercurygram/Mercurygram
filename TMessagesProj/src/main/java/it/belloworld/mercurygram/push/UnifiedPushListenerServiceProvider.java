@@ -28,7 +28,26 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
     private static final long ENSURE_INTERVAL_MS = 60_000L;
     private static long lastEnsureMs = 0;
 
+    private static Runnable stateListener;
+
     private UnifiedPushListenerServiceProvider() {}
+
+    /**
+     * Follows the registration state while the UnifiedPush settings screen is open, which is
+     * what turns "(waiting for endpoint)" into the distributor name once it answers. Only that
+     * screen ever listens, so a single slot is enough; it is cleared when the screen goes away.
+     */
+    public static void setStateListener(Runnable listener) {
+        stateListener = listener;
+    }
+
+    /** Called from every path that changes what the settings screen shows. */
+    public static void notifyStateChanged() {
+        Runnable listener = stateListener;
+        if (listener != null) {
+            AndroidUtilities.runOnUIThread(listener);
+        }
+    }
 
     @Override
     public boolean hasServices() {
@@ -154,6 +173,7 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
         // supposed to have left.
         UnifiedPush.forceRemoveDistributor(ApplicationLoader.applicationContext);
         PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_WEB, null);
+        notifyStateChanged();
     }
 
     /**
@@ -182,6 +202,7 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
                 "Mercurygram WebPush",
                 null
         );
+        notifyStateChanged();
     }
 
     /** Unsubscribes from the current distributor and revokes both server-side tokens. */
