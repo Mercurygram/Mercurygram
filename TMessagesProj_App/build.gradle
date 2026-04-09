@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+// Derive rootProject.ext.MG_VERSION_NAME / MG_VERSION_CODE from MG_BUILD_TAG.
+apply from: "$rootDir/gradle/mg-version.gradle"
+
 // Wire each variant's merge*JniLibFolders task to the matching per-ABI native build task.
 // F-Droid per-ABI flavors only need one ABI compiled; fat flavors need all four.
 afterEvaluate {
@@ -175,7 +178,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = Integer.parseInt(APP_VERSION_CODE)
+    defaultConfig.versionCode = rootProject.ext.MG_VERSION_CODE
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
@@ -194,7 +197,7 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 35
-        versionName APP_VERSION_NAME
+        versionName rootProject.ext.MG_VERSION_NAME
         ndkVersion "27.2.12479018"
 
         multiDexEnabled true
