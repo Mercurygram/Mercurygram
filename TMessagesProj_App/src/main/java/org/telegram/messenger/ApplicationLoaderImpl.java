@@ -4,6 +4,16 @@ import org.telegram.messenger.regular.BuildConfig;
 
 public class ApplicationLoaderImpl extends ApplicationLoader {
     @Override
+    protected PushListenerController.IPushListenerServiceProvider onCreatePushProvider() {
+        return it.belloworld.mercurygram.push.UnifiedPushListenerServiceProvider.INSTANCE;
+    }
+
+    @Override
+    protected boolean isStandalone() {
+        return true;
+    }
+
+    @Override
     protected String onGetApplicationId() {
         return BuildConfig.APPLICATION_ID;
     }

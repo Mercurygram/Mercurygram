@@ -8,15 +8,15 @@
 
 package org.telegram.messenger;
 
+import android.app.Service;
 import android.content.Intent;
-import android.os.Bundle;
+import android.os.IBinder;
 
-import com.google.android.search.verification.client.SearchActionVerificationClientService;
-
-public class GoogleVoiceClientService extends SearchActionVerificationClientService {
+// [TF] Google Voice removed — stub implementation
+public class GoogleVoiceClientService extends Service {
 
     @Override
-    public void performAction(Intent intent, boolean isVerified, Bundle options) {
-        AndroidUtilities.googleVoiceClientService_performAction(intent, isVerified, options);
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 }

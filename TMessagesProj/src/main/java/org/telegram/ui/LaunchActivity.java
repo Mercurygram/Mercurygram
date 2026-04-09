@@ -86,11 +86,7 @@ import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 
-import com.google.android.gms.common.api.Status;
 import com.google.common.primitives.Longs;
-import com.google.firebase.appindexing.Action;
-import com.google.firebase.appindexing.FirebaseUserActions;
-import com.google.firebase.appindexing.builders.AssistActionBuilder;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
@@ -1883,15 +1879,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
                     final LinkManager linkManager = new LinkManager(this, intentAccount[0], progress, openedTelegram);
                     if (linkManager.handle(data)) {
-                        if (intent.hasExtra(EXTRA_ACTION_TOKEN)) {
-                            final boolean success = true;
-                            final Action assistAction = new AssistActionBuilder()
-                                .setActionToken(intent.getStringExtra(EXTRA_ACTION_TOKEN))
-                                .setActionStatus(success ? Action.Builder.STATUS_TYPE_COMPLETED : Action.Builder.STATUS_TYPE_FAILED)
-                                .build();
-                            FirebaseUserActions.getInstance(this).end(assistAction);
-                            intent.removeExtra(EXTRA_ACTION_TOKEN);
-                        }
+                        intent.removeExtra(EXTRA_ACTION_TOKEN);
                         return true;
                     }
 
@@ -2793,15 +2781,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 }
                             }
                         }
-                        if (intent.hasExtra(EXTRA_ACTION_TOKEN)) {
-                            final boolean success = UserConfig.getInstance(currentAccount).isClientActivated() && "tg".equals(scheme) && unsupportedUrl == null;
-                            final Action assistAction = new AssistActionBuilder()
-                                    .setActionToken(intent.getStringExtra(EXTRA_ACTION_TOKEN))
-                                    .setActionStatus(success ? Action.Builder.STATUS_TYPE_COMPLETED : Action.Builder.STATUS_TYPE_FAILED)
-                                    .build();
-                            FirebaseUserActions.getInstance(this).end(assistAction);
-                            intent.removeExtra(EXTRA_ACTION_TOKEN);
-                        }
+                        intent.removeExtra(EXTRA_ACTION_TOKEN);
                         if (code != null || UserConfig.getInstance(currentAccount).isClientActivated()) {
                             if (phone != null || phoneHash != null) {
                                 AlertDialog cancelDeleteProgressDialog = new AlertDialog(LaunchActivity.this, AlertDialog.ALERT_TYPE_SPINNER);
@@ -2812,7 +2792,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 req.hash = phoneHash;
                                 req.settings = new TLRPC.TL_codeSettings();
                                 req.settings.allow_flashcall = false;
-                                req.settings.allow_app_hash = req.settings.allow_firebase = PushListenerController.GooglePushListenerServiceProvider.INSTANCE.hasServices();
+                                req.settings.allow_app_hash = req.settings.allow_firebase = false;
                                 SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
                                 if (req.settings.allow_app_hash) {
                                     preferences.edit().putString("sms_hash", BuildVars.getSmsHash()).apply();
@@ -7466,13 +7446,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 if (rightActionBarLayout != null) {
                     rightActionBarLayout.animateThemedValues(theme, accentId, nightTheme, instant);
                 }
-            }
-        } else if (id == NotificationCenter.needShowPlayServicesAlert) {
-            try {
-                final Status status = (Status) args[0];
-                status.startResolutionForResult(this, PLAY_SERVICES_REQUEST_CHECK_SETTINGS);
-            } catch (Throwable ignore) {
-
             }
         } else if (id == NotificationCenter.fileLoaded) {
             String path = (String) args[0];

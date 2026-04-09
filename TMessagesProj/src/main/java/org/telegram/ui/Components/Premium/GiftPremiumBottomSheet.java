@@ -19,10 +19,10 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingFlowParams;
-import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.QueryProductDetailsParams;
+import it.belloworld.mercurygram.compat.billing.BillingClient;
+import it.belloworld.mercurygram.compat.billing.BillingFlowParams;
+import it.belloworld.mercurygram.compat.billing.ProductDetails;
+import it.belloworld.mercurygram.compat.billing.QueryProductDetailsParams;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;

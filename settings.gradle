@@ -1,8 +1,18 @@
 include ':TMessagesProj'
 include ':TMessagesProj_App'
-include ':TMessagesProj_AppHuawei'
-include ':TMessagesProj_AppHockeyApp'
-include ':TMessagesProj_AppStandalone'
-include ':TMessagesProj_AppTests'
+
+// Since 12.10.0 TMessagesProj depends on `project(':jlatexmath')`, which lives
+// in the TMessagesProj/lib/jlatexmath submodule. Upstream never declares the
+// project, so its own settings.gradle does not configure as shipped. Settings
+// are evaluated before any task runs, so patchNativeSources cannot init this
+// one: do it here, otherwise a fresh clone fails with an unexplained missing
+// project directory.
+def jlatexmathDir = file('TMessagesProj/lib/jlatexmath/jlatexmath')
+if (!jlatexmathDir.exists()) {
+    exec {
+        workingDir rootDir
+        commandLine 'git', 'submodule', 'update', '--init', 'TMessagesProj/lib/jlatexmath'
+    }
+}
 include ':jlatexmath'
-project(':jlatexmath').projectDir = file('TMessagesProj/lib/jlatexmath/jlatexmath')
+project(':jlatexmath').projectDir = jlatexmathDir
