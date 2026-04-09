@@ -80,6 +80,9 @@ dependencies {
         }
     }
 
+    // kotlin-stdlib 2.0.20 via okhttp/okio — safe with R8 8.6.27. Re-check on major version bumps.
+    implementation 'org.maplibre.gl:android-sdk:13.0.1'
+
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 

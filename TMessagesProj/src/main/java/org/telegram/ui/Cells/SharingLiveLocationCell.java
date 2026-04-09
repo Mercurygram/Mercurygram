@@ -186,12 +186,7 @@ public class SharingLiveLocationCell extends FrameLayout {
                     Geocoder geocoder = new Geocoder(ApplicationLoader.applicationContext, LocaleController.getInstance().getCurrentLocale());
                     List<Address> addresses = geocoder.getFromLocation(lat, _long, 1);
                     if (addresses.isEmpty()) {
-                        lastName = LocationController.detectOcean(_long, lat);
-                        if (lastName == null) {
-                            lastName = "";
-                        } else {
-                            lastName = "🌊 " + lastName;
-                        }
+                        lastName = "";
                     } else {
                         Address addr = addresses.get(0);
 
