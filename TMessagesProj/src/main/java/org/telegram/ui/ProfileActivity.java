@@ -4641,7 +4641,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 !SharedConfig.messageDetailsMenu ? "Enable Message Details menu" : "Disable Message Details menu",
                                 SharedConfig.disableUnifiedPush ? "Enable Unified Push" : "Disable Unified Push",
                                 SharedConfig.disableSecureFlags ? "Enable Secure Flags" : "Disable Secure Flags",
-                                SharedConfig.removeAdsAndProxySponsor ? "Enable Ads & Proxy Sponsor" : "Remove Ads & Proxy Sponsor"
+                                SharedConfig.removeAdsAndProxySponsor ? "Enable Ads & Proxy Sponsor" : "Remove Ads & Proxy Sponsor",
+                                "Check for Mercurygram updates"
                         };
 
                         builder.setItems(items, (dialog, which) -> {
@@ -4951,6 +4952,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 SharedConfig.toggleDisableSecureFlags();
                             } else if (which == 42) {
                                 SharedConfig.toggleRemoveAdsAndProxySponsor();
+                            } else if (which == 43) {
+                                it.belloworld.mercurygram.MgUpdateChecker.checkForUpdates(true);
+                                android.widget.Toast.makeText(context, "Checking for updates...", android.widget.Toast.LENGTH_SHORT).show();
                             }
                         });
                         builder.setNegativeButton(getString("Cancel", R.string.Cancel), null);
