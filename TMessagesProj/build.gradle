@@ -135,7 +135,7 @@ android {
 
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 35
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
@@ -148,7 +148,7 @@ android {
         externalNativeBuild {
             cmake {
                 version '3.10.2'
-                def cmakeArgs = ['-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'] //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                def cmakeArgs = ['-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-24'] //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
                 if (getProps('QUIET_NATIVE_BUILD')) {
                     cmakeArgs += '-DQUIET_BUILD=ON'
                 }
