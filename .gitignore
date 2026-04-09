@@ -7,6 +7,7 @@ local.properties
 TMessagesProj/.cxx/
 TMessagesProj/jniLibs/
 TMessagesProj/jniRes/
+TMessagesProj/jni.bak/
 **/.DS_Store
 TMessagesProj/afat/
 TMessagesProj_App/afat/
@@ -31,3 +32,8 @@ TMessagesProj/jni/tlottie_lib/x86/
 TMessagesProj/jni/tlottie_lib/x86_64/
 TMessagesProj/jni/tlottie_lib/build/
 API_KEYS
+.env
+# Written at the repo root by .github/actions/jni-cache-fingerprint, hashed
+# into the native-cache keys by the job that generated it. Never committed.
+.jni-cache-fingerprint
+.jni-cache-fingerprint.tmp
