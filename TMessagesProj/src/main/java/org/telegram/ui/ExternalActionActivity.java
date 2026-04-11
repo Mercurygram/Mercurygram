@@ -25,6 +25,7 @@ import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildVars;
@@ -261,7 +262,7 @@ public class ExternalActionActivity extends Activity implements INavigationLayou
         }
         if ("org.telegram.passport.AUTHORIZE".equals(intent.getAction())) {
             if (state == 0) {
-                int activatedAccountsCount = UserConfig.getActivatedAccountsCount();
+                int activatedAccountsCount = UserConfig.getVisibleAccountsCount();
                 if (activatedAccountsCount == 0) {
                     passcodeSaveIntent = intent;
                     passcodeSaveIntentIsNew = isNew;

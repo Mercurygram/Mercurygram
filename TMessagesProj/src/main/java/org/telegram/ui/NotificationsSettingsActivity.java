@@ -33,6 +33,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Keep;
+import it.belloworld.mercurygram.HiddenAccountHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -191,7 +192,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     private void rebuildRows() {
         rowCount = 0;
 
-        if (UserConfig.getActivatedAccountsCount() > 1) {
+        if (UserConfig.getVisibleAccountsCount() > 1) {
             accountsSectionRow = rowCount++;
             accountsAllRow = rowCount++;
             accountsInfoRow = rowCount++;

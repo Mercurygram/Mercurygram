@@ -264,6 +264,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
 import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 
@@ -2849,6 +2850,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.forceImportContactsStart);
             getNotificationCenter().addObserver(this, NotificationCenter.userEmojiStatusUpdated);
             getNotificationCenter().addObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
+            getNotificationCenter().addObserver(this, NotificationCenter.mainUserInfoChanged);
 
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
         }
@@ -3020,6 +3022,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().removeObserver(this, NotificationCenter.forceImportContactsStart);
             getNotificationCenter().removeObserver(this, NotificationCenter.userEmojiStatusUpdated);
             getNotificationCenter().removeObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
+            getNotificationCenter().removeObserver(this, NotificationCenter.mainUserInfoChanged);
 
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetPasscode);
         }
@@ -3356,6 +3359,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             @Override
             public void onTextChanged(EditText editText) {
                 String text = editText.getText().toString();
+                int hiddenAccount = HiddenAccountHelper.tryUnlockFromSearch(text.trim());
+                if (hiddenAccount >= 0) {
+                    actionBar.closeSearchField();
+                    if (LaunchActivity.instance != null) {
+                        LaunchActivity.instance.switchToAccount(hiddenAccount, true);
+                    }
+                    return;
+                }
                 if (!text.isEmpty() || (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null && searchViewPager.dialogsSearchAdapter.hasRecentSearch()) || searchFiltersWasShowed || hasStories) {
                     searchWas = true;
                     if (!searchIsShowed) {
@@ -3809,15 +3820,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             imageView.getImageReceiver().setCurrentAccount(currentAccount);
             Drawable thumb = user != null && user.photo != null && user.photo.strippedBitmap != null ? user.photo.strippedBitmap : avatarDrawable;
             imageView.setImage(ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user);
-
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                TLRPC.User u = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
-                if (u != null) {
-                    AccountSelectCell cell = new AccountSelectCell(context, false);
-                    cell.setAccount(a, true);
-                    switchItem.addSubItem(10 + a, cell, dp(230), dp(48));
-                }
-            }
+            updateSwitchItemAccounts();
         }
 //        createActionMode(null);
 
@@ -10409,6 +10412,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateVisibleRows(0);
         } else if (id == NotificationCenter.messageReceivedByAck || id == NotificationCenter.messageReceivedByServer || id == NotificationCenter.messageSendError) {
             updateVisibleRows(MessagesController.UPDATE_MASK_SEND_STATE);
+        } else if (id == NotificationCenter.mainUserInfoChanged) {
+            updateSwitchItemAccounts();
         } else if (id == NotificationCenter.didSetPasscode) {
             checkUi_itemPasscodeVisibility();
         } else if (id == NotificationCenter.needReloadRecentDialogsSearch) {
@@ -13530,6 +13535,25 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         final float factor3 = 1f - animatorDoneButtonVisible.getFloatValue();
         final float factor = factor1 * factor2 * factor3;
         FragmentFloatingButton.setAnimatedVisibility(optionsItem, factor);
+    }
+
+    private void updateSwitchItemAccounts() {
+        if (switchItem == null || getContext() == null) {
+            return;
+        }
+        switchItem.removeAllSubItems();
+        ArrayList<Integer> accountNumbers = new ArrayList<>();
+        HiddenAccountHelper.collectVisibleAccountNumbers(accountNumbers);
+        for (int a : accountNumbers) {
+            TLRPC.User user = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
+            if (user != null) {
+                AccountSelectCell cell = new AccountSelectCell(getContext(), false);
+                cell.setAccount(a, true);
+                switchItem.addSubItem(10 + a, cell, dp(230), dp(48));
+            }
+        }
+        boolean visible = HiddenAccountHelper.getVisibleAccountsCountExcluding(currentAccount) > 0;
+        switchItem.setVisibility(visible && !searchIsShowed ? View.VISIBLE : View.GONE);
     }
 
     private void checkUi_itemPasscodeVisibility() {

@@ -21,6 +21,8 @@ import org.telegram.tgnet.tl.TL_account;
 
 import java.util.Arrays;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
+
 public class UserConfig extends BaseController {
 
     public static int selectedAccount;
@@ -108,6 +110,10 @@ public class UserConfig extends BaseController {
             }
         }
         return count;
+    }
+
+    public static int getVisibleAccountsCount() {
+        return HiddenAccountHelper.getVisibleAccountsCount();
     }
 
     public UserConfig(int instance) {
@@ -466,6 +472,7 @@ public class UserConfig extends BaseController {
 
     public void clearConfig() {
         getPreferences().edit().clear().apply();
+        HiddenAccountHelper.clearAccount(currentAccount);
 
         sharingMyLocationUntil = 0;
         lastMyLocationShareTime = 0;
