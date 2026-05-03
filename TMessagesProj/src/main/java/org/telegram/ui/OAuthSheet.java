@@ -63,7 +63,8 @@ import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.web.BotWebViewContainer;
 
 import java.util.ArrayList;
-import java.util.Collections;
+
+import it.belloworld.mercurygram.HiddenAccountHelper;
 
 public class OAuthSheet {
 
@@ -149,22 +150,7 @@ public class OAuthSheet {
 
         final ArrayList<Integer> accountNumbers = new ArrayList<>();
         final boolean testBackend = ConnectionsManager.getInstance(currentAccount).isTestBackend();
-        accountNumbers.clear();
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && ConnectionsManager.getInstance(a).isTestBackend() == testBackend) {
-                accountNumbers.add(a);
-            }
-        }
-        Collections.sort(accountNumbers, (o1, o2) -> {
-            long l1 = UserConfig.getInstance(o1).loginTime;
-            long l2 = UserConfig.getInstance(o2).loginTime;
-            if (l1 > l2) {
-                return 1;
-            } else if (l1 < l2) {
-                return -1;
-            }
-            return 0;
-        });
+        HiddenAccountHelper.collectVisibleAccountNumbers(accountNumbers, -1, testBackend);
 
         final boolean bot = request.peer != null;
         final boolean is_app = r.is_app;
