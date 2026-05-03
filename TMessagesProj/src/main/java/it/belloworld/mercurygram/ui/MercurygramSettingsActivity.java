@@ -19,6 +19,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UnifiedPushReceiver;
+import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.RadioColorCell;
@@ -32,10 +33,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
 import it.belloworld.mercurygram.MgUpdateChecker;
 
 public class MercurygramSettingsActivity extends UniversalFragment {
 
+    private static final int ID_HIDDEN_ACCOUNTS = 0;
     private static final int ID_MESSAGE_DETAILS_MENU = 1;
     private static final int ID_HIDE_CHAT_KEYBOARD = 2;
     private static final int ID_HIDE_ALL_TAB = 3;
@@ -55,6 +58,18 @@ public class MercurygramSettingsActivity extends UniversalFragment {
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
+        if (HiddenAccountHelper.shouldShowSettingsEntry(currentAccount)) {
+            int hiddenCount = 0;
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (HiddenAccountHelper.isAccountHidden(a)) {
+                    hiddenCount++;
+                }
+            }
+            String value = hiddenCount > 0 ? Integer.toString(hiddenCount) : LocaleController.getString(R.string.PasswordOff);
+            items.add(UItem.asButton(ID_HIDDEN_ACCOUNTS, R.drawable.msg2_secret, LocaleController.getString(R.string.HiddenAccounts), value));
+            items.add(UItem.asShadow(null));
+        }
+
         items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsGeneral)));
         items.add(UItem.asCheck(ID_MESSAGE_DETAILS_MENU, LocaleController.getString(R.string.MercurygramMessageDetailsMenu))
                 .setChecked(getUserConfig().mg.messageDetailsMenu));
@@ -118,6 +133,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
         switch (item.id) {
+            case ID_HIDDEN_ACCOUNTS:
+                presentFragment(new HiddenAccountsActivity());
+                break;
             case ID_MESSAGE_DETAILS_MENU:
                 getUserConfig().mg.messageDetailsMenu = !getUserConfig().mg.messageDetailsMenu;
                 getUserConfig().saveConfig(false);
