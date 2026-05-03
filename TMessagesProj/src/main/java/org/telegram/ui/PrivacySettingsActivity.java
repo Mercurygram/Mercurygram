@@ -47,6 +47,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
@@ -75,6 +76,7 @@ import org.telegram.ui.bots.BotBiometry;
 import org.telegram.ui.bots.BotBiometrySettings;
 
 import java.util.ArrayList;
+
 
 public class PrivacySettingsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -1001,6 +1003,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     public void onResume() {
         super.onResume();
         if (listAdapter != null) {
+            updateRows(false);
             listAdapter.notifyDataSetChanged();
         }
     }
