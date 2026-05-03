@@ -282,6 +282,8 @@ import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 import me.vkryl.android.util.ClickHelper;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
+
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider, FactorAnimator.Target, MainTabsActivity.TabFragmentDelegate {
     private final int ADDITIONAL_LIST_HEIGHT_DP = Build.VERSION.SDK_INT >= 31 ? 48 : 0;
 
@@ -2925,7 +2927,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 .add(NotificationCenter.dialogsUnreadPollVotesCounterChanged)
                 .add(NotificationCenter.forceImportContactsStart)
                 .add(NotificationCenter.userEmojiStatusUpdated)
-                .add(NotificationCenter.currentUserPremiumStatusChanged);
+                .add(NotificationCenter.currentUserPremiumStatusChanged)
+                .add(NotificationCenter.mainUserInfoChanged);
 
             globalObserversGroup.add(NotificationCenter.didSetPasscode);
         }
@@ -3402,6 +3405,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             @Override
             public void onTextChanged(EditText editText) {
                 String text = editText.getText().toString();
+                int hiddenAccount = HiddenAccountHelper.tryUnlockFromSearch(text.trim());
+                if (hiddenAccount >= 0) {
+                    actionBar.closeSearchField();
+                    if (LaunchActivity.instance != null) {
+                        LaunchActivity.instance.switchToAccount(hiddenAccount, true);
+                    }
+                    return;
+                }
                 if (!text.isEmpty() || (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null && searchViewPager.dialogsSearchAdapter.hasRecentSearch()) || searchFiltersWasShowed || hasStories) {
                     searchWas = true;
                     if (!searchIsShowed) {
@@ -3871,6 +3882,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             imageView.getImageReceiver().setCurrentAccount(currentAccount);
             Drawable thumb = user != null && user.photo != null && user.photo.strippedBitmap != null ? user.photo.strippedBitmap : avatarDrawable;
             imageView.setImage(ImageLocation.getForUserOrChat(currentAccount, user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user);
+            updateSwitchItemAccounts();
         }
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -10685,6 +10697,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateVisibleRows(0);
         } else if (id == NotificationCenter.messageReceivedByAck || id == NotificationCenter.messageReceivedByServer || id == NotificationCenter.messageSendError) {
             updateVisibleRows(MessagesController.UPDATE_MASK_SEND_STATE);
+        } else if (id == NotificationCenter.mainUserInfoChanged) {
+            updateSwitchItemAccounts();
         } else if (id == NotificationCenter.didSetPasscode) {
             checkUi_itemPasscodeVisibility();
         } else if (id == NotificationCenter.needReloadRecentDialogsSearch) {
@@ -14115,6 +14129,30 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         FragmentFloatingButton.setAnimatedVisibility(optionsItem, factor);
     }
 
+    private ArrayList<Integer> switchItemAccountNumbers;
+
+    private void updateSwitchItemAccounts() {
+        if (switchItem == null || getContext() == null) {
+            return;
+        }
+        ArrayList<Integer> accountNumbers = new ArrayList<>();
+        HiddenAccountHelper.collectVisibleAccountNumbers(accountNumbers);
+        if (!accountNumbers.equals(switchItemAccountNumbers)) {
+            switchItemAccountNumbers = accountNumbers;
+            switchItem.removeAllSubItems();
+            for (int a : accountNumbers) {
+                TLRPC.User user = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
+                if (user != null) {
+                    org.telegram.ui.Cells.AccountSelectCell cell = new org.telegram.ui.Cells.AccountSelectCell(getContext(), false);
+                    cell.setAccount(a, true);
+                    switchItem.addSubItem(10 + a, cell, dp(230), dp(48));
+                }
+            }
+        }
+        boolean visible = HiddenAccountHelper.getVisibleAccountsCountExcluding(currentAccount) > 0;
+        switchItem.setVisibility(visible && !searchIsShowed ? View.VISIBLE : View.GONE);
+    }
+
     private void checkUi_itemPasscodeVisibility() {
         final float factor0 = SharedConfig.passcodeHash.isEmpty() ? 0 : 1;
         final float factor1 = 1f - animatorSearchVisible.getFloatValue();
@@ -14393,7 +14431,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
+            if (HiddenAccountHelper.isVisibleActivatedAccount(a)) {
                 accountNumbers.add(a);
             }
         }
