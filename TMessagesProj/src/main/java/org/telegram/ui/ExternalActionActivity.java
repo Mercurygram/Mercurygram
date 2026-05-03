@@ -49,6 +49,8 @@ import org.telegram.ui.Components.SizeNotifierFrameLayout;
 
 import java.util.ArrayList;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
+
 public class ExternalActionActivity extends Activity implements INavigationLayout.INavigationLayoutDelegate {
 
     private boolean finished;
@@ -261,7 +263,7 @@ public class ExternalActionActivity extends Activity implements INavigationLayou
         }
         if ("org.telegram.passport.AUTHORIZE".equals(intent.getAction())) {
             if (state == 0) {
-                int activatedAccountsCount = UserConfig.getActivatedAccountsCount();
+                int activatedAccountsCount = HiddenAccountHelper.getVisibleAccountsCount();
                 if (activatedAccountsCount == 0) {
                     passcodeSaveIntent = intent;
                     passcodeSaveIntentIsNew = isNew;
