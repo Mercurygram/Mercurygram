@@ -51,6 +51,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
+
 public class ContactsController extends BaseController {
 
     private Account systemAccount;
@@ -397,7 +399,7 @@ public class ContactsController extends BaseController {
                     boolean found = false;
                     for (int b = 0; b < UserConfig.MAX_ACCOUNT_COUNT; b++) {
                         TLRPC.User user = UserConfig.getInstance(b).getCurrentUser();
-                        if (user != null) {
+                        if (user != null && HiddenAccountHelper.isVisibleActivatedAccount(b)) {
                             if (acc.name.equals("" + user.id)) {
                                 if (b == currentAccount) {
                                     systemAccount = acc;
@@ -419,7 +421,7 @@ public class ContactsController extends BaseController {
             } catch (Throwable ignore) {
 
             }
-            if (getUserConfig().isClientActivated()) {
+            if (HiddenAccountHelper.isVisibleActivatedAccount(currentAccount)) {
                 readContacts();
                 if (systemAccount == null) {
                     try {
@@ -443,7 +445,7 @@ public class ContactsController extends BaseController {
                 boolean found = false;
                 for (int b = 0; b < UserConfig.MAX_ACCOUNT_COUNT; b++) {
                     TLRPC.User user = UserConfig.getInstance(b).getCurrentUser();
-                    if (user != null) {
+                    if (user != null && HiddenAccountHelper.isVisibleActivatedAccount(b)) {
                         if (acc.name.equals("" + user.id)) {
                             found = true;
                             break;
@@ -530,11 +532,13 @@ public class ContactsController extends BaseController {
                     } catch (Throwable ignore) {
 
                     }
-                    try {
-                        systemAccount = new Account("" + getUserConfig().getClientUserId(), "org.telegram.messenger");
-                        am.addAccountExplicitly(systemAccount, "", null);
-                    } catch (Exception ignore) {
+                    if (HiddenAccountHelper.isVisibleActivatedAccount(currentAccount)) {
+                        try {
+                            systemAccount = new Account("" + getUserConfig().getClientUserId(), "org.telegram.messenger");
+                            am.addAccountExplicitly(systemAccount, "", null);
+                        } catch (Exception ignore) {
 
+                        }
                     }
                     getMessagesStorage().putCachedPhoneBook(new HashMap<>(), false, true);
                     getMessagesStorage().putContacts(new ArrayList<>(), true);

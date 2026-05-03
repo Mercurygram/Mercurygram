@@ -151,6 +151,7 @@ import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 import java.util.HashSet;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
 import it.belloworld.mercurygram.MgUpdateChecker;
 
 public class SettingsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, ImageUpdater.ImageUpdaterDelegate, MainTabsActivity.TabFragmentDelegate, FactorAnimator.Target {
@@ -215,6 +216,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             .add(NotificationCenter.updateInterfaces)
             .add(NotificationCenter.starBalanceUpdated)
             .add(NotificationCenter.newSuggestionsAvailable);
+        getNotificationCenter().addObserver(this, NotificationCenter.mainUserInfoChanged);
 
         if (arguments != null) {
             hasMainTabs = arguments.getBoolean("hasMainTabs", false);
@@ -501,6 +503,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             observersGroup.removeAllObservers();
             observersGroup = null;
         }
+        getNotificationCenter().removeObserver(this, NotificationCenter.mainUserInfoChanged);
     }
 
     @Override
@@ -513,6 +516,11 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         } else if (id == NotificationCenter.updateInterfaces) {
             setInfo();
         } else if (id == NotificationCenter.newSuggestionsAvailable) {
+            if (listView != null) {
+                listView.adapter.update(true);
+            }
+        } else if (id == NotificationCenter.mainUserInfoChanged) {
+            setInfo();
             if (listView != null) {
                 listView.adapter.update(true);
             }
@@ -611,6 +619,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     @Override
     public void onResume() {
         super.onResume();
+        setInfo();
         if (listView.adapter != null) {
             listView.adapter.update(false);
         }
@@ -725,22 +734,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
         items.add(UItem.asCustomShadow(topView, 200 - 12));
 
-        accountNumbers.clear();
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && currentAccount != a) {
-                accountNumbers.add(a);
-            }
-        }
-        Collections.sort(accountNumbers, (o1, o2) -> {
-            long l1 = UserConfig.getInstance(o1).loginTime;
-            long l2 = UserConfig.getInstance(o2).loginTime;
-            if (l1 > l2) {
-                return 1;
-            } else if (l1 < l2) {
-                return -1;
-            }
-            return 0;
-        });
+        HiddenAccountHelper.collectVisibleAccountNumbers(accountNumbers, currentAccount);
 
         final Set<String> suggestions = getMessagesController().pendingSuggestions;
         if (suggestions.contains("PREMIUM_GRACE")) {

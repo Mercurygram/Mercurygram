@@ -83,6 +83,7 @@ import org.telegram.utils.glass.BaseFragmentSimpleGlass;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+
 public class PrivacySettingsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private ListAdapter listAdapter;
@@ -1021,6 +1022,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     public void onResume() {
         super.onResume();
         if (listAdapter != null) {
+            updateRows(false);
             listAdapter.notifyDataSetChanged();
         }
     }
