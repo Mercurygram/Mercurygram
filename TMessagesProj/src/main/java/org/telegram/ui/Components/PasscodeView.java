@@ -79,6 +79,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import it.belloworld.mercurygram.HiddenAccountHelper;
+
 public class PasscodeView extends FrameLayout implements NotificationCenter.NotificationCenterDelegate {
     private final static float BACKGROUND_SPRING_STIFFNESS = 300f;
 
@@ -463,6 +465,7 @@ public class PasscodeView extends FrameLayout implements NotificationCenter.Noti
     private TextView retryTextView;
     private ImageView checkImage;
     private ImageView fingerprintImage;
+    private boolean skipFingerprintOnce;
     private View border;
     private int keyboardHeight = 0;
 
@@ -965,6 +968,11 @@ public class PasscodeView extends FrameLayout implements NotificationCenter.Noti
                 return;
             }
             if (!SharedConfig.checkPasscode(password)) {
+                if (HiddenAccountHelper.prepareHiddenUnlockFromPasscode(password) >= 0) {
+                    skipFingerprintOnce = true;
+                    finishPasscodeAccepted();
+                    return;
+                }
                 SharedConfig.increaseBadPasscodeTries();
                 if (SharedConfig.passcodeRetryInMs > 0) {
                     checkRetryTextView();
@@ -985,6 +993,10 @@ public class PasscodeView extends FrameLayout implements NotificationCenter.Noti
                 return;
             }
         }
+        finishPasscodeAccepted();
+    }
+
+    private void finishPasscodeAccepted() {
         dismissing = true;
         onPause();
         SharedConfig.badPasscodeTries = 0;
@@ -1006,6 +1018,7 @@ public class PasscodeView extends FrameLayout implements NotificationCenter.Noti
         if (delegate != null) {
             delegate.didAcceptedPassword(this);
         }
+        skipFingerprintOnce = false;
 
         hide(true);
     }
@@ -1244,6 +1257,10 @@ public class PasscodeView extends FrameLayout implements NotificationCenter.Noti
 
     protected void checkFingerprint() {
         if (dismissing) return;
+        if (skipFingerprintOnce) {
+            skipFingerprintOnce = false;
+            return;
+        }
         if (Build.VERSION.SDK_INT < 23) {
             return;
         }
