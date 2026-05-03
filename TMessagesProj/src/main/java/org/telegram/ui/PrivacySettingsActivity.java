@@ -77,6 +77,7 @@ import org.telegram.ui.bots.BotBiometrySettings;
 
 import java.util.ArrayList;
 
+
 public class PrivacySettingsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private ListAdapter listAdapter;
@@ -1005,6 +1006,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     public void onResume() {
         super.onResume();
         if (listAdapter != null) {
+            updateRows(false);
             listAdapter.notifyDataSetChanged();
         }
     }
