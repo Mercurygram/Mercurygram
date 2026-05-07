@@ -19,6 +19,8 @@
     <string name="MercurygramCheckForUpdatesLastChecked">Zuletzt geprüft: %1$s</string>
     <string name="MercurygramCheckForUpdatesNever">Nie</string>
     <string name="MercurygramCheckForUpdatesToast">Suche nach Updates…</string>
+    <string name="MercurygramDisableLivePhotos">Live Photos standardmäßig deaktivieren</string>
+    <string name="MercurygramDisableLivePhotosAbout">Nur das Standbild senden, wenn du ein Google Motion Photo auswählst. Du kannst Live Photo für eine einzelne Auswahl trotzdem aktivieren, indem du das Bewegungssymbol im Anhang-Panel antippst.</string>
     <string name="MercurygramDisableUnifiedPush">UnifiedPush deaktivieren</string>
     <string name="MercurygramDisableUnifiedPushAbout">Wenn deaktiviert, fällt Mercurygram auf Polling neuer Nachrichten zurück. Die App wird neu gestartet, um die Änderung anzuwenden.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram muss neu gestartet werden, um diese Änderung anzuwenden. Fortfahren?</string>
