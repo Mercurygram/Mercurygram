@@ -69,6 +69,7 @@ public class UserConfig extends BaseController {
     public boolean hideChatKeyboard = false;
     public boolean hideAllTab = false;
     public boolean messageDetailsMenu = false;
+    public boolean disableLivePhotosByDefault = false;
     public boolean hasSecureData;
     public int loginTime;
     public TLRPC.TL_help_termsOfService unacceptedTermsOfService;
@@ -174,6 +175,7 @@ public class UserConfig extends BaseController {
                     editor.putBoolean("hideChatKeyboard", hideChatKeyboard);
                     editor.putBoolean("hideAllTab", hideAllTab);
                     editor.putBoolean("messageDetailsMenu", messageDetailsMenu);
+                    editor.putBoolean("disableLivePhotosByDefault", disableLivePhotosByDefault);
                     editor.putBoolean("hasSecureData", hasSecureData);
                     editor.putBoolean("notificationsSettingsLoaded4", notificationsSettingsLoaded);
                     editor.putBoolean("notificationsSignUpSettingsLoaded", notificationsSignUpSettingsLoaded);
@@ -331,6 +333,7 @@ public class UserConfig extends BaseController {
             hideChatKeyboard = preferences.getBoolean("hideChatKeyboard", false);
             hideAllTab = preferences.getBoolean("hideAllTab", false);
             messageDetailsMenu = preferences.getBoolean("messageDetailsMenu", false);
+            disableLivePhotosByDefault = preferences.getBoolean("disableLivePhotosByDefault", false);
             hasSecureData = preferences.getBoolean("hasSecureData", false);
             notificationsSettingsLoaded = preferences.getBoolean("notificationsSettingsLoaded4", false);
             notificationsSignUpSettingsLoaded = preferences.getBoolean("notificationsSignUpSettingsLoaded", false);
@@ -509,6 +512,7 @@ public class UserConfig extends BaseController {
         hideChatKeyboard = false;
         hideAllTab = false;
         messageDetailsMenu = false;
+        disableLivePhotosByDefault = false;
         unreadDialogsLoaded = true;
         hasValidDialogLoadIds = true;
         unacceptedTermsOfService = null;

@@ -1260,6 +1260,8 @@
     <string name="MercurygramCheckForUpdatesLastChecked">آخر فحص: %1$s</string>
     <string name="MercurygramCheckForUpdatesNever">أبدًا</string>
     <string name="MercurygramCheckForUpdatesToast">جارٍ التحقق من التحديثات…</string>
+    <string name="MercurygramDisableLivePhotos">تعطيل Live Photos افتراضيًا</string>
+    <string name="MercurygramDisableLivePhotosAbout">أرسل الصورة الثابتة فقط عند اختيار Google Motion Photo. لا يزال بإمكانك تمكين Live Photo لاختيار فردي بالنقر على أيقونة الحركة في لوحة المرفقات.</string>
     <string name="MercurygramDisableUnifiedPush">تعطيل UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">عند تعطيله، يعود Mercurygram إلى استطلاع الرسائل الجديدة. سيُعاد تشغيل التطبيق لتطبيق التغيير.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">يحتاج Mercurygram إلى إعادة التشغيل لتطبيق هذا التغيير. هل تريد المتابعة؟</string>
