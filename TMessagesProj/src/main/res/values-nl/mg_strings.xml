@@ -19,6 +19,8 @@
     <string name="MercurygramCheckForUpdatesLastChecked">Laatst gecontroleerd: %1$s</string>
     <string name="MercurygramCheckForUpdatesNever">Nooit</string>
     <string name="MercurygramCheckForUpdatesToast">Bezig met controleren op updates…</string>
+    <string name="MercurygramDisableLivePhotos">Live Photos standaard uitschakelen</string>
+    <string name="MercurygramDisableLivePhotosAbout">Alleen de stilstaande foto verzenden wanneer je een Google Motion Photo kiest. Je kunt Live Photo voor een afzonderlijke selectie nog steeds inschakelen door op het bewegingspictogram in het bijlagenpaneel te tikken.</string>
     <string name="MercurygramDisableUnifiedPush">UnifiedPush uitschakelen</string>
     <string name="MercurygramDisableUnifiedPushAbout">Wanneer uitgeschakeld ontvangt Mercurygram geen pushmeldingen meer. Bezorging op de achtergrond hangt dan af van Telegrams eigen verbinding: schakel Achtergrondverbinding of Keep-Alive-service in bij Instellingen → Meldingen en geluiden als je toch berichten wilt ontvangen terwijl de app gesloten is.</string>
     <string name="NtfyDefaultServerDisableUP">UnifiedPush uitschakelen</string>
