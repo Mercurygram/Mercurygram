@@ -10705,24 +10705,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         if (!TextUtils.isEmpty(info.imagePath)) {
                             info.path = info.imagePath;
                         } else {
+                            // [MG] Truncate the trailing MotionPhoto MP4 data and forward the original
+                            // JPEG bytes as-is. Upstream re-encoded through Bitmap → JPEG@97% to bake
+                            // EXIF orientation into pixels, which lost quality and metadata; the regular
+                            // photo upload pipeline handles EXIF orientation for us.
                             copyRange(wholeFile, 0, videoStart, imageFile);
                             info.path = imageFile.getAbsolutePath();
-
-                            final Pair<Integer, Integer> orientation = AndroidUtilities.getImageOrientation(imageFile);
-                            if (orientation != null && orientation.first != 0) {
-                                final Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-                                if (bitmap != null) {
-                                    final int invert = orientation.second;
-                                    final Matrix matrix = new Matrix();
-                                    matrix.postScale(invert == 1 ? -1.0f : 1.0f, invert == 2 ? -1.0f : 1.0f, bitmap.getWidth() / 2f, bitmap.getHeight() / 2f);
-                                    matrix.postRotate(orientation.first);
-                                    final Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-                                    final File rotatedImageFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_CACHE), Integer.MIN_VALUE + "_" + SharedConfig.getLastLocalId() + ".jpeg");
-                                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 97, new FileOutputStream(rotatedImageFile));
-                                    info.path = rotatedImageFile.getAbsolutePath();
-                                    imageFile.delete();
-                                }
-                            }
                         }
 
                         info.videoEditedInfo = null;
