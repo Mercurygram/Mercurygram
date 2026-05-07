@@ -293,6 +293,8 @@
     <string name="MercurygramCheckForUpdatesLastChecked">Остання перевірка: %1$s</string>
     <string name="MercurygramCheckForUpdatesNever">Ніколи</string>
     <string name="MercurygramCheckForUpdatesToast">Перевірка оновлень…</string>
+    <string name="MercurygramDisableLivePhotos">Вимкнути Live Photos за замовчуванням</string>
+    <string name="MercurygramDisableLivePhotosAbout">Надсилати лише статичне фото під час вибору Google Motion Photo. Live Photo для окремого вибору можна увімкнути, торкнувшись піктограми руху на панелі вкладень.</string>
     <string name="MercurygramDisableUnifiedPush">Вимкнути UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Якщо вимкнено, Mercurygram повертається до опитування нових повідомлень. Програму буде перезапущено для застосування змін.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Щоб застосувати цю зміну, Mercurygram потрібно перезапустити. Продовжити?</string>
