@@ -9,6 +9,7 @@ import android.widget.Toast;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MediaController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -33,6 +34,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_HIDE_CHAT_KEYBOARD = 2;
     private static final int ID_HIDE_ALL_TAB = 3;
     private static final int ID_REAR_ROUND_VIDEOS = 11;
+    private static final int ID_DISABLE_LIVE_PHOTOS = 12;
     private static final int ID_DISABLE_AUTO_UPDATE = 20;
     private static final int ID_ACCEPT_PRERELEASES = 21;
     private static final int ID_CHECK_FOR_UPDATES_NOW = 22;
@@ -69,7 +71,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsMedia)));
         items.add(UItem.asCheck(ID_REAR_ROUND_VIDEOS, LocaleController.getString(R.string.RearRoundVideos))
                 .setChecked(getUserConfig().mg.rearRoundCamera));
-        items.add(UItem.asShadow(null));
+        items.add(UItem.asCheck(ID_DISABLE_LIVE_PHOTOS, LocaleController.getString(R.string.MercurygramDisableLivePhotos))
+                .setChecked(getUserConfig().mg.disableLivePhotosByDefault));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableLivePhotosAbout)));
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
@@ -137,6 +141,12 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_REAR_ROUND_VIDEOS:
                 getUserConfig().mg.rearRoundCamera = !getUserConfig().mg.rearRoundCamera;
                 getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_DISABLE_LIVE_PHOTOS:
+                getUserConfig().mg.disableLivePhotosByDefault = !getUserConfig().mg.disableLivePhotosByDefault;
+                getUserConfig().saveConfig(false);
+                MediaController.refreshLivePhotoDefault();
                 refreshList();
                 break;
             case ID_DISABLE_AUTO_UPDATE:
