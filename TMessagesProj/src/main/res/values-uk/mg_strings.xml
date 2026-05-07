@@ -19,6 +19,8 @@
     <string name="MercurygramCheckForUpdatesLastChecked">Остання перевірка: %1$s</string>
     <string name="MercurygramCheckForUpdatesNever">Ніколи</string>
     <string name="MercurygramCheckForUpdatesToast">Перевірка оновлень…</string>
+    <string name="MercurygramDisableLivePhotos">Вимкнути Live Photos за замовчуванням</string>
+    <string name="MercurygramDisableLivePhotosAbout">Надсилати лише статичне фото під час вибору Google Motion Photo. Live Photo для окремого вибору можна увімкнути, торкнувшись піктограми руху на панелі вкладень.</string>
     <string name="MercurygramDisableUnifiedPush">Вимкнути UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Якщо вимкнено, Mercurygram перестає отримувати push-сповіщення. Доставка у фоновому режимі тоді залежить від власного з’єднання Telegram: увімкніть «З’єднання у фоновому режимі» або «Keep-Alive» у Налаштуваннях → Сповіщення та звуки, якщо повідомлення потрібні при закритому застосунку.</string>
     <string name="NtfyDefaultServerDisableUP">Вимкнути UnifiedPush</string>
