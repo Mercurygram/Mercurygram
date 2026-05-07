@@ -16,12 +16,14 @@ public class MgAccountConfig {
     public boolean hideChatKeyboard = false;
     public boolean hideAllTab = false;
     public boolean messageDetailsMenu = false;
+    public boolean disableLivePhotosByDefault = false;
 
     public void save(SharedPreferences.Editor editor) {
         editor.putBoolean("rearRoundCamera", rearRoundCamera);
         editor.putBoolean("hideChatKeyboard", hideChatKeyboard);
         editor.putBoolean("hideAllTab", hideAllTab);
         editor.putBoolean("messageDetailsMenu", messageDetailsMenu);
+        editor.putBoolean("disableLivePhotosByDefault", disableLivePhotosByDefault);
     }
 
     public void load(SharedPreferences preferences) {
@@ -29,6 +31,7 @@ public class MgAccountConfig {
         hideChatKeyboard = preferences.getBoolean("hideChatKeyboard", false);
         hideAllTab = preferences.getBoolean("hideAllTab", false);
         messageDetailsMenu = preferences.getBoolean("messageDetailsMenu", false);
+        disableLivePhotosByDefault = preferences.getBoolean("disableLivePhotosByDefault", false);
     }
 
     public void reset() {
@@ -36,5 +39,6 @@ public class MgAccountConfig {
         hideChatKeyboard = false;
         hideAllTab = false;
         messageDetailsMenu = false;
+        disableLivePhotosByDefault = false;
     }
 }
