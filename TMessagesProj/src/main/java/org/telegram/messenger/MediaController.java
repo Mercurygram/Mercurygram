@@ -592,8 +592,11 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         public Boolean discardLivePhoto;
 
         public boolean isUnalivePhoto() {
-            if (discardLivePhoto == null)
-                return !SharedConfig.photoLiveDefault;
+            if (discardLivePhoto == null) {
+                // [MG] honor per-account "disable Live Photos by default" before upstream's global default
+                return UserConfig.getInstance(UserConfig.selectedAccount).mg.disableLivePhotosByDefault
+                        || !SharedConfig.photoLiveDefault;
+            }
             return discardLivePhoto;
         }
 
@@ -705,6 +708,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             this.isLivePhoto = state instanceof PhotoEntry && ((PhotoEntry) state).isLivePhoto;
             this.livePhotoVideoOffset = state instanceof PhotoEntry ? ((PhotoEntry) state).livePhotoVideoOffset : 0;
             this.livePhotoTimestampUs = state instanceof PhotoEntry ? ((PhotoEntry) state).livePhotoTimestampUs : 0;
+            this.discardLivePhoto = state instanceof PhotoEntry ? ((PhotoEntry) state).discardLivePhoto : null;
         }
 
         public PhotoEntry clone() {
@@ -6076,6 +6080,24 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             }
         }
         return null;
+    }
+
+    // [MG] Reapply UserConfig.mg.disableLivePhotosByDefault (active account) to every
+    // live-photo entry already cached by loadGalleryPhotosAlbums(). PhotoEntry
+    // instances are shared across allPhotosAlbumEntry / allMediaAlbumEntry /
+    // per-bucket albums, so walking allPhotosAlbumEntry covers all references.
+    public static void refreshLivePhotoDefault() {
+        AlbumEntry album = allPhotosAlbumEntry;
+        if (album == null) {
+            return;
+        }
+        boolean value = UserConfig.getInstance(UserConfig.selectedAccount).mg.disableLivePhotosByDefault;
+        for (int i = 0, n = album.photos.size(); i < n; i++) {
+            PhotoEntry e = album.photos.get(i);
+            if (e.isLivePhoto) {
+                e.discardLivePhoto = value;
+            }
+        }
     }
 
     public static void loadGalleryPhotosAlbums(final int guid) {
