@@ -19,6 +19,8 @@
     <string name="MercurygramCheckForUpdatesLastChecked">Última verificação: %1$s</string>
     <string name="MercurygramCheckForUpdatesNever">Nunca</string>
     <string name="MercurygramCheckForUpdatesToast">Verificando atualizações…</string>
+    <string name="MercurygramDisableLivePhotos">Desativar Live Photos por padrão</string>
+    <string name="MercurygramDisableLivePhotosAbout">Enviar apenas a foto estática ao escolher uma Google Motion Photo. Você ainda pode ativar Live Photo para uma seleção específica tocando no ícone de movimento no painel de anexos.</string>
     <string name="MercurygramDisableUnifiedPush">Desativar UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Quando desativado, o Mercurygram deixa de receber notificações push. A entrega em segundo plano passa a depender da própria conexão do Telegram: ative Conexão em segundo plano ou Serviço Keep-Alive em Configurações → Notificações e sons se ainda quiser receber mensagens com o aplicativo fechado.</string>
     <string name="NtfyDefaultServerDisableUP">Desativar UnifiedPush</string>
