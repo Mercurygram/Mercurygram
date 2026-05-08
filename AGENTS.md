@@ -18,6 +18,7 @@ Mercurygram is maintained as a **rebase on top of upstream/master**, not a merge
 - **Never reconstruct a commit via `git reset --mixed HEAD^` + `git add <named files>`.** Untracked entries (`??` in `git status --porcelain`) from the original commit will be silently dropped. Use `git rebase -i` with `squash`/`fixup` (preserves all content) or `git commit --amend --no-edit` after `git add -A`. After any rebase that edits commits, verify with `git diff <backup-tag> HEAD --stat` — file count and line totals must match expected delta (zero if pure reorder); any drift means content was lost.
 - **Keep documentation up to date.** When a change affects build instructions, configuration, architecture, or workflow, update `AGENTS.md`, `README`, or other relevant docs in the same commit.
 - **Never squash [TF] and [MG] commits together.** They serve different purposes and may need to be separated in future rebases.
+- **Translations stay in lockstep with strings.** Any commit that adds or changes a `Mercurygram*` / `mg_*` string in `TMessagesProj/src/main/res/values/strings.xml` must also update **every** shipped `values-<locale>/strings.xml` (currently `ar de es it ko nl pt-rBR ru uk`) in the same commit — seed translations with AI if no native speaker is available, mirroring the policy in `CONTRIBUTING.md` ("Translation status"). Verify with `./scripts/check-mg-translations.sh` — output must show no missing keys.
 
 ### Commit naming convention
 
