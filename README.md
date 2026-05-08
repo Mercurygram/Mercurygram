@@ -140,6 +140,15 @@ For a couple of reasons:
 - Mercury is the Roman, and I'm Italian, God and the "**messenger** of the gods"
 - The logo is a stylized 'F' representing his winged shoes, but it also resembles an 'F' in honor of **Freddy Mercury**.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution guide. **Translations
+of the Mercurygram-only strings are especially welcome** — translators do not
+need to know the codebase, just edit the relevant
+`TMessagesProj/src/main/res/values-<locale>/strings.xml` and open a PR. Run
+`./scripts/check-mg-translations.sh` to see which keys are still missing per
+locale.
+
 ## Current Maintainers
 
 - [drizzt](https://github.com/drizzt)
