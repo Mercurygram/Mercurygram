@@ -1,0 +1,58 @@
+name: Translation contribution
+description: Provide a translation of Mercurygram-only strings without opening a pull request.
+title: "translation: "
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping translate Mercurygram!
+
+        If you can open a pull request directly, please do — see
+        [CONTRIBUTING.md](../blob/master/CONTRIBUTING.md). This issue form is
+        a fallback for translators who don't want to use git.
+
+        Please complete the title above with the locale, e.g.
+        `translation: Italian (it)`.
+
+  - type: input
+    id: locale
+    attributes:
+      label: Locale
+      description: Android locale code (e.g. `it`, `de`, `pt-rBR`, `zh-rCN`).
+      placeholder: it
+    validations:
+      required: true
+
+  - type: dropdown
+    id: native
+    attributes:
+      label: Native speaker?
+      options:
+        - "Yes — native speaker"
+        - "No — fluent / advanced"
+        - "No — assisted (dictionary, machine translation review, etc.)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: translations
+    attributes:
+      label: Translations
+      description: |
+        Paste each translated string as `Key=Translated value`, one per line.
+        You can get the list of missing keys for your locale by running
+        `./scripts/check-mg-translations.sh` from a checkout of the repo.
+      placeholder: |
+        MercurygramRestart=Riavvia
+        MercurygramSettings=Mercurygram
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I kept proper nouns (`Mercurygram`, `UnifiedPush`, `GitHub`, `Live Photos`, `Google Motion Photo`) untranslated.
+          required: true
