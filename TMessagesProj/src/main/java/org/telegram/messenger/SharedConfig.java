@@ -213,6 +213,15 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleUseSystemFont() {
+        useSystemFont = !useSystemFont;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_useSystemFont", useSystemFont)
+                .apply();
+        AndroidUtilities.clearTypefaceCache();
+    }
+
     public static void setUnifiedPushGateway(String gateway) {
         unifiedPushGateway = gateway;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
@@ -365,6 +374,7 @@ public class SharedConfig {
     // tell a deliberate regress to an older stable (auto-clear the opt-in
     // above) apart from a fresh opt-in that has never been on a prerelease.
     public static String mgLastPreReleaseTag = "";
+    public static boolean useSystemFont = false;
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -629,6 +639,7 @@ public class SharedConfig {
         disableAutoUpdate = preferences.getBoolean("mg_disableAutoUpdate", false);
         acceptPreReleaseUpdates = preferences.getBoolean("mg_acceptPreReleaseUpdates", false);
         mgLastPreReleaseTag = preferences.getString("mg_lastPreReleaseTag", "");
+        useSystemFont = preferences.getBoolean("mg_useSystemFont", false);
         String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
         if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
         String wpPub = preferences.getString("mg_webPushPublicKey", "");
