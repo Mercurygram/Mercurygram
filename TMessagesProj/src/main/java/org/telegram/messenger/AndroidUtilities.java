@@ -261,7 +261,7 @@ public class AndroidUtilities {
 
     public static Typeface bold() {
         if (mediumTypeface == null) {
-            if (SharedConfig.useSystemBoldFont && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if ((SharedConfig.useSystemBoldFont || SharedConfig.useSystemFont) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 mediumTypeface = Typeface.create(null, 500, false);
             } else {
                 mediumTypeface = getTypeface(TYPEFACE_ROBOTO_MEDIUM);
@@ -2369,6 +2369,12 @@ public class AndroidUtilities {
     }
 
     public static Typeface getTypeface(String assetPath) {
+        if (SharedConfig.useSystemFont) {
+            Typeface sys = it.belloworld.mercurygram.MgSystemFont.typefaceFor(assetPath);
+            if (sys != null) {
+                return sys;
+            }
+        }
         synchronized (typefaceCache) {
             if (!typefaceCache.containsKey(assetPath)) {
                 try {
@@ -2398,6 +2404,13 @@ public class AndroidUtilities {
             }
             return typefaceCache.get(assetPath);
         }
+    }
+
+    public static void clearTypefaceCache() {
+        synchronized (typefaceCache) {
+            typefaceCache.clear();
+        }
+        mediumTypeface = null;
     }
 
     public static boolean isWaitingForSms() {
