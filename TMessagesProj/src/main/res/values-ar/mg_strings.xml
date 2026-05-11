@@ -21,6 +21,8 @@
     <string name="MercurygramCheckForUpdatesToast">جارٍ التحقق من التحديثات…</string>
     <string name="MercurygramDisableLivePhotos">تعطيل Live Photos افتراضيًا</string>
     <string name="MercurygramDisableLivePhotosAbout">أرسل الصورة الثابتة فقط عند اختيار Google Motion Photo. لا يزال بإمكانك تمكين Live Photo لاختيار فردي بالنقر على أيقونة الحركة في لوحة المرفقات.</string>
+    <string name="MercurygramUseSystemFont">استخدام خط النظام</string>
+    <string name="MercurygramUseSystemFontAbout">يستبدل خطوط Roboto المضمنة بخطوط النظام في الجهاز. قد تحتاج إلى إعادة فتح الشاشات المفتوحة بالفعل لتطبيق التغيير بالكامل.</string>
     <string name="MercurygramDisableUnifiedPush">تعطيل UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">عند تعطيله، يتوقف Mercurygram عن تلقي إشعارات الدفع. عندئذ يعتمد التسليم في الخلفية على اتصال Telegram نفسه: فعّل «الاتصال في الخلفية» أو «خدمة Keep-Alive» في الإعدادات ← الإشعارات والأصوات إن كنت لا تزال تريد الرسائل والتطبيق مغلق.</string>
     <string name="NtfyDefaultServerDisableUP">تعطيل UnifiedPush</string>
