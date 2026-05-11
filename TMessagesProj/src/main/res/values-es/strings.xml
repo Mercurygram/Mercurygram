@@ -1335,6 +1335,8 @@
     <string name="MercurygramCheckForUpdatesToast">Buscando actualizaciones…</string>
     <string name="MercurygramDisableLivePhotos">Desactivar Live Photos de forma predeterminada</string>
     <string name="MercurygramDisableLivePhotosAbout">Envía solo la foto estática al seleccionar una Google Motion Photo. Aún puedes activar Live Photo en una selección concreta tocando el icono de movimiento en el panel de adjuntos.</string>
+    <string name="MercurygramUseSystemFont">Usar la fuente del sistema</string>
+    <string name="MercurygramUseSystemFontAbout">Reemplaza las fuentes Roboto incluidas con las fuentes del sistema del dispositivo. Es posible que las pantallas ya abiertas deban reabrirse para que el cambio se aplique por completo.</string>
     <string name="MercurygramDisableUnifiedPush">Desactivar UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Cuando está desactivado, Mercurygram vuelve al sondeo de nuevos mensajes. La aplicación se reiniciará para aplicar el cambio.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram debe reiniciarse para aplicar este cambio. ¿Continuar?</string>

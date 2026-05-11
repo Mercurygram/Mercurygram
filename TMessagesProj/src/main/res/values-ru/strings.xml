@@ -282,6 +282,8 @@
     <string name="MercurygramCheckForUpdatesToast">Проверка обновлений…</string>
     <string name="MercurygramDisableLivePhotos">Отключить Live Photos по умолчанию</string>
     <string name="MercurygramDisableLivePhotosAbout">Отправлять только статичное фото при выборе Google Motion Photo. Live Photo для отдельного выбора можно включить, нажав значок движения на панели вложений.</string>
+    <string name="MercurygramUseSystemFont">Использовать системный шрифт</string>
+    <string name="MercurygramUseSystemFontAbout">Заменяет встроенные шрифты Roboto на системные шрифты устройства. Уже открытые экраны может потребоваться открыть заново, чтобы изменение применилось полностью.</string>
     <string name="MercurygramDisableUnifiedPush">Отключить UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Если отключено, Mercurygram переходит на опрос новых сообщений. Приложение перезапустится для применения изменения.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Для применения этого изменения Mercurygram нужно перезапустить. Продолжить?</string>

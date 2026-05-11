@@ -1103,6 +1103,8 @@
     <string name="MercurygramCheckForUpdatesToast">Bezig met controleren op updates…</string>
     <string name="MercurygramDisableLivePhotos">Live Photos standaard uitschakelen</string>
     <string name="MercurygramDisableLivePhotosAbout">Alleen de stilstaande foto verzenden wanneer je een Google Motion Photo kiest. Je kunt Live Photo voor een afzonderlijke selectie nog steeds inschakelen door op het bewegingspictogram in het bijlagenpaneel te tikken.</string>
+    <string name="MercurygramUseSystemFont">Systeemlettertype gebruiken</string>
+    <string name="MercurygramUseSystemFontAbout">Vervangt de meegeleverde Roboto-lettertypen door de systeemlettertypen van het apparaat. Reeds geopende schermen moeten mogelijk opnieuw worden geopend om de wijziging volledig toe te passen.</string>
     <string name="MercurygramDisableUnifiedPush">UnifiedPush uitschakelen</string>
     <string name="MercurygramDisableUnifiedPushAbout">Wanneer uitgeschakeld, valt Mercurygram terug op pollen voor nieuwe berichten. De app wordt opnieuw gestart om de wijziging toe te passen.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram moet opnieuw worden gestart om deze wijziging toe te passen. Doorgaan?</string>

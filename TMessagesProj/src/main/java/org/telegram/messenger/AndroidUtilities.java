@@ -262,7 +262,7 @@ public class AndroidUtilities {
 
     public static Typeface bold() {
         if (mediumTypeface == null) {
-            if (SharedConfig.useSystemBoldFont && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if ((SharedConfig.useSystemBoldFont || SharedConfig.useSystemFont) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 mediumTypeface = Typeface.create(null, 500, false);
             } else {
                 mediumTypeface = getTypeface(TYPEFACE_ROBOTO_MEDIUM);
@@ -2379,6 +2379,12 @@ public class AndroidUtilities {
     }
 
     public static Typeface getTypeface(String assetPath) {
+        if (SharedConfig.useSystemFont) {
+            Typeface sys = systemTypefaceFor(assetPath);
+            if (sys != null) {
+                return sys;
+            }
+        }
         synchronized (typefaceCache) {
             if (!typefaceCache.containsKey(assetPath)) {
                 try {
@@ -2408,6 +2414,36 @@ public class AndroidUtilities {
             }
             return typefaceCache.get(assetPath);
         }
+    }
+
+    private static Typeface systemTypefaceFor(String assetPath) {
+        switch (assetPath) {
+            case TYPEFACE_ROBOTO_MEDIUM:
+                return Typeface.create("sans-serif-medium", Typeface.NORMAL);
+            case TYPEFACE_ROBOTO_MEDIUM_ITALIC:
+                return Typeface.create("sans-serif-medium", Typeface.ITALIC);
+            case TYPEFACE_ROBOTO_EXTRA_BOLD:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    return Typeface.create(Typeface.DEFAULT, 800, false);
+                }
+                return Typeface.DEFAULT_BOLD;
+            case TYPEFACE_ROBOTO_MONO:
+                return Typeface.MONOSPACE;
+            case TYPEFACE_MERRIWEATHER_BOLD:
+                return Typeface.create("serif", Typeface.BOLD);
+            case "fonts/ritalic.ttf":
+                return Typeface.create("sans-serif", Typeface.ITALIC);
+            case "fonts/rcondensedbold.ttf":
+                return Typeface.create("sans-serif-condensed", Typeface.BOLD);
+        }
+        return null;
+    }
+
+    public static void clearTypefaceCache() {
+        synchronized (typefaceCache) {
+            typefaceCache.clear();
+        }
+        mediumTypeface = null;
     }
 
     public static boolean isWaitingForSms() {
