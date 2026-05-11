@@ -196,6 +196,15 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleUseSystemFont() {
+        useSystemFont = !useSystemFont;
+        ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_useSystemFont", useSystemFont)
+                .apply();
+        AndroidUtilities.clearTypefaceCache();
+    }
+
     public static void setUnifiedPushGateway(String gateway) {
         unifiedPushGateway = gateway;
         ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
@@ -348,6 +357,7 @@ public class SharedConfig {
     // tell a deliberate regress to an older stable (auto-clear the opt-in
     // above) apart from a fresh opt-in that has never been on a prerelease.
     public static String mgLastPreReleaseTag = "";
+    public static boolean useSystemFont = false;
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -580,6 +590,7 @@ public class SharedConfig {
         editor.putBoolean("mg_disableAutoUpdate", disableAutoUpdate);
         editor.putBoolean("mg_acceptPreReleaseUpdates", acceptPreReleaseUpdates);
         editor.putString("mg_lastPreReleaseTag", mgLastPreReleaseTag);
+        editor.putBoolean("mg_useSystemFont", useSystemFont);
         editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -612,6 +623,7 @@ public class SharedConfig {
         disableAutoUpdate = preferences.getBoolean("mg_disableAutoUpdate", false);
         acceptPreReleaseUpdates = preferences.getBoolean("mg_acceptPreReleaseUpdates", false);
         mgLastPreReleaseTag = preferences.getString("mg_lastPreReleaseTag", "");
+        useSystemFont = preferences.getBoolean("mg_useSystemFont", false);
         String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
         if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
         String wpPub = preferences.getString("mg_webPushPublicKey", "");
