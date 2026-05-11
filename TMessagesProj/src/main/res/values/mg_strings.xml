@@ -77,6 +77,8 @@
     <string name="MercurygramCheckForUpdatesToast">Checking for updates…</string>
     <string name="MercurygramDisableLivePhotos">Disable Live Photos by default</string>
     <string name="MercurygramDisableLivePhotosAbout">Send only the still photo when picking a Google Motion Photo. You can still enable Live Photo for an individual selection by tapping the motion icon in the attach panel.</string>
+    <string name="MercurygramUseSystemFont">Use system font</string>
+    <string name="MercurygramUseSystemFontAbout">Replace the bundled Roboto fonts with the device system fonts. Existing screens may need to be reopened for the change to fully apply.</string>
     <string name="MercurygramDisableUnifiedPush">Disable UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">When disabled, Mercurygram stops receiving push notifications. Background delivery then depends on Telegram\'s own connection: enable Background Connection or Keep-Alive Service in Settings → Notifications and Sounds if you still want messages while the app is closed.</string>
 </resources>
