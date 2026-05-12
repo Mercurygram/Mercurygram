@@ -2017,10 +2017,10 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                             boolean canShowArchive;
                             boolean storiesIsHidden;
                             if (dialogId > 0) {
-                                canShowArchive = user != null && user.contact;
+                                canShowArchive = user != null;
                                 storiesIsHidden = user != null && user.stories_hidden;
                             } else {
-                                canShowArchive = chat != null && !ChatObject.isNotInChat(chat);
+                                canShowArchive = chat != null;
                                 storiesIsHidden = chat != null && chat.stories_hidden;
                             }
                             if (fromTopPeer) {
