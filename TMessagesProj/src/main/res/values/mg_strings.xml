@@ -79,6 +79,16 @@
     <string name="MercurygramDisableLivePhotosAbout">Send only the still photo when picking a Google Motion Photo. You can still enable Live Photo for an individual selection by tapping the motion icon in the attach panel.</string>
     <string name="MercurygramUseSystemFont">Use system font</string>
     <string name="MercurygramUseSystemFontAbout">Replace the bundled Roboto fonts with the device system fonts. Existing screens may need to be reopened for the change to fully apply.</string>
+    <string name="MercurygramSavedMessagesHistory">Save deleted &amp; edited messages</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">Deleted messages stay in the chat, grayed out and non-replyable; edited messages keep their previous versions accessible from the message menu. Stored separately from the Telegram cache. Self-destructing messages and secret chats are never saved.</string>
+    <string name="MercurygramSavedMessagesDeleted">deleted</string>
+    <string name="MercurygramSavedMessagesEmpty">(no text)</string>
+    <string name="MercurygramClearSavedHistory">Clear saved message history</string>
+    <string name="MercurygramClearSavedHistoryConfirm">Permanently delete all saved deleted and edited messages?</string>
+    <string name="MercurygramEditHistory">Edit history</string>
+    <string name="MercurygramEditHistoryTitle">Edit history</string>
+    <string name="MercurygramEditHistoryCurrent">Current version</string>
+    <string name="MercurygramEditHistoryRevision">Revision %1$d of %2$d</string>
     <string name="MercurygramDisableUnifiedPush">Disable UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">When disabled, Mercurygram stops receiving push notifications. Background delivery then depends on Telegram\'s own connection: enable Background Connection or Keep-Alive Service in Settings → Notifications and Sounds if you still want messages while the app is closed.</string>
 </resources>
