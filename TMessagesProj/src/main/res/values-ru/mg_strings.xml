@@ -23,6 +23,16 @@
     <string name="MercurygramDisableLivePhotosAbout">Отправлять только статичное фото при выборе Google Motion Photo. Live Photo для отдельного выбора можно включить, нажав значок движения на панели вложений.</string>
     <string name="MercurygramUseSystemFont">Использовать системный шрифт</string>
     <string name="MercurygramUseSystemFontAbout">Заменяет встроенные шрифты Roboto на системные шрифты устройства. Уже открытые экраны может потребоваться открыть заново, чтобы изменение применилось полностью.</string>
+    <string name="MercurygramSavedMessagesHistory">Сохранять удалённые и изменённые сообщения</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">Удалённые сообщения остаются в чате, затемнёнными и без возможности ответа; изменённые сообщения сохраняют прежние версии, доступные через меню сообщения. Хранится отдельно от кэша Telegram. Самоуничтожающиеся сообщения и секретные чаты никогда не сохраняются.</string>
+    <string name="MercurygramSavedMessagesDeleted">удалено</string>
+    <string name="MercurygramSavedMessagesEmpty">(нет текста)</string>
+    <string name="MercurygramClearSavedHistory">Очистить историю сохранённых сообщений</string>
+    <string name="MercurygramClearSavedHistoryConfirm">Безвозвратно удалить все сохранённые удалённые и изменённые сообщения?</string>
+    <string name="MercurygramEditHistory">История изменений</string>
+    <string name="MercurygramEditHistoryTitle">История изменений</string>
+    <string name="MercurygramEditHistoryCurrent">Текущая версия</string>
+    <string name="MercurygramEditHistoryRevision">Версия %1$d из %2$d</string>
     <string name="MercurygramDisableUnifiedPush">Отключить UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Если отключено, Mercurygram перестаёт получать push-уведомления. Доставка в фоне тогда зависит от собственного соединения Telegram: включите «Соединение в фоне» или «Keep-Alive» в Настройках → Уведомления и звуки, если сообщения нужны при закрытом приложении.</string>
     <string name="NtfyDefaultServerDisableUP">Отключить UnifiedPush</string>
