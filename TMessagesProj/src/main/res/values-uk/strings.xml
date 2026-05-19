@@ -297,6 +297,16 @@
     <string name="MercurygramDisableLivePhotosAbout">Надсилати лише статичне фото під час вибору Google Motion Photo. Live Photo для окремого вибору можна увімкнути, торкнувшись піктограми руху на панелі вкладень.</string>
     <string name="MercurygramUseSystemFont">Використовувати системний шрифт</string>
     <string name="MercurygramUseSystemFontAbout">Замінює вбудовані шрифти Roboto на системні шрифти пристрою. Уже відкриті екрани, можливо, доведеться відкрити знову, щоб зміна повністю застосувалася.</string>
+    <string name="MercurygramSavedMessagesHistory">Зберігати видалені та змінені повідомлення</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">Видалені повідомлення залишаються в чаті, затемнені та без можливості відповіді; змінені повідомлення зберігають попередні версії, доступні з меню повідомлення. Зберігається окремо від кешу Telegram. Самознищувані повідомлення та секретні чати ніколи не зберігаються.</string>
+    <string name="MercurygramSavedMessagesDeleted">видалено</string>
+    <string name="MercurygramSavedMessagesEmpty">(немає тексту)</string>
+    <string name="MercurygramClearSavedHistory">Очистити історію збережених повідомлень</string>
+    <string name="MercurygramClearSavedHistoryConfirm">Безповоротно видалити всі збережені видалені та змінені повідомлення?</string>
+    <string name="MercurygramEditHistory">Історія змін</string>
+    <string name="MercurygramEditHistoryTitle">Історія змін</string>
+    <string name="MercurygramEditHistoryCurrent">Поточна версія</string>
+    <string name="MercurygramEditHistoryRevision">Версія %1$d з %2$d</string>
     <string name="MercurygramDisableUnifiedPush">Вимкнути UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Якщо вимкнено, Mercurygram повертається до опитування нових повідомлень. Програму буде перезапущено для застосування змін.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Щоб застосувати цю зміну, Mercurygram потрібно перезапустити. Продовжити?</string>

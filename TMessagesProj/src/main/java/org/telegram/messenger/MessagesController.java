@@ -19147,6 +19147,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 for (int a = 0, size2 = messageObjects.size(); a < size2; a++) {
                     messagesRes.messages.add(messageObjects.get(a).messageOwner);
                 }
+                it.belloworld.mercurygram.MgMessageHistory.getInstance().archiveEditsBefore(currentAccount, editingMessages.keyAt(b), messagesRes.messages);
                 getMessagesStorage().putMessages(messagesRes, editingMessages.keyAt(b), -2, 0, false, 0, 0);
             }
             LongSparseArray<ArrayList<MessageObject>> editingMessagesFinal = editingMessages;
@@ -20493,11 +20494,13 @@ public class MessagesController extends BaseController implements NotificationCe
             }
         }
         if (deletedMessages != null) {
+            final boolean keepFiles = getUserConfig().savedMessagesHistory;
             for (int a = 0, size = deletedMessages.size(); a < size; a++) {
                 long key = deletedMessages.keyAt(a);
                 ArrayList<Integer> arrayList = deletedMessages.valueAt(a);
+                it.belloworld.mercurygram.MgMessageHistory.getInstance().archiveDeleted(currentAccount, key, arrayList);
                 getMessagesStorage().getStorageQueue().postRunnable(() -> {
-                    ArrayList<Long> dialogIds = getMessagesStorage().markMessagesAsDeleted(key, arrayList, false, true, 0, 0);
+                    ArrayList<Long> dialogIds = getMessagesStorage().markMessagesAsDeleted(key, arrayList, false, !keepFiles, 0, 0);
                     getMessagesStorage().updateDialogsWithDeletedMessages(key, -key, arrayList, dialogIds);
                 });
             }
