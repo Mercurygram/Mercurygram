@@ -23,6 +23,16 @@
     <string name="MercurygramDisableLivePhotosAbout">Enviar apenas a foto estática ao escolher uma Google Motion Photo. Você ainda pode ativar Live Photo para uma seleção específica tocando no ícone de movimento no painel de anexos.</string>
     <string name="MercurygramUseSystemFont">Usar a fonte do sistema</string>
     <string name="MercurygramUseSystemFontAbout">Substitui as fontes Roboto incluídas pelas fontes do sistema do dispositivo. Pode ser necessário reabrir as telas já abertas para que a alteração seja totalmente aplicada.</string>
+    <string name="MercurygramSavedMessagesHistory">Salvar mensagens excluídas e editadas</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">As mensagens excluídas permanecem no chat, esmaecidas e sem possibilidade de resposta; as mensagens editadas mantêm suas versões anteriores, acessíveis pelo menu da mensagem. Armazenado separadamente do cache do Telegram. Mensagens autodestrutivas e conversas secretas nunca são salvas.</string>
+    <string name="MercurygramSavedMessagesDeleted">excluída</string>
+    <string name="MercurygramSavedMessagesEmpty">(sem texto)</string>
+    <string name="MercurygramClearSavedHistory">Limpar histórico de mensagens salvas</string>
+    <string name="MercurygramClearSavedHistoryConfirm">Excluir permanentemente todas as mensagens excluídas e editadas salvas?</string>
+    <string name="MercurygramEditHistory">Histórico de edições</string>
+    <string name="MercurygramEditHistoryTitle">Histórico de edições</string>
+    <string name="MercurygramEditHistoryCurrent">Versão atual</string>
+    <string name="MercurygramEditHistoryRevision">Revisão %1$d de %2$d</string>
     <string name="MercurygramDisableUnifiedPush">Desativar UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Quando desativado, o Mercurygram volta a sondar por novas mensagens. O aplicativo será reiniciado para aplicar a alteração.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">O Mercurygram precisa ser reiniciado para aplicar esta alteração. Continuar?</string>

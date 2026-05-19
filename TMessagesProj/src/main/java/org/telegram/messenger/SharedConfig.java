@@ -640,6 +640,7 @@ public class SharedConfig {
         acceptPreReleaseUpdates = preferences.getBoolean("mg_acceptPreReleaseUpdates", false);
         mgLastPreReleaseTag = preferences.getString("mg_lastPreReleaseTag", "");
         useSystemFont = preferences.getBoolean("mg_useSystemFont", false);
+        migratePerAccountSettingsV1(preferences);
         String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
         if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
         String wpPub = preferences.getString("mg_webPushPublicKey", "");
@@ -933,6 +934,36 @@ public class SharedConfig {
             FileLog.e(e);
             return 0;
         }
+    }
+
+    // Copy formerly-global MG toggles into every account's UserConfig prefs on
+    // first launch after the per-account split. Preserves prior behavior exactly
+    // (each account inherits the old shared value). Runs once.
+    private static void migratePerAccountSettingsV1(SharedPreferences mainconfig) {
+        if (mainconfig.getBoolean("mg_perAccountMigrationV1Done", false)) {
+            return;
+        }
+        boolean messageDetailsMenu = mainconfig.getBoolean("mg_messageDetailsMenu", false);
+        boolean savedMessagesHistory = mainconfig.getBoolean("mg_savedMessagesHistory", false);
+        boolean disableLivePhotosByDefault = mainconfig.getBoolean("mg_disableLivePhotosByDefault", false);
+        boolean hideChatKeyboard = mainconfig.getBoolean("hide_chat_keyboard", false);
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            String name = a == 0 ? "userconfing" : "userconfig" + a;
+            ApplicationLoader.applicationContext.getSharedPreferences(name, Activity.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("messageDetailsMenu", messageDetailsMenu)
+                    .putBoolean("savedMessagesHistory", savedMessagesHistory)
+                    .putBoolean("disableLivePhotosByDefault", disableLivePhotosByDefault)
+                    .putBoolean("hideChatKeyboard", hideChatKeyboard)
+                    .apply();
+        }
+        mainconfig.edit()
+                .remove("mg_messageDetailsMenu")
+                .remove("mg_savedMessagesHistory")
+                .remove("mg_disableLivePhotosByDefault")
+                .remove("hide_chat_keyboard")
+                .putBoolean("mg_perAccountMigrationV1Done", true)
+                .apply();
     }
 
     public static void updateTabletConfig() {
