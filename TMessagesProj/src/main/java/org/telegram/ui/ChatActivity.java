@@ -335,6 +335,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -828,6 +829,16 @@ public class ChatActivity extends BaseFragment implements
     private boolean scrollToTopUnReadOnResume;
     private long dialog_id;
     private Long dialog_id_Long;
+    // Mercurygram: per-chat caches for kept-deleted / edited message IDs.
+    // Null until primed off the UI thread on first messagesDidLoad; consulted by
+    // the long-press menu and the ghost-marking pass to avoid per-row SQLite.
+    private Set<Integer> mgDeletedMidsCache;
+    private Set<Integer> mgEditedMidsCache;
+    // Full TLRPC.Message blobs of deleted messages, newest-first, loaded once
+    // when the chat opens. Source of truth for re-injecting ghost cells on cold
+    // restart and on pagination — messages_v2 has already dropped these rows.
+    private List<it.belloworld.mercurygram.MgMessageHistory.Entry> mgGhostEntriesCache;
+    private boolean mgHistoryCachesPriming;
     private int lastLoadIndex = 1;
     private SparseArray<MessageObject>[] selectedMessagesIds = new SparseArray[]{new SparseArray<>(), new SparseArray<>()};
     private SparseArray<MessageObject>[] selectedMessagesCanCopyIds = new SparseArray[]{new SparseArray<>(), new SparseArray<>()};
@@ -1233,6 +1244,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_FACT_CHECK = 106;
     public final static int OPTION_EDIT_PRICE = 107;
     public final static int OPTION_DETAILS = 200;
+    public final static int OPTION_EDIT_HISTORY = 201;
     public final static int OPTION_GIFT = 108;
     public final static int OPTION_EDIT_TODO = 109;
     public final static int OPTION_ADD_TO_TODO = 110;
@@ -4933,6 +4945,7 @@ public class ChatActivity extends BaseFragment implements
                         MessageObject message = getSlidingMessageObject();
                         boolean allowReplyOnOpenTopic = canSendMessageToTopic(message);
                         if (
+                            message.mgDeletedGhost || // Mercurygram: cannot reply to a kept-after-delete ghost
                             chatMode != 0 && chatMode != MODE_QUICK_REPLIES && chatMode != MODE_SUGGESTIONS && (chatMode != MODE_SAVED || threadMessageId != getUserConfig().getClientUserId()) ||
                             threadMessageObjects != null && threadMessageObjects.contains(message) ||
                             getMessageType(message) == 1 && (message.getDialogId() == mergeDialogId || message.needDrawBluredPreview()) ||
@@ -20345,6 +20358,9 @@ public class ChatActivity extends BaseFragment implements
             }
             ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
 
+            mgPrimeHistoryCaches();
+            mgApplyGhostFlags(messArr);
+
             boolean universalNotify = false;
             HashMap<Integer, MessageObject> oldMessages = null;
             if (clearOnLoad && (mode == MODE_DEFAULT || mode == MODE_SUGGESTIONS)) {
@@ -21167,6 +21183,7 @@ public class ChatActivity extends BaseFragment implements
                 }
             }
             checkGroupMessagesOrder();
+            mgInjectGhosts();
             if (createUnreadLoading) {
                 createUnreadMessageAfterId = 0;
             }
@@ -22095,7 +22112,42 @@ public class ChatActivity extends BaseFragment implements
                 scheduleNowDialog.dismiss();
                 scheduleNowDialog = null;
             }
-            processDeletedMessages(markAsDeletedMessages, channelId, sent, !movedToScheduled);
+            ArrayList<MessageObject> mgGhosts = null;
+            ArrayList<Integer> mgDeleteList = markAsDeletedMessages;
+            if (getUserConfig().savedMessagesHistory && chatMode == MODE_DEFAULT && !movedToScheduled) {
+                for (int i = 0; i < messages.size(); i++) {
+                    MessageObject mo = messages.get(i);
+                    if (!mo.scheduled && !it.belloworld.mercurygram.MgMessageHistory.isExcluded(dialog_id, mo.messageOwner)) {
+                        mo.mgDeletedGhost = true;
+                        if (mgGhosts == null) {
+                            mgGhosts = new ArrayList<>();
+                        }
+                        mgGhosts.add(mo);
+                    }
+                }
+                if (mgGhosts != null) {
+                    HashSet<Integer> ghostIds = new HashSet<>(mgGhosts.size());
+                    for (int i = 0; i < mgGhosts.size(); i++) {
+                        ghostIds.add(mgGhosts.get(i).getId());
+                    }
+                    if (mgDeletedMidsCache != null) {
+                        mgDeletedMidsCache.addAll(ghostIds);
+                    }
+                    mgDeleteList = new ArrayList<>(markAsDeletedMessages.size());
+                    for (int i = 0; i < markAsDeletedMessages.size(); i++) {
+                        int mid = markAsDeletedMessages.get(i);
+                        if (!ghostIds.contains(mid)) {
+                            mgDeleteList.add(mid);
+                        }
+                    }
+                }
+            }
+            processDeletedMessages(mgDeleteList, channelId, sent, !movedToScheduled);
+            if (mgGhosts != null && chatAdapter != null) {
+                for (int i = 0; i < mgGhosts.size(); i++) {
+                    chatAdapter.updateRowWithMessageObject(mgGhosts.get(i), true, false);
+                }
+            }
             if (movedToScheduled && chatMode != ChatActivity.MODE_SCHEDULED) {
                 getMessagesController().forceNoReload(dialog_id, ChatActivity.MODE_SCHEDULED);
                 openScheduledMessages(scheduledMessageId, true);
@@ -23127,6 +23179,16 @@ public class ChatActivity extends BaseFragment implements
         } else if (id == NotificationCenter.replaceMessagesObjects) {
             long did = (long) args[0];
             final ArrayList<MessageObject> messageObjects = (ArrayList<MessageObject>) args[1];
+            if (did == dialog_id && getUserConfig().savedMessagesHistory
+                    && mgEditedMidsCache != null && !DialogObject.isEncryptedDialog(dialog_id)) {
+                for (int i = 0; i < messageObjects.size(); i++) {
+                    MessageObject mo = messageObjects.get(i);
+                    if (mo != null && mo.messageOwner != null && mo.messageOwner.edit_date != 0
+                            && !it.belloworld.mercurygram.MgMessageHistory.isExcluded(dialog_id, mo.messageOwner)) {
+                        mgEditedMidsCache.add(mo.getId());
+                    }
+                }
+            }
             if (replyingMessageObject != null) {
                 for (int i = 0; i < messageObjects.size(); ++i) {
                     MessageObject messageObject = messageObjects.get(i);
@@ -26037,6 +26099,193 @@ public class ChatActivity extends BaseFragment implements
     private void processDeletedMessages(ArrayList<Integer> markAsDeletedMessages, long channelId, boolean sent) {
         processDeletedMessages(markAsDeletedMessages, channelId, sent, true);
     }
+
+    private void mgPrimeHistoryCaches() {
+        if (!getUserConfig().savedMessagesHistory || mgHistoryCachesPriming
+                || mgDeletedMidsCache != null
+                || DialogObject.isEncryptedDialog(dialog_id)) {
+            return;
+        }
+        mgHistoryCachesPriming = true;
+        final int acc = currentAccount;
+        final long did = dialog_id;
+        Utilities.globalQueue.postRunnable(() -> {
+            List<it.belloworld.mercurygram.MgMessageHistory.Entry> entries =
+                    it.belloworld.mercurygram.MgMessageHistory.getInstance().getDeletedEntries(acc, did);
+            // Derive the dmids set from `entries` — both come from `deleted_messages`; a
+            // separate `getMidsForDialog(false)` would scan the same table under the same
+            // writeLock for no extra info.
+            HashSet<Integer> dmids = new HashSet<>(entries.size());
+            for (int i = 0, n = entries.size(); i < n; i++) {
+                it.belloworld.mercurygram.MgMessageHistory.Entry en = entries.get(i);
+                if (en != null) {
+                    dmids.add(en.mid);
+                }
+            }
+            Set<Integer> emids = it.belloworld.mercurygram.MgMessageHistory.getInstance()
+                    .getMidsForDialog(acc, did, true);
+            AndroidUtilities.runOnUIThread(() -> {
+                mgDeletedMidsCache = dmids;
+                mgEditedMidsCache = emids;
+                mgGhostEntriesCache = entries;
+                mgHistoryCachesPriming = false;
+                if (chatAdapter == null) {
+                    return;
+                }
+                boolean any = false;
+                if (!dmids.isEmpty() && !messages.isEmpty()) {
+                    for (int i = 0; i < messages.size(); i++) {
+                        MessageObject mo = messages.get(i);
+                        if (mo != null && !mo.mgDeletedGhost && dmids.contains(mo.getId())) {
+                            mo.mgDeletedGhost = true;
+                            any = true;
+                        }
+                    }
+                }
+                // mgInjectGhosts already calls notifyDataSetChanged when it inserts anything;
+                // only fire here if the in-memory flag-flip above is the only mutation.
+                int injected = mgInjectGhosts();
+                if (any && injected == 0) {
+                    chatAdapter.notifyDataSetChanged(false);
+                }
+            });
+        });
+    }
+
+    private void mgApplyGhostFlags(ArrayList<MessageObject> messArr) {
+        if (!getUserConfig().savedMessagesHistory || mgDeletedMidsCache == null
+                || mgDeletedMidsCache.isEmpty() || messArr == null || messArr.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < messArr.size(); i++) {
+            MessageObject mo = messArr.get(i);
+            if (mo != null && mgDeletedMidsCache.contains(mo.getId())) {
+                mo.mgDeletedGhost = true;
+            }
+        }
+    }
+
+    // Mercurygram: cap a single inject batch. 200 layout-generating MessageObject
+    // allocations on the UI thread is the worst case before user-visible jank.
+    private static final int MG_GHOST_INJECT_CAP_PER_CALL = 200;
+
+    /**
+     * Rebuild ghost cells from the archive DB on chat open / pagination, reading
+     * the cached entry list primed by {@link #mgPrimeHistoryCaches()}. Idempotent
+     * (dedups against {@code messagesDict[0]}), bounded to {@link #MG_GHOST_INJECT_CAP_PER_CALL}
+     * per call, only acts inside the current date window so it does not race
+     * pagination state ({@code minDate/maxDate/endReached/forwardEndReached} are
+     * deliberately not mutated — ghosts are a UI overlay, not real history).
+     *
+     * @return number of ghosts inserted this call (0 means nothing to do).
+     */
+    private int mgInjectGhosts() {
+        final List<it.belloworld.mercurygram.MgMessageHistory.Entry> entries = mgGhostEntriesCache;
+        if (!getUserConfig().savedMessagesHistory || chatMode != MODE_DEFAULT
+                || DialogObject.isEncryptedDialog(dialog_id)
+                || isThreadChat() || isTopic
+                || chatAdapter == null || chatAdapter.isFiltered
+                || entries == null || entries.isEmpty()) {
+            return 0;
+        }
+        final int curMinDate = endReached[0] ? Integer.MIN_VALUE : minDate[0];
+        final int curMaxDate = forwardEndReached[0] ? Integer.MAX_VALUE : maxDate[0];
+
+        LongSparseArray<MessageObject.GroupedMessages> touchedGroups = null;
+        int injected = 0;
+
+        for (int e = 0; e < entries.size() && injected < MG_GHOST_INJECT_CAP_PER_CALL; e++) {
+            it.belloworld.mercurygram.MgMessageHistory.Entry entry = entries.get(e);
+            TLRPC.Message m = entry == null ? null : entry.message;
+            if (m == null || it.belloworld.mercurygram.MgMessageHistory.isExcluded(dialog_id, m)) {
+                continue;
+            }
+            if (messagesDict[0].indexOfKey(m.id) >= 0) {
+                continue;
+            }
+            if (m.date < curMinDate || m.date > curMaxDate) {
+                continue;
+            }
+
+            MessageObject mo = new MessageObject(
+                    currentAccount, m,
+                    getMessagesController().getUsers(),
+                    getMessagesController().getChats(),
+                    true, true);
+            mo.mgDeletedGhost = true;
+            mo.stableId = lastStableId++;
+
+            int placeToPaste = messages.size();
+            for (int b = 0, sz = messages.size(); b < sz; b++) {
+                MessageObject lm = messages.get(b);
+                if (lm == null || lm.type < 0 || lm.messageOwner == null || lm.messageOwner.date <= 0) {
+                    continue;
+                }
+                if ((lm.messageOwner.id > 0 && m.id > 0 && lm.messageOwner.id < m.id)
+                        || lm.messageOwner.date < m.date) {
+                    placeToPaste = b;
+                    break;
+                }
+            }
+
+            messages.add(placeToPaste, mo);
+            messagesDict[0].put(m.id, mo);
+
+            ArrayList<MessageObject> dayArray = messagesByDays.get(mo.dateKey);
+            if (dayArray == null) {
+                dayArray = new ArrayList<>();
+                messagesByDays.put(mo.dateKey, dayArray);
+                messagesByDaysSorted.put(mo.dateKeyInt, dayArray);
+                TLRPC.Message dateMsg = new TLRPC.TL_message();
+                dateMsg.message = LocaleController.formatDateChat(m.date);
+                dateMsg.id = 0;
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(((long) m.date) * 1000);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                dateMsg.date = (int) (cal.getTimeInMillis() / 1000);
+                MessageObject dateObj = new MessageObject(currentAccount, dateMsg, false, false);
+                dateObj.type = MessageObject.TYPE_DATE;
+                dateObj.contentType = 1;
+                dateObj.isDateObject = true;
+                dateObj.stableId = getStableIdForDateObject(mo.dateKeyInt);
+                // mo was just inserted at placeToPaste; the date header sits one slot
+                // older (higher index in newest-first storage = above mo in the UI).
+                messages.add(placeToPaste + 1, dateObj);
+            }
+            dayArray.add(mo);
+
+            if (mo.hasValidGroupId()) {
+                MessageObject.GroupedMessages g = groupedMessagesMap.get(mo.getGroupIdForUse());
+                if (g == null) {
+                    g = new MessageObject.GroupedMessages();
+                    g.reversed = reversed;
+                    g.groupId = mo.getGroupId();
+                    groupedMessagesMap.put(g.groupId, g);
+                }
+                g.messages.add(mo);
+                if (touchedGroups == null) {
+                    touchedGroups = new LongSparseArray<>();
+                }
+                touchedGroups.put(g.groupId, g);
+            }
+
+            injected++;
+        }
+
+        if (touchedGroups != null) {
+            for (int i = 0, n = touchedGroups.size(); i < n; i++) {
+                touchedGroups.valueAt(i).calculate();
+            }
+        }
+        if (injected > 0) {
+            chatAdapter.notifyDataSetChanged(false);
+        }
+        return injected;
+    }
+
     private void processDeletedMessages(ArrayList<Integer> markAsDeletedMessages, long channelId, boolean sent, boolean thanos) {
         ArrayList<Integer> removedIndexes = new ArrayList<>();
         ArrayList<Integer> thanosMessagesIndexes = new ArrayList<>();
@@ -33246,6 +33495,9 @@ public class ChatActivity extends BaseFragment implements
                 break;
             }
             case OPTION_REPLY: {
+                if (selectedObject != null && selectedObject.mgDeletedGhost) {
+                    return;
+                }
                 if (selectedObject != null && selectedObject.messageOwner != null && selectedObject.messageOwner.noforwards) {
                     return;
                 }
@@ -33912,6 +34164,10 @@ public class ChatActivity extends BaseFragment implements
             }
             case OPTION_DETAILS: {
                 presentFragment(new it.belloworld.mercurygram.ui.MessageDetailsActivity(selectedObject));
+                break;
+            }
+            case OPTION_EDIT_HISTORY: {
+                presentFragment(new it.belloworld.mercurygram.ui.MgMessageEditHistoryActivity(selectedObject));
                 break;
             }
             case OPTION_SUGGESTION_ADD_OFFER:
@@ -45313,7 +45569,7 @@ public class ChatActivity extends BaseFragment implements
                     icons.add(R.drawable.msg_report);
                 }
             } else {
-                if (selectedObject.getId() > 0 && allowChatActions && !isInsideContainer) {
+                if (selectedObject.getId() > 0 && allowChatActions && !isInsideContainer && !selectedObject.mgDeletedGhost) {
                     items.add(LocaleController.getString(R.string.Reply));
                     options.add(OPTION_REPLY);
                     icons.add(R.drawable.menu_reply);
@@ -45359,7 +45615,7 @@ public class ChatActivity extends BaseFragment implements
                         icons.add(R.drawable.msg_fave);
                     }
                 }
-                if ((allowChatActions || !noforwardsOrPaidMedia && ChatObject.isChannelAndNotMegaGroup(currentChat) && !selectedObject.isSponsored() && selectedObject.contentType == 0 && chatMode == MODE_DEFAULT) && !isInsideContainer) {
+                if ((allowChatActions || !noforwardsOrPaidMedia && ChatObject.isChannelAndNotMegaGroup(currentChat) && !selectedObject.isSponsored() && selectedObject.contentType == 0 && chatMode == MODE_DEFAULT) && !isInsideContainer && !selectedObject.mgDeletedGhost) {
                     items.add(LocaleController.getString(R.string.Reply));
                     options.add(OPTION_REPLY);
                     icons.add(R.drawable.menu_reply);
@@ -45652,6 +45908,15 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(chatMode == MODE_SAVED && threadMessageId != getUserConfig().getClientUserId() ? R.string.Remove : R.string.Delete));
                     options.add(OPTION_DELETE);
                     icons.add(deleteIconRes);
+                }
+                if (getUserConfig().savedMessagesHistory
+                        && selectedObject.messageOwner != null
+                        && selectedObject.messageOwner.edit_date != 0
+                        && mgEditedMidsCache != null
+                        && mgEditedMidsCache.contains(selectedObject.getId())) {
+                    items.add(LocaleController.getString(R.string.MercurygramEditHistory));
+                    options.add(OPTION_EDIT_HISTORY);
+                    icons.add(R.drawable.msg_edit);
                 }
                 if (getUserConfig().messageDetailsMenu) {
                     items.add(LocaleController.getString(R.string.MessageDetails));
