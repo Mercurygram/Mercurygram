@@ -18474,6 +18474,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         } else {
             timeString = LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000);
         }
+        if (currentMessageObject.mgDeletedGhost) {
+            timeString = getString(R.string.MercurygramSavedMessagesDeleted) + " · " + timeString;
+        }
         if (currentMessageObject.messageOwner.video_processing_pending) {
             timeString = formatString(R.string.ScheduledTimeApprox, timeString);
         }
@@ -20120,6 +20123,19 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     @Override
     protected void onDraw(Canvas canvas) {
         drawInternal(canvas);
+    }
+
+    // Mercurygram: gray-out the whole cell when this message is a kept-after-delete ghost.
+    // Wrapping draw() (not onDraw) covers bubble + media + child views (reactions, replies).
+    @Override
+    public void draw(Canvas canvas) {
+        if (currentMessageObject == null || !currentMessageObject.mgDeletedGhost) {
+            super.draw(canvas);
+            return;
+        }
+        int restore = canvas.saveLayerAlpha(0, 0, getWidth(), getHeight(), 165, Canvas.ALL_SAVE_FLAG);
+        super.draw(canvas);
+        canvas.restoreToCount(restore);
     }
     public void drawInternal(Canvas canvas) {
         if (currentMessageObject == null) {
