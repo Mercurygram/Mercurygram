@@ -23,6 +23,16 @@
     <string name="MercurygramDisableLivePhotosAbout">Invia solo la foto statica quando selezioni una Google Motion Photo. Puoi comunque abilitare Live Photo per la singola selezione toccando l\'icona movimento nel pannello allegati.</string>
     <string name="MercurygramUseSystemFont">Usa il font di sistema</string>
     <string name="MercurygramUseSystemFontAbout">Sostituisce i font Roboto inclusi con i font di sistema del dispositivo. Le schermate già aperte potrebbero dover essere riaperte perché la modifica abbia pieno effetto.</string>
+    <string name="MercurygramSavedMessagesHistory">Salva messaggi eliminati e modificati</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">I messaggi eliminati restano nella chat, in grigio e non rispondibili; i messaggi modificati conservano le versioni precedenti, accessibili dal menu del messaggio. Memorizzati separatamente dalla cache di Telegram. I messaggi ad autodistruzione e le chat segrete non vengono mai salvati.</string>
+    <string name="MercurygramSavedMessagesDeleted">eliminato</string>
+    <string name="MercurygramSavedMessagesEmpty">(nessun testo)</string>
+    <string name="MercurygramClearSavedHistory">Cancella cronologia messaggi salvati</string>
+    <string name="MercurygramClearSavedHistoryConfirm">Eliminare definitivamente tutti i messaggi eliminati e modificati salvati?</string>
+    <string name="MercurygramEditHistory">Cronologia modifiche</string>
+    <string name="MercurygramEditHistoryTitle">Cronologia modifiche</string>
+    <string name="MercurygramEditHistoryCurrent">Versione attuale</string>
+    <string name="MercurygramEditHistoryRevision">Revisione %1$d di %2$d</string>
     <string name="MercurygramDisableUnifiedPush">Disabilita UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Quando disabilitato, Mercurygram torna al polling per i nuovi messaggi. L\'app verrà riavviata per applicare la modifica.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram deve essere riavviato per applicare questa modifica. Continuare?</string>
