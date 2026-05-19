@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import it.belloworld.mercurygram.HiddenAccountHelper;
+import it.belloworld.mercurygram.MgMessageHistory;
 import it.belloworld.mercurygram.MgUpdateChecker;
 import it.belloworld.mercurygram.push.MgEmbeddedFcmDistributor;
 import it.belloworld.mercurygram.push.UnifiedPushListenerServiceProvider;
@@ -43,6 +44,8 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_HIDE_CHAT_KEYBOARD = 2;
     private static final int ID_HIDE_ALL_TAB = 3;
     private static final int ID_USE_SYSTEM_FONT = 4;
+    private static final int ID_SAVED_MESSAGES_HISTORY = 5;
+    private static final int ID_CLEAR_SAVED_HISTORY = 6;
     private static final int ID_SEND_LARGE_PHOTOS = 10;
     private static final int ID_REAR_ROUND_VIDEOS = 11;
     private static final int ID_DISABLE_LIVE_PHOTOS = 12;
@@ -82,6 +85,13 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
                 .setChecked(SharedConfig.useSystemFont));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramUseSystemFontAbout)));
+
+        items.add(UItem.asCheck(ID_SAVED_MESSAGES_HISTORY, LocaleController.getString(R.string.MercurygramSavedMessagesHistory))
+                .setChecked(getUserConfig().mg.savedMessagesHistory));
+        if (getUserConfig().mg.savedMessagesHistory) {
+            items.add(UItem.asButton(ID_CLEAR_SAVED_HISTORY, LocaleController.getString(R.string.MercurygramClearSavedHistory), ""));
+        }
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramSavedMessagesHistoryAbout)));
 
         items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsMedia)));
         items.add(UItem.asCheck(ID_SEND_LARGE_PHOTOS, LocaleController.getString(R.string.SendLargePhotos))
@@ -170,6 +180,14 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_USE_SYSTEM_FONT:
                 SharedConfig.toggleUseSystemFont();
                 refreshList();
+                break;
+            case ID_SAVED_MESSAGES_HISTORY:
+                getUserConfig().mg.savedMessagesHistory = !getUserConfig().mg.savedMessagesHistory;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_CLEAR_SAVED_HISTORY:
+                confirmClearSavedHistory();
                 break;
             case ID_SEND_LARGE_PHOTOS:
                 getUserConfig().mg.sendLargePhotos = !getUserConfig().mg.sendLargePhotos;
@@ -279,6 +297,22 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         if (positive != null) {
             positive.setTextColor(getThemedColor(Theme.key_text_RedBold));
         }
+    }
+
+    private void confirmClearSavedHistory() {
+        Context context = getParentActivity();
+        if (context == null) {
+            return;
+        }
+        new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramClearSavedHistory))
+                .setMessage(LocaleController.getString(R.string.MercurygramClearSavedHistoryConfirm))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .setPositiveButton(LocaleController.getString(R.string.Delete), (dialog, which) -> {
+                    MgMessageHistory.getInstance().clearAll();
+                    refreshList();
+                })
+                .show();
     }
 
     /** The embedded FCM distributor is our own package: show what it is, not the application id. */
