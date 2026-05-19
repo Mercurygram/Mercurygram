@@ -23,6 +23,16 @@
     <string name="MercurygramDisableLivePhotosAbout">Alleen de stilstaande foto verzenden wanneer je een Google Motion Photo kiest. Je kunt Live Photo voor een afzonderlijke selectie nog steeds inschakelen door op het bewegingspictogram in het bijlagenpaneel te tikken.</string>
     <string name="MercurygramUseSystemFont">Systeemlettertype gebruiken</string>
     <string name="MercurygramUseSystemFontAbout">Vervangt de meegeleverde Roboto-lettertypen door de systeemlettertypen van het apparaat. Reeds geopende schermen moeten mogelijk opnieuw worden geopend om de wijziging volledig toe te passen.</string>
+    <string name="MercurygramSavedMessagesHistory">Verwijderde &amp; bewerkte berichten opslaan</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">Verwijderde berichten blijven in de chat staan, grijs gemaakt en niet te beantwoorden; bewerkte berichten behouden hun vorige versies, toegankelijk via het berichtmenu. Wordt los van de Telegram-cache opgeslagen. Zelfvernietigende berichten en geheime chats worden nooit opgeslagen.</string>
+    <string name="MercurygramSavedMessagesDeleted">verwijderd</string>
+    <string name="MercurygramSavedMessagesEmpty">(geen tekst)</string>
+    <string name="MercurygramClearSavedHistory">Opgeslagen berichtgeschiedenis wissen</string>
+    <string name="MercurygramClearSavedHistoryConfirm">Alle opgeslagen verwijderde en bewerkte berichten permanent verwijderen?</string>
+    <string name="MercurygramEditHistory">Bewerkgeschiedenis</string>
+    <string name="MercurygramEditHistoryTitle">Bewerkgeschiedenis</string>
+    <string name="MercurygramEditHistoryCurrent">Huidige versie</string>
+    <string name="MercurygramEditHistoryRevision">Revisie %1$d van %2$d</string>
     <string name="MercurygramDisableUnifiedPush">UnifiedPush uitschakelen</string>
     <string name="MercurygramDisableUnifiedPushAbout">Wanneer uitgeschakeld, valt Mercurygram terug op pollen voor nieuwe berichten. De app wordt opnieuw gestart om de wijziging toe te passen.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram moet opnieuw worden gestart om deze wijziging toe te passen. Doorgaan?</string>
