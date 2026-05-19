@@ -23,6 +23,16 @@
     <string name="MercurygramDisableLivePhotosAbout">أرسل الصورة الثابتة فقط عند اختيار Google Motion Photo. لا يزال بإمكانك تمكين Live Photo لاختيار فردي بالنقر على أيقونة الحركة في لوحة المرفقات.</string>
     <string name="MercurygramUseSystemFont">استخدام خط النظام</string>
     <string name="MercurygramUseSystemFontAbout">يستبدل خطوط Roboto المضمنة بخطوط النظام في الجهاز. قد تحتاج إلى إعادة فتح الشاشات المفتوحة بالفعل لتطبيق التغيير بالكامل.</string>
+    <string name="MercurygramSavedMessagesHistory">حفظ الرسائل المحذوفة والمعدّلة</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">تبقى الرسائل المحذوفة في المحادثة باللون الرمادي ولا يمكن الرد عليها، بينما تحتفظ الرسائل المعدّلة بنسخها السابقة المتاحة من قائمة الرسالة. تُخزَّن بشكل منفصل عن ذاكرة تيليجرام المؤقتة. لا يتم حفظ الرسائل ذاتية التدمير والمحادثات السرية أبدًا.</string>
+    <string name="MercurygramSavedMessagesDeleted">محذوفة</string>
+    <string name="MercurygramSavedMessagesEmpty">(بدون نص)</string>
+    <string name="MercurygramClearSavedHistory">مسح سجل الرسائل المحفوظة</string>
+    <string name="MercurygramClearSavedHistoryConfirm">حذف جميع الرسائل المحذوفة والمعدّلة المحفوظة نهائيًا؟</string>
+    <string name="MercurygramEditHistory">سجل التعديلات</string>
+    <string name="MercurygramEditHistoryTitle">سجل التعديلات</string>
+    <string name="MercurygramEditHistoryCurrent">الإصدار الحالي</string>
+    <string name="MercurygramEditHistoryRevision">المراجعة %1$d من %2$d</string>
     <string name="MercurygramDisableUnifiedPush">تعطيل UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">عند تعطيله، يعود Mercurygram إلى استطلاع الرسائل الجديدة. سيُعاد تشغيل التطبيق لتطبيق التغيير.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">يحتاج Mercurygram إلى إعادة التشغيل لتطبيق هذا التغيير. هل تريد المتابعة؟</string>

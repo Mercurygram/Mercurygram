@@ -23,6 +23,16 @@
     <string name="MercurygramDisableLivePhotosAbout">Envía solo la foto estática al seleccionar una Google Motion Photo. Aún puedes activar Live Photo en una selección concreta tocando el icono de movimiento en el panel de adjuntos.</string>
     <string name="MercurygramUseSystemFont">Usar la fuente del sistema</string>
     <string name="MercurygramUseSystemFontAbout">Reemplaza las fuentes Roboto incluidas con las fuentes del sistema del dispositivo. Es posible que las pantallas ya abiertas deban reabrirse para que el cambio se aplique por completo.</string>
+    <string name="MercurygramSavedMessagesHistory">Guardar mensajes eliminados y editados</string>
+    <string name="MercurygramSavedMessagesHistoryAbout">Los mensajes eliminados permanecen en el chat, atenuados y sin posibilidad de respuesta; los mensajes editados conservan sus versiones anteriores, accesibles desde el menú del mensaje. Se almacena por separado de la caché de Telegram. Los mensajes autodestructivos y los chats secretos nunca se guardan.</string>
+    <string name="MercurygramSavedMessagesDeleted">eliminado</string>
+    <string name="MercurygramSavedMessagesEmpty">(sin texto)</string>
+    <string name="MercurygramClearSavedHistory">Borrar historial de mensajes guardados</string>
+    <string name="MercurygramClearSavedHistoryConfirm">¿Eliminar permanentemente todos los mensajes eliminados y editados guardados?</string>
+    <string name="MercurygramEditHistory">Historial de ediciones</string>
+    <string name="MercurygramEditHistoryTitle">Historial de ediciones</string>
+    <string name="MercurygramEditHistoryCurrent">Versión actual</string>
+    <string name="MercurygramEditHistoryRevision">Revisión %1$d de %2$d</string>
     <string name="MercurygramDisableUnifiedPush">Desactivar UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Cuando está desactivado, Mercurygram vuelve al sondeo de nuevos mensajes. La aplicación se reiniciará para aplicar el cambio.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram debe reiniciarse para aplicar este cambio. ¿Continuar?</string>
