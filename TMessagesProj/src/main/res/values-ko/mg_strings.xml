@@ -12,4 +12,5 @@
     <string name="NotSet">설정되지 않음</string>
     <string name="SendLargePhotos">더 큰 사진 보내기 (2560px)</string>
     <string name="RearRoundVideos">동영상 메시지에 후면 카메라 사용</string>
+    <string name="HideChatKeyboard">채팅 스크롤 시 키보드 숨기기</string>
 </resources>
