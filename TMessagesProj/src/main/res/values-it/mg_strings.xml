@@ -12,4 +12,5 @@
     <string name="NotSet">Non impostato</string>
     <string name="SendLargePhotos">Invia foto più grandi (2560px)</string>
     <string name="RearRoundVideos">Usa la fotocamera posteriore per i messaggi video</string>
+    <string name="HideChatKeyboard">Nascondi tastiera durante lo scorrimento della chat</string>
 </resources>
