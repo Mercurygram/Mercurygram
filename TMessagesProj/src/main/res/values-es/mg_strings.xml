@@ -10,4 +10,5 @@
     <string name="UnifiedPushGateway">URL de la puerta de enlace</string>
     <string name="UnifiedPushGatewayInfo">Prefijo de URL para la puerta de enlace de UnifiedPush</string>
     <string name="NotSet">Sin establecer</string>
+    <string name="RearRoundVideos">Usar cámara trasera para mensajes de video</string>
 </resources>
