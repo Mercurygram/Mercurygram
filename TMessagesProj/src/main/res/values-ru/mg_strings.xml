@@ -13,4 +13,6 @@
     <string name="SendLargePhotos">Отправлять фото большего размера (2560px)</string>
     <string name="RearRoundVideos">Использовать заднюю камеру для видеосообщений</string>
     <string name="HideChatKeyboard">Скрывать клавиатуру при прокрутке чата</string>
+    <string name="HideAllTab">Скрыть вкладку \"Все чаты\"</string>
+    <string name="HideAllTabAbout">Нажмите и удерживайте панель заголовка, чтобы временно показать её</string>
 </resources>
