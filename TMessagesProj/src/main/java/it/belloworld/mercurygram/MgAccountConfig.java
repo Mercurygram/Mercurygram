@@ -13,16 +13,20 @@ import org.telegram.messenger.SharedConfig;
 public class MgAccountConfig {
 
     public boolean sendLargePhotos = false;
+    public boolean rearRoundCamera = false;
 
     public void save(SharedPreferences.Editor editor) {
         editor.putBoolean("sendLargePhotos", sendLargePhotos);
+        editor.putBoolean("rearRoundCamera", rearRoundCamera);
     }
 
     public void load(SharedPreferences preferences) {
         sendLargePhotos = preferences.getBoolean("sendLargePhotos", false);
+        rearRoundCamera = preferences.getBoolean("rearRoundCamera", false);
     }
 
     public void reset() {
         sendLargePhotos = false;
+        rearRoundCamera = false;
     }
 }

@@ -11,4 +11,5 @@
     <string name="UnifiedPushGatewayInfo">URL-Präfix für das UnifiedPush-Gateway</string>
     <string name="NotSet">Nicht festgelegt</string>
     <string name="SendLargePhotos">Größere Fotos senden (2560px)</string>
+    <string name="RearRoundVideos">Rückkamera für Videonachrichten verwenden</string>
 </resources>
