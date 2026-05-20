@@ -28,6 +28,20 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
 
     @Override
     public boolean hasServices() {
+        // The embedded FCM distributor is our own package and is never auto-selected, so it only
+        // counts once the user picked it explicitly. Counting it unconditionally would make a
+        // device with no distributor app installed report push support: onRequestPushToken()
+        // would save nothing, UnifiedPush.register() would return immediately, and
+        // ApplicationLoader would skip the no-push path that tells the server there is no token.
+        String ownPackage = ApplicationLoader.applicationContext.getPackageName();
+        if (ownPackage.equals(UnifiedPush.getSavedDistributor(ApplicationLoader.applicationContext))) {
+            return true;
+        }
+        for (String distributor : UnifiedPush.getDistributors(ApplicationLoader.applicationContext)) {
+            if (!ownPackage.equals(distributor)) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -38,10 +52,104 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
 
     @Override
     public void onRequestPushToken() {
+        if (SharedConfig.disableUnifiedPush) {
+            UnifiedPush.unregister(ApplicationLoader.applicationContext, "default");
+        } else {
+            String currentPushString = SharedConfig.pushString;
+            if (!TextUtils.isEmpty(currentPushString)) {
+                if (BuildVars.DEBUG_PRIVATE_VERSION && BuildVars.LOGS_ENABLED) {
+                    FileLog.d("UnifiedPush endpoint = " + currentPushString);
+                }
+            } else {
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.d("No UnifiedPush string found");
+                }
+            }
+            Utilities.globalQueue.postRunnable(() -> {
+                try {
+                    SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
+                    SharedConfig.saveConfig();
+                    if (UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext) == null) {
+                        // The embedded FCM distributor is our own package, so it is always in
+                        // this list. Picking it silently would route push metadata through
+                        // Google without the user ever asking, so it is only ever selected
+                        // explicitly in the settings. Once it is selected, leave it alone: its
+                        // acknowledgement needs a Play Services round trip, and falling back to
+                        // another distributor meanwhile would undo the user's explicit choice.
+                        String ownPackage = ApplicationLoader.applicationContext.getPackageName();
+                        if (!ownPackage.equals(UnifiedPush.getSavedDistributor(ApplicationLoader.applicationContext))) {
+                            List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext);
+                            for (String distributor : distributors) {
+                                if (!ownPackage.equals(distributor)) {
+                                    UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, distributor);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    UnifiedPush.register(
+                            ApplicationLoader.applicationContext,
+                            "default",
+                            "Mercurygram WebPush",
+                            null
+                    );
+                } catch (Throwable e) {
+                    FileLog.e(e);
+                }
+            });
+        }
     }
 
     @Override
     public int getPushType() {
-        return PUSH_TYPE_FIREBASE;
+        return PushListenerController.PUSH_TYPE_WEB;
+    }
+
+    /**
+     * Registers a Simple Push (token_type=4) endpoint URL with Telegram for all active accounts.
+     * Simple Push is a plain PUT wake-up with no encrypted payload, used by Telegram to notify
+     * about events where no content can be included (e.g., encrypted chats).
+     *
+     * Unlike sendRegistrationToServer(), this does NOT overwrite SharedConfig.pushString/pushType
+     * (which remain set to the primary Web Push type=10 registration).
+     */
+    public static void sendSimplePushRegistration(String token) {
+        if (TextUtils.isEmpty(token)) {
+            return;
+        }
+        SharedConfig.pushStringSimple = token;
+        SharedConfig.saveConfig();
+        Utilities.stageQueue.postRunnable(() -> {
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                UserConfig userConfig = UserConfig.getInstance(a);
+                if (userConfig.getClientUserId() != 0) {
+                    final int currentAccount = a;
+                    AndroidUtilities.runOnUIThread(() ->
+                            MgSimplePush.register(currentAccount, token));
+                }
+            }
+        });
+    }
+
+    public static void unregisterSimplePush() {
+        // Capture the token BEFORE clearing: the runnable is async on stageQueue, so reading
+        // SharedConfig.pushStringSimple there would see the already-cleared empty value and
+        // the unregisterDevice request would never be sent.
+        String token = SharedConfig.pushStringSimple;
+        SharedConfig.pushStringSimple = "";
+        SharedConfig.saveConfig();
+        if (TextUtils.isEmpty(token)) {
+            return;
+        }
+        Utilities.stageQueue.postRunnable(() -> {
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                UserConfig userConfig = UserConfig.getInstance(a);
+                if (userConfig.getClientUserId() != 0) {
+                    final int currentAccount = a;
+                    AndroidUtilities.runOnUIThread(() ->
+                            MgSimplePush.unregister(currentAccount, token));
+                }
+            }
+        });
     }
 }
