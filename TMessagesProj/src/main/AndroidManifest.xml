@@ -550,6 +550,12 @@
             </intent-filter>
         </receiver>
 
+        <service android:name="org.telegram.messenger.UnifiedPushReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.unifiedpush.android.connector.PUSH_EVENT"/>
+            </intent-filter>
+        </service>
 
         <receiver android:name=".AppStartReceiver" android:enabled="true" android:exported="false">
             <intent-filter>
