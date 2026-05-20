@@ -12,4 +12,5 @@
     <string name="NotSet">غير محدد</string>
     <string name="SendLargePhotos">إرسال صور أكبر (2560 بكسل)</string>
     <string name="RearRoundVideos">استخدام الكاميرا الخلفية لرسائل الفيديو</string>
+    <string name="HideChatKeyboard">إخفاء لوحة المفاتيح عند التمرير في المحادثة</string>
 </resources>
