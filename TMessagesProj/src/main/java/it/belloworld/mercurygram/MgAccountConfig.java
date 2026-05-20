@@ -13,16 +13,20 @@ import org.telegram.messenger.SharedConfig;
 public class MgAccountConfig {
 
     public boolean rearRoundCamera = false;
+    public boolean hideChatKeyboard = false;
 
     public void save(SharedPreferences.Editor editor) {
         editor.putBoolean("rearRoundCamera", rearRoundCamera);
+        editor.putBoolean("hideChatKeyboard", hideChatKeyboard);
     }
 
     public void load(SharedPreferences preferences) {
         rearRoundCamera = preferences.getBoolean("rearRoundCamera", false);
+        hideChatKeyboard = preferences.getBoolean("hideChatKeyboard", false);
     }
 
     public void reset() {
         rearRoundCamera = false;
+        hideChatKeyboard = false;
     }
 }
