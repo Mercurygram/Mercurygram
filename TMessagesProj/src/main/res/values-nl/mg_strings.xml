@@ -10,4 +10,5 @@
     <string name="UnifiedPushGateway">Gateway-URL</string>
     <string name="UnifiedPushGatewayInfo">URL-voorvoegsel voor de UnifiedPush-gateway</string>
     <string name="NotSet">Niet ingesteld</string>
+    <string name="RearRoundVideos">Achtercamera gebruiken voor videoberichten</string>
 </resources>

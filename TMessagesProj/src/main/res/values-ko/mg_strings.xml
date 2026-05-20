@@ -10,4 +10,5 @@
     <string name="UnifiedPushGateway">게이트웨이 URL</string>
     <string name="UnifiedPushGatewayInfo">UnifiedPush 게이트웨이의 URL 접두사</string>
     <string name="NotSet">설정되지 않음</string>
+    <string name="RearRoundVideos">동영상 메시지에 후면 카메라 사용</string>
 </resources>
