@@ -12,4 +12,6 @@
     <string name="NotSet">설정되지 않음</string>
     <string name="RearRoundVideos">동영상 메시지에 후면 카메라 사용</string>
     <string name="HideChatKeyboard">채팅 스크롤 시 키보드 숨기기</string>
+    <string name="HideAllTab">\"전체 채팅\" 탭 숨기기</string>
+    <string name="HideAllTabAbout">제목 표시줄을 길게 눌러 일시적으로 표시</string>
 </resources>

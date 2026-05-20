@@ -3526,6 +3526,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
             }
             if (folderId == 0) {
+                actionBar.setOnLongClickListener(v -> {
+                    if (getUserConfig().mg.hideAllTab && filterTabsView != null && filterTabsView.getDefaultTabId() != filterTabsView.getCurrentTabId()) {
+                        filterTabsView.toggleAllTabs(true);
+                        filterTabsView.selectDefaultTab();
+                    }
+                    return false;
+                });
                 actionBar.setSupportsHolidayImage(true);
             }
         }
@@ -6880,7 +6887,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 filterTabsView.removeTabs();
                 for (int a = 0, N = filters.size(); a < N; a++) {
                     if (filters.get(a).isDefault()) {
-                        filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
+                        if (filterTabsView.showAllChatsTab) {
+                            filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
+                        }
                     } else {
                         final MessagesController.DialogFilter filter = filters.get(a);
                         filterTabsView.addTab(a, filter.localId, filter.name, filter.entities, filter.title_noanimate, false, filters.get(a).locked);
@@ -6909,6 +6918,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     viewPages[a].listView.setScrollingTouchSlop(RecyclerView.TOUCH_SLOP_PAGING);
                 }
                 filterTabsView.finishAddingTabs(animatedUpdateItems);
+                // [MG] When "All Chats" tab is hidden, sync viewPages[0] with the
+                // actually-selected tab id so switchToCurrentSelectedMode() resolves
+                // the correct (non-default) filter on initial load.
+                if (!filterTabsView.showAllChatsTab) {
+                    int currentTabId = filterTabsView.getCurrentTabId();
+                    if (currentTabId >= 0 && currentTabId < filters.size()
+                            && viewPages[0].selectedType != currentTabId) {
+                        viewPages[0].selectedType = currentTabId;
+                        updateCurrentTab = true;
+                    }
+                }
                 if (updateCurrentTab) {
                     switchToCurrentSelectedMode(false);
                 }
@@ -7307,7 +7327,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             return false;
         } else if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE && !tabsAnimationInProgress && !filterTabsView.isAnimatingIndicator() && !startedTracking && !filterTabsView.isFirstTabSelected()) {
-            if (invoked) filterTabsView.selectFirstTab();
+            if (invoked && !getUserConfig().mg.hideAllTab) filterTabsView.selectFirstTab();
             return false;
         } else if (commentView != null && commentView.isPopupShowing()) {
             if (invoked) commentView.hidePopup(true);
