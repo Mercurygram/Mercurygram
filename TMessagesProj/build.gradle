@@ -56,6 +56,9 @@ dependencies {
         }
     }
 
+    // Pinned to 3.0.x: 3.1.0 bumped kotlin-stdlib to 2.2.20 (3.2.0+ to 2.3.0), which exceeds
+    // what R8 8.6.27 (AGP 8.6.x) can parse. Lift when upgrading AGP to 8.7+ (needs Gradle 8.9+).
+    implementation 'org.unifiedpush.android:connector:3.0.9'
     // kotlin-stdlib 2.0.20 via okhttp/okio — safe with R8 8.6.27. Re-check on major version bumps.
     implementation 'org.maplibre.gl:android-sdk:13.0.1'
 

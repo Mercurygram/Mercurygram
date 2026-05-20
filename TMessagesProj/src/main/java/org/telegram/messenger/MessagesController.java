@@ -15568,6 +15568,26 @@ public class MessagesController extends BaseController implements NotificationCe
         if (TextUtils.isEmpty(regid) || registeringForPush || getUserConfig().getClientUserId() == 0) {
             return;
         }
+        // One-time migration for users updating from a version without Simple Push support:
+        // pushStringSimple will be empty on first run after update, but unifiedPushEndpointUrl
+        // was already persisted by the old version's onNewEndpoint(). Reconstruct the token
+        // so type-4 gets registered without requiring the user to re-select their distributor.
+        if (TextUtils.isEmpty(SharedConfig.pushStringSimple)
+                && !TextUtils.isEmpty(SharedConfig.unifiedPushEndpointUrl)
+                && !SharedConfig.disableUnifiedPush) {
+            String gateway = SharedConfig.unifiedPushGateway;
+            if (!gateway.endsWith("/")) gateway += "/";
+            try {
+                SharedConfig.pushStringSimple = gateway
+                        + java.net.URLEncoder.encode(SharedConfig.unifiedPushEndpointUrl, "UTF-8");
+                SharedConfig.saveConfig();
+            } catch (java.io.UnsupportedEncodingException ignored) {}
+        }
+        // Keep Simple Push (type 4) registration in sync with every type-10 re-registration
+        // (including the getDifference() path which may not reset registeredForPush).
+        if (!TextUtils.isEmpty(SharedConfig.pushStringSimple)) {
+            registerSimplePush(SharedConfig.pushStringSimple);
+        }
         if (getUserConfig().registeredForPush && regid.equals(SharedConfig.pushString)) {
             return;
         }
@@ -15605,6 +15625,59 @@ public class MessagesController extends BaseController implements NotificationCe
             }
             AndroidUtilities.runOnUIThread(() -> registeringForPush = false);
         });
+    }
+
+    /**
+     * Registers a Simple Push (token_type=4) URL with Telegram for this account.
+     * Called after the primary Web Push (type=10) registration via sendSimplePushRegistration().
+     * Uses the same pushAuthKey as the primary registration.
+     * Does not set registeredForPush — that flag tracks the primary type=10 registration.
+     */
+    public void registerSimplePush(String token) {
+        if (TextUtils.isEmpty(token) || getUserConfig().getClientUserId() == 0) {
+            return;
+        }
+        if (SharedConfig.pushAuthKey == null) {
+            SharedConfig.pushAuthKey = new byte[256];
+            Utilities.random.nextBytes(SharedConfig.pushAuthKey);
+            SharedConfig.saveConfig();
+        }
+        TL_account.registerDevice req = new TL_account.registerDevice();
+        req.token_type = PushListenerController.PUSH_TYPE_SIMPLE;
+        req.token = token;
+        req.no_muted = false;
+        req.secret = SharedConfig.pushAuthKey;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig userConfig = UserConfig.getInstance(a);
+            if (a != currentAccount && userConfig.isClientActivated()) {
+                req.other_uids.add(userConfig.getClientUserId());
+            }
+        }
+        getConnectionsManager().sendRequest(req, (response, error) -> {
+            if (BuildVars.LOGS_ENABLED) {
+                if (response instanceof TLRPC.TL_boolTrue) {
+                    FileLog.d("account " + currentAccount + " registered simple push");
+                } else {
+                    FileLog.d("account " + currentAccount + " simple push registration failed: " + error);
+                }
+            }
+        });
+    }
+
+    public void unregisterSimplePush(String token) {
+        if (TextUtils.isEmpty(token) || getUserConfig().getClientUserId() == 0) {
+            return;
+        }
+        TL_account.unregisterDevice req = new TL_account.unregisterDevice();
+        req.token_type = PushListenerController.PUSH_TYPE_SIMPLE;
+        req.token = token;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig userConfig = UserConfig.getInstance(a);
+            if (a != currentAccount && userConfig.isClientActivated()) {
+                req.other_uids.add(userConfig.getClientUserId());
+            }
+        }
+        getConnectionsManager().sendRequest(req, null);
     }
 
     public void loadCurrentState() {
