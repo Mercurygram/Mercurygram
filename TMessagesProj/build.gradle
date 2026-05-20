@@ -41,9 +41,9 @@ configurations.all {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.core:core:1.16.0'
-    implementation 'androidx.media:media:1.7.0'
+    implementation 'androidx.media:media:1.8.0'
     implementation 'androidx.palette:palette:1.0.0'
     implementation 'androidx.exifinterface:exifinterface:1.3.6'
     implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
@@ -91,8 +91,16 @@ dependencies {
 
 //    implementation 'com.google.mlkit:translate:17.0.3'
 
-    // kotlin-stdlib 2.0.20 via okhttp/okio — safe with R8 8.6.27. Re-check on major version bumps.
-    implementation 'org.maplibre.gl:android-sdk:13.0.1'
+    // 3.0.10 or later: 3.0.9 and older bind our PushService to hand over an event and unbind
+    // after 1s, which the cold start of this app regularly loses, and a bind that never
+    // connects leaves the connector's internal event queue stuck for the whole process (no
+    // endpoint, no messages).
+    implementation 'org.unifiedpush.android:connector:3.3.5'
+    // 3.1.0 or later: 3.0.0 asks Play Services for a token with the legacy
+    // com.google.iid.TOKEN_REQUEST broadcast, which current Play Services never answers, so
+    // a new registration waits for an endpoint forever.
+    implementation 'org.unifiedpush.android:embedded-fcm-distributor:3.1.0'
+    implementation 'org.maplibre.gl:android-sdk:13.7.1'
 
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
