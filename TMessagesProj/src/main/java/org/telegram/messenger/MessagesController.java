@@ -16129,6 +16129,7 @@ public class MessagesController extends BaseController implements NotificationCe
         if (TextUtils.isEmpty(regid) || registeringForPush || getUserConfig().getClientUserId() == 0) {
             return;
         }
+        it.belloworld.mercurygram.push.MgSimplePush.syncOnRegisterForPush(currentAccount);
         if (getUserConfig().registeredForPush && regid.equals(SharedConfig.pushString)) {
             return;
         }
@@ -16167,6 +16168,7 @@ public class MessagesController extends BaseController implements NotificationCe
             AndroidUtilities.runOnUIThread(() -> registeringForPush = false);
         });
     }
+
 
     public void loadCurrentState() {
         if (updatingState) {
@@ -16813,6 +16815,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void getDifference(int pts, int date, int qts, boolean slice) {
         registerForPush(SharedConfig.pushType, SharedConfig.pushString);
+        it.belloworld.mercurygram.push.UnifiedPushListenerServiceProvider.ensureRegistered();
         if (getMessagesStorage().getLastPtsValue() == 0) {
             loadCurrentState();
             return;
