@@ -33,6 +33,8 @@ import androidx.annotation.Keep;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.unifiedpush.android.connector.UnifiedPush;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
@@ -70,10 +72,12 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.utils.glass.BaseFragmentSimpleGlass;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 public class NotificationsSettingsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
@@ -167,6 +171,17 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     public boolean onFragmentCreate() {
         MessagesController.getInstance(currentAccount).loadSignUpNotificationsSettings();
         loadExceptions(null);
+        rebuildRows();
+
+        NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.notificationsSettingsUpdated);
+
+        getMessagesController().reloadReactionsNotifySettings();
+
+        return super.onFragmentCreate();
+    }
+
+    private void rebuildRows() {
+        rowCount = 0;
 
         if (UserConfig.getActivatedAccountsCount() > 1) {
             accountsSectionRow = rowCount++;
@@ -223,12 +238,6 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
         resetSectionRow = rowCount++;
         resetNotificationsRow = rowCount++;
         resetNotificationsSectionRow = rowCount++;
-
-        NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.notificationsSettingsUpdated);
-
-        getMessagesController().reloadReactionsNotifySettings();
-
-        return super.onFragmentCreate();
     }
 
     public void loadExceptions(Runnable onDone) {
@@ -929,8 +938,44 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.notificationsSettingsUpdated) {
+            rebuildRows();
             adapter.notifyDataSetChanged();
+            if (SharedConfig.isNtfyDefaultServer()) {
+                showNtfyDefaultServerDialog(getParentActivity());
+            }
         }
+    }
+
+    public static void showNtfyDefaultServerDialog(android.app.Activity activity) {
+        if (activity == null || activity.isFinishing()) return;
+
+        List<String> allDistributors = UnifiedPush.getDistributors(activity);
+        List<String> alternatives = new ArrayList<>(allDistributors);
+        alternatives.remove("io.heckel.ntfy");
+
+        String baseMessage = getString(R.string.NtfyDefaultServerMessage);
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(activity);
+        builder.setTitle(getString(R.string.NtfyDefaultServerTitle));
+        builder.setCancelable(false);
+
+        if (!alternatives.isEmpty()) {
+            String alt = alternatives.get(0);
+            it.belloworld.mercurygram.push.UnifiedPushListenerServiceProvider.switchDistributor(alt);
+            builder.setMessage(baseMessage + "\n\n" + LocaleController.formatString(R.string.NtfyDefaultServerSwitched, alt));
+            builder.setPositiveButton(getString(R.string.OK), null);
+        } else {
+            builder.setMessage(baseMessage + "\n\n" + getString(R.string.NtfyDefaultServerNoAlternative));
+            builder.setPositiveButton(getString(R.string.NtfyDefaultServerDisableUP), (dialog, which) -> {
+                UnifiedPush.forceRemoveDistributor(activity);
+                if (!SharedConfig.disableUnifiedPush) {
+                    SharedConfig.toggleDisableUnifiedPush();
+                }
+                it.belloworld.mercurygram.push.UnifiedPushListenerServiceProvider.applyDisabled();
+                SharedConfig.setUnifiedPushEndpointUrl("");
+            });
+        }
+        builder.show();
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
