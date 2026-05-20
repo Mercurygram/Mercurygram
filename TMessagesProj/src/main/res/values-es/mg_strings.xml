@@ -12,4 +12,6 @@
     <string name="NotSet">Sin establecer</string>
     <string name="RearRoundVideos">Usar cámara trasera para mensajes de video</string>
     <string name="HideChatKeyboard">Ocultar teclado al desplazarse en el chat</string>
+    <string name="HideAllTab">Ocultar pestaña \"Todos los chats\"</string>
+    <string name="HideAllTabAbout">Mantén pulsada la barra de título para mostrarla temporalmente</string>
 </resources>
