@@ -11,4 +11,5 @@
     <string name="UnifiedPushGatewayInfo">Prefisso URL per il gateway UnifiedPush</string>
     <string name="NotSet">Non impostato</string>
     <string name="RearRoundVideos">Usa la fotocamera posteriore per i messaggi video</string>
+    <string name="HideChatKeyboard">Nascondi tastiera durante lo scorrimento della chat</string>
 </resources>
