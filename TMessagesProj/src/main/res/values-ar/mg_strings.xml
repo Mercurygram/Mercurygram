@@ -12,4 +12,6 @@
     <string name="NotSet">غير محدد</string>
     <string name="RearRoundVideos">استخدام الكاميرا الخلفية لرسائل الفيديو</string>
     <string name="HideChatKeyboard">إخفاء لوحة المفاتيح عند التمرير في المحادثة</string>
+    <string name="HideAllTab">إخفاء علامة تبويب \"جميع المحادثات\"</string>
+    <string name="HideAllTabAbout">اضغط مطولاً على شريط العنوان لإظهاره مؤقتًا</string>
 </resources>
