@@ -12,12 +12,17 @@ import org.telegram.messenger.SharedConfig;
  */
 public class MgAccountConfig {
 
+    public boolean rearRoundCamera = false;
+
     public void save(SharedPreferences.Editor editor) {
+        editor.putBoolean("rearRoundCamera", rearRoundCamera);
     }
 
     public void load(SharedPreferences preferences) {
+        rearRoundCamera = preferences.getBoolean("rearRoundCamera", false);
     }
 
     public void reset() {
+        rearRoundCamera = false;
     }
 }

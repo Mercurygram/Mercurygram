@@ -10,4 +10,5 @@
     <string name="UnifiedPushGateway">رابط البوابة</string>
     <string name="UnifiedPushGatewayInfo">بادئة الرابط لبوابة UnifiedPush</string>
     <string name="NotSet">غير محدد</string>
+    <string name="RearRoundVideos">استخدام الكاميرا الخلفية لرسائل الفيديو</string>
 </resources>
