@@ -13,4 +13,6 @@
     <string name="SendLargePhotos">Größere Fotos senden (2560px)</string>
     <string name="RearRoundVideos">Rückkamera für Videonachrichten verwenden</string>
     <string name="HideChatKeyboard">Tastatur beim Scrollen im Chat ausblenden</string>
+    <string name="HideAllTab">\"Alle Chats\"-Tab ausblenden</string>
+    <string name="HideAllTabAbout">Lange auf die Titelleiste drücken, um sie vorübergehend anzuzeigen</string>
 </resources>
