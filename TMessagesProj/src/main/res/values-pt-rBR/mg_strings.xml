@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="NtfyDefaultServerDisableUP">Desativar UnifiedPush</string>
+    <string name="NtfyDefaultServerMessage">O servidor ntfy.sh padrão tem limites de taxa muito baixos e bloqueia o gateway de push do Mercurygram. As notificações push não funcionarão de forma confiável.</string>
+    <string name="NtfyDefaultServerNoAlternative">Nenhum distribuidor alternativo instalado. O UnifiedPush será desativado. Você pode reativá-lo após instalar um distribuidor compatível com um servidor autogerenciado.</string>
+    <string name="NtfyDefaultServerSwitched">O Mercurygram mudou automaticamente para: %1$s\n\nSe quiser usar o ntfy, configure-o com um servidor autogerenciado.</string>
+    <string name="NtfyDefaultServerTitle">ntfy.sh não suportado</string>
+    <string name="NtfyDefaultServerWarningRow">⚠ O servidor ntfy.sh padrão está bloqueado. As notificações push não funcionarão. Use um servidor ntfy autogerenciado ou mude para outro distribuidor.</string>
+    <string name="UnifiedPushDistributor">Distribuidor UnifiedPush</string>
+    <string name="UnifiedPushGateway">URL do gateway</string>
+    <string name="UnifiedPushGatewayInfo">Prefixo de URL para o gateway do UnifiedPush</string>
+    <string name="NotSet">Não definido</string>
+</resources>
