@@ -11,4 +11,5 @@
     <string name="UnifiedPushGatewayInfo">Prefixo de URL para o gateway do UnifiedPush</string>
     <string name="NotSet">Não definido</string>
     <string name="SendLargePhotos">Enviar fotos maiores (2560px)</string>
+    <string name="RearRoundVideos">Usar câmera traseira para mensagens de vídeo</string>
 </resources>
