@@ -10,4 +10,5 @@
     <string name="UnifiedPushGateway">URL del gateway</string>
     <string name="UnifiedPushGatewayInfo">Prefisso URL per il gateway UnifiedPush</string>
     <string name="NotSet">Non impostato</string>
+    <string name="RearRoundVideos">Usa la fotocamera posteriore per i messaggi video</string>
 </resources>
