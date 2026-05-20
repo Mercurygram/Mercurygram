@@ -12,4 +12,5 @@
     <string name="NotSet">Не встановлено</string>
     <string name="SendLargePhotos">Надсилати фото більшого розміру (2560px)</string>
     <string name="RearRoundVideos">Використовувати задню камеру для відеоповідомлень</string>
+    <string name="HideChatKeyboard">Приховувати клавіатуру під час прокручування чату</string>
 </resources>
