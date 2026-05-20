@@ -11,4 +11,5 @@
     <string name="UnifiedPushGatewayInfo">Префікс URL для шлюзу UnifiedPush</string>
     <string name="NotSet">Не встановлено</string>
     <string name="RearRoundVideos">Використовувати задню камеру для відеоповідомлень</string>
+    <string name="HideChatKeyboard">Приховувати клавіатуру під час прокручування чату</string>
 </resources>

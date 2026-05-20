@@ -11,4 +11,5 @@
     <string name="UnifiedPushGatewayInfo">بادئة الرابط لبوابة UnifiedPush</string>
     <string name="NotSet">غير محدد</string>
     <string name="RearRoundVideos">استخدام الكاميرا الخلفية لرسائل الفيديو</string>
+    <string name="HideChatKeyboard">إخفاء لوحة المفاتيح عند التمرير في المحادثة</string>
 </resources>
