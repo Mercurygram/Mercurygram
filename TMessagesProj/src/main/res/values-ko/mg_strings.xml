@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="NtfyDefaultServerDisableUP">UnifiedPush 비활성화</string>
+    <string name="NtfyDefaultServerMessage">기본 ntfy.sh 서버는 요청 제한이 매우 낮아 Mercurygram의 푸시 게이트웨이를 차단합니다. 푸시 알림이 안정적으로 작동하지 않습니다.</string>
+    <string name="NtfyDefaultServerNoAlternative">설치된 대체 배포자가 없습니다. UnifiedPush가 비활성화됩니다. 자체 호스팅 서버를 사용하는 호환 배포자를 설치한 후 다시 활성화할 수 있습니다.</string>
+    <string name="NtfyDefaultServerSwitched">Mercurygram이 자동으로 다음으로 전환했습니다: %1$s\n\nntfy를 사용하려면 자체 호스팅 서버로 구성하세요.</string>
+    <string name="NtfyDefaultServerTitle">ntfy.sh 지원 안 함</string>
+    <string name="NtfyDefaultServerWarningRow">⚠ 기본 ntfy.sh 서버가 차단되었습니다. 푸시 알림이 작동하지 않습니다. 자체 호스팅 ntfy 서버를 사용하거나 다른 배포자로 전환하세요.</string>
+    <string name="UnifiedPushDistributor">UnifiedPush 배포자</string>
+    <string name="UnifiedPushGateway">게이트웨이 URL</string>
+    <string name="UnifiedPushGatewayInfo">UnifiedPush 게이트웨이의 URL 접두사</string>
+    <string name="NotSet">설정되지 않음</string>
+</resources>
