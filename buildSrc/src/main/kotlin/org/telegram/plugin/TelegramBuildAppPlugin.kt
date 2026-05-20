@@ -24,21 +24,26 @@ class TelegramBuildAppPlugin : Plugin<Project> {
             val task = project.tasks.register<TelegramStringsTask>(
                 "generate${suffix}TelegramStrings"
             ) {
+                // mg_strings.xml carries the Mercurygram-only keys. Since
+                // 12.10.2 the APK ships no values-*/ translations at all
+                // (localeFilters), every localized value is read back from the
+                // generated localization_<tag>.bin, so MG keys have to go
+                // through this task too or they only ever render in English.
                 stringsXml.from(
                     telegramModule.fileTree("src/main/res/values") {
-                        include("strings.xml")
+                        include("strings.xml", "mg_strings.xml")
                     },
                     project.fileTree("src/main/res/values") {
-                        include("strings.xml")
+                        include("strings.xml", "mg_strings.xml")
                     }
                 )
 
                 localizationFiles.from(
                     telegramModule.fileTree("src/main/res") {
-                        include("values-*/strings.xml")
+                        include("values-*/strings.xml", "values-*/mg_strings.xml")
                     },
                     project.fileTree("src/main/res") {
-                        include("values-*/strings.xml")
+                        include("values-*/strings.xml", "values-*/mg_strings.xml")
                     }
                 )
 

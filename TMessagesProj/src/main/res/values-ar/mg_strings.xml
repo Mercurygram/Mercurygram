@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="NtfyDefaultServerDisableUP">تعطيل UnifiedPush</string>
+    <string name="NtfyDefaultServerMessage">خادم ntfy.sh الافتراضي لديه حدود معدل منخفضة جدًا ويحظر بوابة الدفع الخاصة بـ Mercurygram. لن تعمل إشعارات الدفع بشكل موثوق.</string>
+    <string name="NtfyDefaultServerNoAlternative">لا توجد موزّعات بديلة مثبَّتة. سيتم تعطيل UnifiedPush. يمكنك إعادة تفعيله بعد تثبيت موزّع متوافق يستخدم خادمًا ذاتي الاستضافة.</string>
+    <string name="NtfyDefaultServerSwitched">قام Mercurygram بالتبديل تلقائيًا إلى: %1$s\n\nإذا كنت تريد استخدام ntfy، يرجى تكوينه بخادم ذاتي الاستضافة.</string>
+    <string name="NtfyDefaultServerTitle">ntfy.sh غير مدعوم</string>
+    <string name="NtfyDefaultServerWarningRow">⚠ خادم ntfy.sh الافتراضي محظور. لن تعمل إشعارات الدفع. يرجى استخدام خادم ntfy ذاتي الاستضافة أو التبديل إلى موزّع آخر.</string>
+    <string name="UnifiedPushDistributor">موزّع UnifiedPush</string>
+    <string name="UnifiedPushGateway">رابط البوابة</string>
+    <string name="UnifiedPushGatewayInfo">بادئة الرابط لبوابة UnifiedPush</string>
+    <string name="NotSet">غير محدد</string>
+</resources>
