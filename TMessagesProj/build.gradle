@@ -80,6 +80,16 @@ dependencies {
         }
     }
 
+    // Pinned to 3.0.x: 3.1.0 bumped kotlin-stdlib to 2.2.20 (3.2.0+ to 2.3.0), which exceeds
+    // what R8 8.6.27 (AGP 8.6.x) can parse. Lift when upgrading AGP to 8.7+ (needs Gradle 8.9+).
+    // 3.0.10 is the last of that line and fixes push delivery here: the connector binds our
+    // PushService to hand over an event and unbinds on a fixed timer; 3.0.9 gave it 1s, which
+    // the cold start of this app regularly loses, and a bind that never connects leaves the
+    // connector's internal event queue stuck for the whole process (no endpoint, no messages).
+    // 3.0.10 raises that window to 5s and keeps kotlin-stdlib 2.0.21, so the R8 pin still holds.
+    implementation 'org.unifiedpush.android:connector:3.0.10'
+    // Pinned to 3.0.0 for the same reason: 3.1.0 requires kotlin-stdlib 2.3.0.
+    implementation 'org.unifiedpush.android:embedded-fcm-distributor:3.0.0'
     // kotlin-stdlib 2.0.20 via okhttp/okio — safe with R8 8.6.27. Re-check on major version bumps.
     implementation 'org.maplibre.gl:android-sdk:13.0.1'
 

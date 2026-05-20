@@ -700,6 +700,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         }
 
+        // Warn existing ntfy.sh users on first launch after this feature was added
+        if (SharedConfig.isNtfyDefaultServer()) {
+            NotificationsSettingsActivity.showNtfyDefaultServerDialog(this);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
                         @Override
