@@ -12,4 +12,5 @@
     <string name="NotSet">Niet ingesteld</string>
     <string name="SendLargePhotos">Grotere foto\'s verzenden (2560px)</string>
     <string name="RearRoundVideos">Achtercamera gebruiken voor videoberichten</string>
+    <string name="HideChatKeyboard">Toetsenbord verbergen bij scrollen in chat</string>
 </resources>
