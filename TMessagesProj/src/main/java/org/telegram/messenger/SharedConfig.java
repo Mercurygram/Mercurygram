@@ -144,6 +144,84 @@ public class SharedConfig {
                 .apply();
     }
 
+    // Every mg_* setter below writes to "userconfing": that is the file
+    // mgSaveConfig()/mgLoadConfig() use, and writing anywhere else silently
+    // loses the flag on the next launch.
+    public static void toggleDisableUnifiedPush() {
+        disableUnifiedPush = !disableUnifiedPush;
+        ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_disableUnifiedPush", disableUnifiedPush)
+                .commit();
+    }
+
+    public static void setUnifiedPushGateway(String gateway) {
+        unifiedPushGateway = gateway;
+        ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
+                .edit()
+                .putString("mg_unifiedPushGateway2", unifiedPushGateway)
+                .apply();
+    }
+
+    public static void setUnifiedPushEndpointUrl(String url) {
+        unifiedPushEndpointUrl = url != null ? url : "";
+        ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
+                .edit()
+                .putString("mg_unifiedPushEndpointUrl", unifiedPushEndpointUrl)
+                .apply();
+    }
+
+    /** Returns true if the user is on the default gateway AND their UP endpoint uses the default ntfy.sh server.
+     *  Custom-gateway users are unaffected by the public gateway's ntfy.sh block, so we skip the warning. */
+    public static boolean isNtfyDefaultServer() {
+        if (!unifiedPushGateway.equals("https://p2p.belloworld.it/")) {
+            return false;
+        }
+        if (!unifiedPushEndpointUrl.isEmpty()) {
+            return unifiedPushEndpointUrl.contains("ntfy.sh");
+        }
+        // Fallback for existing users: check the token sent to Telegram (gateway URL contains encoded endpoint)
+        return pushString != null && pushString.contains("ntfy.sh");
+    }
+
+    public static synchronized void ensureWebPushKeys() {
+        if (webPushPrivateKey != null && webPushPublicKey != null && webPushAuthSecret != null) {
+            return;
+        }
+        try {
+            java.security.KeyPairGenerator kpg = java.security.KeyPairGenerator.getInstance("EC");
+            kpg.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
+            java.security.KeyPair keyPair = kpg.generateKeyPair();
+            java.security.interfaces.ECPublicKey ecPub = (java.security.interfaces.ECPublicKey) keyPair.getPublic();
+
+            // Extract raw 65-byte uncompressed P-256 point (04||X||Y)
+            java.security.spec.ECPoint w = ecPub.getW();
+            byte[] xb = w.getAffineX().toByteArray();
+            byte[] yb = w.getAffineY().toByteArray();
+            byte[] rawPub = new byte[65];
+            rawPub[0] = 0x04;
+            if (xb.length >= 32) System.arraycopy(xb, xb.length - 32, rawPub, 1, 32);
+            else System.arraycopy(xb, 0, rawPub, 1 + (32 - xb.length), xb.length);
+            if (yb.length >= 32) System.arraycopy(yb, yb.length - 32, rawPub, 33, 32);
+            else System.arraycopy(yb, 0, rawPub, 33 + (32 - yb.length), yb.length);
+
+            webPushPublicKey = rawPub;
+            webPushPrivateKey = keyPair.getPrivate().getEncoded(); // PKCS#8
+            byte[] secret = new byte[16];
+            new java.security.SecureRandom().nextBytes(secret);
+            webPushAuthSecret = secret;
+
+            ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
+                    .edit()
+                    .putString("mg_webPushPrivateKey", Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT))
+                    .putString("mg_webPushPublicKey", Base64.encodeToString(webPushPublicKey, Base64.DEFAULT))
+                    .putString("mg_webPushAuthSecret", Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT))
+                    .apply();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
     public static void toggleSurfaceInStories() {
         useSurfaceInStories = !useSurfaceInStories;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
@@ -209,7 +287,17 @@ public class SharedConfig {
     @PushListenerController.PushType
     public static int pushType = PushListenerController.PUSH_TYPE_FIREBASE;
     public static String pushString = "";
+    public static String pushStringSimple = "";  // Mercurygram: Simple Push (token_type=4) URL
     public static String pushStringStatus = "";
+
+    // Mercurygram: UnifiedPush
+    public static boolean disableUnifiedPush = false;
+    public static String unifiedPushGateway = "https://p2p.belloworld.it/";
+    public static String unifiedPushEndpointUrl = "";   // raw UP endpoint URL from last onNewEndpoint
+    public static volatile byte[] webPushPrivateKey;    // PKCS#8-encoded P-256 private key
+    public static volatile byte[] webPushPublicKey;     // Raw 65-byte uncompressed P-256 point (04||X||Y)
+    public static volatile byte[] webPushAuthSecret;    // 16-byte random auth secret
+
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
     public static boolean pushStatSent;
@@ -426,6 +514,32 @@ public class SharedConfig {
     private static boolean proxyListLoaded;
     public static ProxyInfo currentProxy;
 
+    private static void mgSaveConfig(SharedPreferences.Editor editor) {
+        editor.putString("mg_pushStringSimple", pushStringSimple);
+        // Mercurygram settings
+        editor.putBoolean("mg_disableUnifiedPush", disableUnifiedPush);
+        editor.putString("mg_unifiedPushGateway2", unifiedPushGateway);
+        editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
+        editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
+        editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
+        editor.putString("mg_unifiedPushEndpointUrl", unifiedPushEndpointUrl);
+    }
+
+    private static void mgLoadConfig(SharedPreferences preferences) {
+        pushStringSimple = preferences.getString("mg_pushStringSimple", "");
+
+        // Mercurygram settings
+        disableUnifiedPush = preferences.getBoolean("mg_disableUnifiedPush", false);
+        unifiedPushGateway = preferences.getString("mg_unifiedPushGateway2", unifiedPushGateway);
+        String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
+        if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
+        String wpPub = preferences.getString("mg_webPushPublicKey", "");
+        if (!TextUtils.isEmpty(wpPub)) webPushPublicKey = Base64.decode(wpPub, Base64.DEFAULT);
+        String wpAuth = preferences.getString("mg_webPushAuthSecret", "");
+        if (!TextUtils.isEmpty(wpAuth)) webPushAuthSecret = Base64.decode(wpAuth, Base64.DEFAULT);
+        unifiedPushEndpointUrl = preferences.getString("mg_unifiedPushEndpointUrl", "");
+    }
+
     public static void saveConfig() {
         synchronized (sync) {
             try {
@@ -444,6 +558,7 @@ public class SharedConfig {
                 editor.putBoolean("useFingerprint", useFingerprintLock);
                 editor.putBoolean("allowScreenCapture", allowScreenCapture);
                 editor.putString("pushString2", pushString);
+                mgSaveConfig(editor);
                 editor.putInt("pushType", pushType);
                 editor.putBoolean("pushStatSent", pushStatSent);
                 editor.putString("pushAuthKey", pushAuthKey != null ? Base64.encodeToString(pushAuthKey, Base64.DEFAULT) : "");
@@ -523,6 +638,7 @@ public class SharedConfig {
             allowScreenCapture = preferences.getBoolean("allowScreenCapture", false);
             lastLocalId = preferences.getInt("lastLocalId", -210000);
             pushString = preferences.getString("pushString2", "");
+            mgLoadConfig(preferences);
             pushType = preferences.getInt("pushType", PushListenerController.PUSH_TYPE_FIREBASE);
             pushStatSent = preferences.getBoolean("pushStatSent", false);
             passportConfigJson = preferences.getString("passportConfigJson", "");
