@@ -13,4 +13,6 @@
     <string name="SendLargePhotos">Grotere foto\'s verzenden (2560px)</string>
     <string name="RearRoundVideos">Achtercamera gebruiken voor videoberichten</string>
     <string name="HideChatKeyboard">Toetsenbord verbergen bij scrollen in chat</string>
+    <string name="HideAllTab">Tabblad \"Alle chats\" verbergen</string>
+    <string name="HideAllTabAbout">Houd de titelbalk ingedrukt om deze tijdelijk weer te geven</string>
 </resources>
