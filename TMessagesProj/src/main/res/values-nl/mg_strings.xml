@@ -11,4 +11,5 @@
     <string name="UnifiedPushGatewayInfo">URL-voorvoegsel voor de UnifiedPush-gateway</string>
     <string name="NotSet">Niet ingesteld</string>
     <string name="RearRoundVideos">Achtercamera gebruiken voor videoberichten</string>
+    <string name="HideChatKeyboard">Toetsenbord verbergen bij scrollen in chat</string>
 </resources>
