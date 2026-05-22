@@ -4,7 +4,10 @@ import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.expr.FieldAccessExpr
+import com.github.javaparser.ast.expr.IntegerLiteralExpr
 import com.github.javaparser.ast.expr.ObjectCreationExpr
+import com.github.javaparser.ast.stmt.SwitchStmt
 import java.io.File
 
 object TelegramCodeParser {
@@ -59,6 +62,8 @@ object TelegramCodeParser {
                 (method.nameAsString == "TLdeserialize" || method.nameAsString == "fromConstructor") && method.isStatic
             }
             val staticDeserializeCreations = staticDeserializeMethods.map(::findNewExpressionsInMethod).flatten().toSet().toList()
+            val (dispatchedLiterals, dispatchedNames) =
+                extractDispatchedMagics(staticDeserializeMethods, cls)
             val hasDeserializeMethod = staticDeserializeMethods.find { method ->
                     method.parameters.size >= 3 &&
                     method.parameters[0].type.toString() == "InputSerializedData" &&
@@ -104,7 +109,9 @@ object TelegramCodeParser {
                     canDeserialize = hasReadParams,
                     canReadResponse = hasDeserializeResponse,
                     canStaticDeserialize = hasDeserializeMethod,
-                    staticDeserializeCreations = staticDeserializeCreations
+                    staticDeserializeCreations = staticDeserializeCreations,
+                    dispatchedMagicLiterals = dispatchedLiterals,
+                    dispatchedMagicNames = dispatchedNames
                 ))
             }
         }
@@ -115,6 +122,53 @@ object TelegramCodeParser {
     private fun findNewExpressionsInMethod(method: MethodDeclaration): List<String> {
         return method.findAll(ObjectCreationExpr::class.java)
             .map { it.typeAsString }
+    }
+
+    /**
+     * Extract dispatched constructor magics from `TLdeserialize`/`fromConstructor`.
+     *
+     * Two complementary sources:
+     *  - `IntegerLiteralExpr` labels inside `SwitchEntry` (e.g. `case 0xdeadbeef:`).
+     *    Restricted to switch-case labels because integer literals elsewhere in
+     *    these methods (array sizes, etc.) are not magics.
+     *  - `FieldAccessExpr` named `constructor` anywhere in the method body. Covers
+     *    both `case X.constructor:` switch dispatch and leaf-class identity checks
+     *    `X.constructor != constructor ? null : new X()`. Within static
+     *    `TLdeserialize`/`fromConstructor`, references to `<class>.constructor`
+     *    are always dispatch references — no other use of that field name exists
+     *    in these methods.
+     *
+     * Names are stored as raw `scope.toString()` (no qualification here). Resolution
+     * to a class happens in GenerateSchemeTask via a staged lookup that tries the
+     * full name, the dispatcher's enclosing-scope-qualified form, and finally a
+     * simple-name fallback — necessary because case scopes may be cross-package
+     * qualified (e.g. `TL_legacy_message.TL_message_layer224.constructor`) or
+     * sibling-relative (e.g. `TL_groupCallDiscarded.constructor` inside
+     * `TLRPC.GroupCall`).
+     */
+    private fun extractDispatchedMagics(
+        methods: List<MethodDeclaration>,
+        enclosingCls: ClassOrInterfaceDeclaration
+    ): Pair<Set<UInt>, Set<String>> {
+        val literals = mutableSetOf<UInt>()
+        val names = mutableSetOf<String>()
+
+        for (method in methods) {
+            for (sw in method.findAll(SwitchStmt::class.java)) {
+                for (entry in sw.entries) {
+                    for (label in entry.labels) {
+                        if (label is IntegerLiteralExpr) {
+                            runCatching { label.asInt().toUInt() }.getOrNull()?.let { literals += it }
+                        }
+                    }
+                }
+            }
+            for (fae in method.findAll(FieldAccessExpr::class.java)) {
+                if (fae.name.asString() != "constructor") continue
+                names += fae.scope.toString()
+            }
+        }
+        return literals to names
     }
 
     private fun getQualifiedName(cls: ClassOrInterfaceDeclaration): String {
