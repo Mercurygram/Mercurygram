@@ -56,6 +56,7 @@ org.telegram.tgnet.TLRPC.TL_videoEncrypted #55555553
 org.telegram.tgnet.TLRPC.TL_wallPaper_layer94 #f04f91ec
 org.telegram.tgnet.TLRPC.TL_webPageUrlPending #d41a5167
 org.telegram.tgnet.tl.TL_bots.exportBotToken #0063b089
+org.telegram.tgnet.tl.TL_iv.getRichMessage #501569cf
 org.telegram.tgnet.tl.TL_stars.TL_savedStarGift_layer221_2 #389bb419
 org.telegram.tgnet.tl.TL_stars.TL_starGiftUnique_layer215 #3a0893b8
 org.telegram.tgnet.tl.TL_stars.TL_starsSubscription_old #d073f1e6
