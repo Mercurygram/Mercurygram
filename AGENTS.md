@@ -33,10 +33,68 @@ Mercurygram is maintained as a **rebase on top of upstream/master**, not a merge
 2. `git rebase upstream/master`
 3. Resolve conflicts — upstream heavily modifies the same large files (ChatActivity, ProfileActivity, etc.)
 4. Re-verify that all features still work
-5. **Test before the first stable tag.** Push the rebased branch — `beta.yml`
+5. **Run tests:** `./gradlew :TMessagesProj_AppTests:connectedAfatDebugAndroidTest -PMG_BUILD_TAG=<dummy>` against a connected device/emulator. If upstream bumped the TL layer, see "TL scheme bump" in `TMessagesProj/AGENTS.md`. See the `## Testing` section below for context.
+6. **Test before the first stable tag.** Push the rebased branch — `beta.yml`
    publishes a pre-stable prerelease (`X.Y.Z.0.K`, see next section) instead
    of waiting for the official tag. Iterate until the build is good, then
    tag the chosen commit as `X.Y.Z.1` (stable).
+
+---
+
+## Testing
+
+Instrumentation tests live in `:TMessagesProj_AppTests`. Upstream coverage:
+TL scheme round-trip via JNI in `NativeSchemeTest`, SQLite migration check
+in `TestDatabaseMigration`. MG-specific coverage lives under
+`src/androidTest/kotlin/it/belloworld/mercurygram/` (version-tag parsing,
+update-info JSON, message-history ToS guard + DB roundtrip). They run on
+Android — `x86_64` device or emulator required (JNI loads the `.so` from
+the Android runtime).
+
+**Recommended — Gradle Managed Devices (no manual emulator):**
+
+```bash
+./gradlew :TMessagesProj_AppTests:api30AfatDebugAndroidTest \
+  -PMG_BUILD_TAG=12.7.3.99.0
+```
+
+AGP downloads the API 30 AOSP x86_64 system image on first run, snapshots
+the boot, and reuses it. Headless, no `adb` interaction. Device config in
+`TMessagesProj_AppTests/build.gradle` (`testOptions.managedDevices`).
+
+**Alternative — connected device/emulator via adb:**
+
+```bash
+./gradlew :TMessagesProj_AppTests:connectedAfatDebugAndroidTest \
+  -PMG_BUILD_TAG=12.7.3.99.0
+```
+
+`MG_BUILD_TAG` is required because the root configures `TMessagesProj_App`
+(which applies `mg-version.gradle`). Any well-formed 5-dotted placeholder
+works — the test APK never ships.
+
+CI runs the same task on every push to `Mercurygram` and on every PR via
+`.github/workflows/tests.yml` (reuses `_prewarm-native.yml` for the
+native lib cache; emulator API 30, x86_64).
+
+CI passes if `failures + errors ≤ KNOWN_FAILURES` (currently 39). The
+baseline is an upstream defect: `com.appmattus.fixture:fixture:1.2.0`
+pulls `io.github.classgraph` → `io.github.toolfactory:jvm-driver`, whose
+`DefaultDriver` initializer needs `sun.misc.Unsafe` / `VarHandle` hooks
+absent on Android ART. The 39 failing fixtures are all polymorphic-class
+resolution paths for legacy-layer TL types; current-layer types resolve
+without ClassGraph and pass. Upstream DrKLO/Telegram never runs this
+module in CI, so the breakage went unnoticed there. Bump
+`KNOWN_FAILURES` in `.github/workflows/tests.yml` **only** after
+confirming a new fail shares the same `ClassGraph` / `jvm-driver` root
+cause.
+
+The `test-generator` Gradle plugin
+(`buildSrc/src/main/kotlin/com/example/`) regenerates
+`TMessagesProj_AppTests/src/androidTest/kotlin/org/telegram/tgnet/model/generated/`
+on every build. Output is deterministic at the current
+`GenerateSchemeTask.LAYER` — see "TL scheme bump" in
+`TMessagesProj/AGENTS.md` when bumping it during a rebase.
 
 ---
 

@@ -112,3 +112,21 @@ echo "deb https://deb.debian.org/debian bookworm main" > /etc/apt/sources.list.d
 apt-get update && apt-get install -y -t bookworm openjdk-17-jdk-headless
 update-java-alternatives -s java-1.17.0-openjdk-amd64
 ```
+
+## TL scheme bump
+
+`:TMessagesProj_AppTests` (re-enabled — see `AGENTS.md` → "Testing")
+validates TL serialization round-trips against generated model classes.
+The `test-generator` Gradle plugin reads the current layer's JSON schema
+from `TMessagesProj_AppTests/tlscheme/<LAYER>.json` and the upstream
+Java sources under `TMessagesProj/src/main/java/org/telegram/tgnet/`.
+
+When an upstream rebase introduces a new TL layer:
+
+1. Drop the new `<N>.json` into `TMessagesProj_AppTests/tlscheme/`.
+2. Bump `LAYER` in `buildSrc/src/main/kotlin/com/example/GenerateSchemeTask.kt:26`.
+3. Re-run the gradle build — the plugin regenerates
+   `TMessagesProj_AppTests/src/androidTest/kotlin/org/telegram/tgnet/model/generated/`.
+4. Commit the regenerated tree alongside the upstream rebase commit.
+5. Run the tests (see `AGENTS.md` → "Testing").
+
