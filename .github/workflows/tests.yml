@@ -1,0 +1,228 @@
+name: Instrumentation tests
+
+on:
+  push:
+    branches: [Mercurygram]
+  pull_request:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prewarm-native:
+    uses: ./.github/workflows/_prewarm-native.yml
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_HASH: ${{ secrets.APP_HASH }}
+
+  instrumentation:
+    runs-on: ubuntu-24.04
+    needs: prewarm-native
+    if: ${{ !cancelled() }}
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [30]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Install host build tools
+        # Same pinned set as _prewarm-native.yml: nasm for dav1d x86/x86_64
+        # SIMD assembly; cmake is queried by the jni-cache-fingerprint
+        # composite.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gperf meson libuv1-dev nasm cmake
+
+      - name: Parse NDK version
+        # Must match _prewarm-native.yml's `NDK_VERSION` for the JNI cache
+        # key below to land an exact hit. Mismatch falls through to the
+        # ABI-only restore-keys prefix → NDK-bump-stale natives restored.
+        run: |
+          set -euo pipefail
+          gradle_file=TMessagesProj/build.gradle
+          ndk=$(grep -oE 'ndkVersion[[:space:]]+"[0-9.]+"' "$gradle_file" | grep -oE '[0-9.]+')
+          [ -n "$ndk" ] || { echo "could not parse ndkVersion from $gradle_file" >&2; exit 1; }
+          echo "NDK_VERSION=$ndk" >> "$GITHUB_ENV"
+
+      - name: Compute JNI cache fingerprint
+        uses: ./.github/actions/jni-cache-fingerprint
+
+      - name: Restore JNI native caches (x86_64 — emulator ABI)
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            TMessagesProj/jni/boringssl/build
+            TMessagesProj/jni/ffmpeg/build
+            TMessagesProj/jni/dav1d/build
+            TMessagesProj/jni/libvpx/build
+            TMessagesProj/jni/td/build
+            TMessagesProj/jni/td/td/generate/auto
+            TMessagesProj/jni/td/tdutils/generate/auto
+          key: jni-native-Linux-x86_64-ndk${{ env.NDK_VERSION }}-${{ hashFiles('.jni-cache-fingerprint') }}
+          restore-keys: |
+            jni-native-Linux-x86_64-ndk${{ env.NDK_VERSION }}-
+            jni-native-Linux-x86_64-
+
+      - name: Create API_KEYS
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_HASH: ${{ secrets.APP_HASH }}
+        run: |
+          printf 'APP_ID = %s\nAPP_HASH = %s\n' "$APP_ID" "$APP_HASH" > API_KEYS
+
+      - name: Restore GMD AVD + system image
+        id: gmd-cache
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          # AGP-managed devices live under ~/.android/avd/gradle-managed
+          # (AGP 8+ may also place them under $GRADLE_USER_HOME/avd — verify
+          # on first run; add ~/.gradle/avd here if so). System image is
+          # installed by AGP via sdkmanager into the runner's ANDROID_HOME
+          # (writable on ubuntu-24.04). Caching both lets the snapshot boot
+          # reuse the warm image on subsequent runs.
+          #
+          # Split into restore + conditional save (see "Save GMD cache" step
+          # below) so a failed first run doesn't poison the immutable key
+          # `gmd-api30-aosp-x86_64-v1` with a half-installed image — every
+          # subsequent run would then restore the corrupt bytes until the
+          # key is manually bumped.
+          path: |
+            ~/.android/avd
+            ~/.android/adb*
+            /usr/local/lib/android/sdk/system-images/android-${{ matrix.api-level }}/aosp/x86_64
+          key: gmd-api${{ matrix.api-level }}-aosp-x86_64-v1
+          restore-keys: |
+            gmd-api${{ matrix.api-level }}-aosp-x86_64-
+
+      - name: Run instrumentation tests
+        id: run_tests
+        # Don't fail the job on gradle's non-zero exit — `Gate on failure
+        # count` below is the authoritative pass/fail signal. Lets us
+        # tolerate the upstream-defect baseline (KNOWN_FAILURES) while
+        # still catching any NEW regression.
+        #
+        # Gradle Managed Devices: AGP boots, snapshots, and tears down the
+        # emulator itself. No reactivecircus/android-emulator-runner — that
+        # action's boot-wait is too lenient on transient `adb: device offline`
+        # and bails before the gradle task ever runs (~5 min flake vs ~1h17
+        # success). AGP polls boot_completed properly and retries internally.
+        #
+        # MG_BUILD_TAG: TMessagesProj_App applies mg-version.gradle which
+        # mandates the property at configure-time even when we only assemble
+        # :TMessagesProj_AppTests (root configures all modules). Synthetic
+        # pre-stable placeholder is fine — test APK never ships.
+        continue-on-error: true
+        run: |
+          ./gradlew :TMessagesProj_AppTests:api${{ matrix.api-level }}AfatDebugAndroidTest \
+            -PMG_BUILD_TAG=12.7.3.99.0 --no-daemon --stacktrace
+
+      - name: Gate on failure count
+        id: gate
+        # Any failure is a regression. The generator emits
+        # `Assume.assumeTrue(false)` for legacy constructors whose magic is
+        # absent from every linked `<Type>.TLdeserialize` switch — those
+        # previously hit `TLParseException` at runtime (see
+        # `reachableMagicsPerDeserializer` in
+        # `buildSrc/src/main/kotlin/com/example/GenerateSchemeTask.kt`).
+        # BaseSchemeTest narrows runtime catches to unknown-magic exceptions
+        # only — VectorWrongSize and other parse failures still surface.
+        # SKIP_CEILING bounds the *skipped* count: a regression in the
+        # gen-time analysis (e.g., classByName lookup misses) would silently
+        # widen the skip set without tripping the failure gate. Bump
+        # deliberately when adding legitimate new skips.
+        env:
+          KNOWN_FAILURES: 0
+          SKIP_CEILING: 80
+        run: |
+          set -euo pipefail
+          results_dir=TMessagesProj_AppTests/build/outputs/androidTest-results
+          # Explicit dir check before `find` — `set -e` + missing dir would
+          # otherwise abort with cryptic `find: ... No such file or directory`
+          # instead of the descriptive message below.
+          if [ ! -d "$results_dir" ]; then
+            echo "::error::No JUnit XML produced — $results_dir does not exist (gradle never reached the test phase)."
+            exit 1
+          fi
+          # `find -print0` handles AGP's space-containing dir names.
+          # GMD writes XMLs under build/outputs/androidTest-results/managedDevice/
+          # (vs `connected/` for the reactivecircus path) — recurse from the
+          # parent to cover either layout.
+          mapfile -d '' xmls < <(find "$results_dir" -name 'TEST-*.xml' -print0)
+          if [ ${#xmls[@]} -eq 0 ]; then
+            echo "::error::No JUnit XML produced under $results_dir — test run never reached the assertion phase."
+            exit 1
+          fi
+          # `paste -sd+ | bc` returns empty on zero matches; default to 0
+          # under `set -u` so a truncated XML (no `failures=`/`errors=`/`tests=`
+          # attrs from an OOM mid-run) doesn't kill the script with
+          # `unbound variable` before the descriptive comparison runs.
+          fails=$(grep -hoE 'failures="[0-9]+"' "${xmls[@]}" | grep -oE '[0-9]+' | paste -sd+ | bc)
+          errs=$(grep -hoE 'errors="[0-9]+"'    "${xmls[@]}" | grep -oE '[0-9]+' | paste -sd+ | bc)
+          tests=$(grep -hoE 'tests="[0-9]+"'    "${xmls[@]}" | grep -oE '[0-9]+' | paste -sd+ | bc)
+          skipped=$(grep -hoE 'skipped="[0-9]+"' "${xmls[@]}" | grep -oE '[0-9]+' | paste -sd+ | bc)
+          fails=${fails:-0}
+          errs=${errs:-0}
+          tests=${tests:-0}
+          skipped=${skipped:-0}
+          total=$((fails + errs))
+          echo "tests=$tests failures=$fails errors=$errs skipped=$skipped total=$total baseline=$KNOWN_FAILURES skip_ceiling=$SKIP_CEILING"
+          if [ "$tests" -eq 0 ]; then
+            echo "::error::XMLs present but tests=0 — likely truncated/corrupt reports."
+            exit 1
+          fi
+          if [ "$total" -gt "$KNOWN_FAILURES" ]; then
+            echo "::error::Regression: $total failures > baseline $KNOWN_FAILURES."
+            exit 1
+          fi
+          if [ "$skipped" -gt "$SKIP_CEILING" ]; then
+            echo "::error::Skip-set regression: $skipped > ceiling $SKIP_CEILING — investigate gen-time skip analysis (`magic dropped from dispatcher`, `link error`, nested-magic runtime skip) before bumping SKIP_CEILING."
+            exit 1
+          fi
+
+      - name: Save GMD AVD + system image
+        # Only save when the gate passed and the cache key was a fresh miss
+        # (`cache-hit != 'true'`). Skips re-uploading identical bytes on
+        # warm runs AND avoids poisoning the immutable
+        # `gmd-api30-aosp-x86_64-v1` key with a half-installed image from a
+        # failed install / OOM / timeout. The unconditional `actions/cache`
+        # save would otherwise pin bad bytes until the key suffix is bumped.
+        if: steps.gate.outcome == 'success' && steps.gmd-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.android/avd
+            ~/.android/adb*
+            /usr/local/lib/android/sdk/system-images/android-${{ matrix.api-level }}/aosp/x86_64
+          key: ${{ steps.gmd-cache.outputs.cache-primary-key }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5.0.0
+        with:
+          name: instrumentation-reports-api${{ matrix.api-level }}
+          path: |
+            TMessagesProj_AppTests/build/reports/androidTests/
+            TMessagesProj_AppTests/build/outputs/androidTest-results/
