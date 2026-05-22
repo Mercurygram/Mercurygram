@@ -149,7 +149,8 @@ abstract class GenerateSchemeTask : DefaultTask() {
             allConstructors.toList(),
             encryptedConstructors.toList(),
             linkedTypes,
-            legacyPaths
+            legacyPaths,
+            telegramClasses.classes
         )
         // println("✅ Generation complete. Output: $outputDir")
     }
@@ -202,7 +203,8 @@ abstract class GenerateSchemeTask : DefaultTask() {
         constructors: List<TlObjectWithLayer>,
         encrypted: List<TlObjectWithLayer>,
         linkedTypes: Set<Pair<String, TelegramTlClass>>,
-        comments: List<Map<String, List<List<String>>>>
+        comments: List<Map<String, List<List<String>>>>,
+        allTelegramClasses: Set<TelegramTlClass>
     ) {
         val packageName = "org.telegram.tgnet.test.generated"
 
@@ -222,6 +224,44 @@ abstract class GenerateSchemeTask : DefaultTask() {
 
         val lt = linkedTypes.groupBy { it.first }.mapValues { it.value.map { it.second } }
 
+        // Per-deserializer set of magics reachable from its static
+        // `TLdeserialize` + `fromConstructor` methods. Two precise sources extracted
+        // by TelegramCodeParser.extractDispatchedMagics:
+        //   - `dispatchedMagicLiterals` — IntegerLiteralExpr labels inside `case ...:`
+        //   - `dispatchedMagicNames` — raw `<X>.constructor` scope expressions
+        //     (covers both `case X.constructor:` switch dispatch and leaf-class
+        //     identity checks)
+        //
+        // Names resolve via a staged lookup against `allTelegramClasses`:
+        //   1. exact fullName match — handles cross-package qualified scopes like
+        //      `TL_legacy_message.TL_message_layer224`
+        //   2. dispatcher's enclosing scope + name — handles sibling references
+        //      like `TL_groupCallDiscarded` inside `TLRPC.GroupCall`
+        //   3. unique simple name — last-resort fallback; deliberately drops
+        //      ambiguous names rather than risking last-wins. Resulting over-skip
+        //      is caught by SKIP_CEILING in `.github/workflows/tests.yml`.
+        val classesByFullName = allTelegramClasses.associateBy { it.fullName }
+        val simpleNameCounts = allTelegramClasses.groupingBy { it.name }.eachCount()
+        val classesBySimpleName = allTelegramClasses
+            .filter { simpleNameCounts[it.name] == 1 }
+            .associateBy { it.name }
+        fun lookupRelativeTo(name: String, dispatcher: TelegramTlClass): TelegramTlClass? {
+            classesByFullName[name]?.let { return it }
+            val parentPrefix = dispatcher.fullName.substringBeforeLast('.', "")
+            if (parentPrefix.isNotEmpty()) {
+                classesByFullName["$parentPrefix.$name"]?.let { return it }
+            }
+            return classesBySimpleName[name]
+        }
+
+        val reachableMagicsPerDeserializer: Map<TelegramTlClass, Set<UInt>> =
+            linkedTypes.map { it.second }.toSet().associateWith { dz ->
+                val fromNames = dz.dispatchedMagicNames
+                    .mapNotNull { name -> lookupRelativeTo(name, dz)?.constructor }
+                    .toSet()
+                dz.dispatchedMagicLiterals + fromNames
+            }
+
         val constructorsSorted = constructors.sortedWith(
             compareByDescending<TlObjectWithLayer> { it.layerLast }
                 .thenBy { it.tl.key.name.type }
@@ -237,13 +277,37 @@ abstract class GenerateSchemeTask : DefaultTask() {
             val type = constructor.tl.key.name.type.replace('.', '_')
             val name = "test_${(testIndex++).toString().padStart(6, '0')}_${type}_${constructor.codegenDataClassName}"
 
-            val lines = lt[constructor.tl.key.name.type]?.map { clz ->
-                val clz2 = clz.packageName + "." + clz.fullName
-                "test_TLdeserialize(org.telegram.tgnet.model.generated.TlGen_${type}.${constructor.codegenDataClassName}::class, " +
-                        "${clz2}::TLdeserialize, ${if (isLegacy && !isEncrypted) constructor.layerLast.toString() else "null"})"
-            } ?: listOf("assumeTrue(\"Test skipped, link error\", false)")
+            val linkedDeserializers = lt[constructor.tl.key.name.type]
 
-            val code = buildString { lines.forEach { appendLine(it) } }
+            // Per-deserializer: emit the real test call when the magic is in
+            // that deserializer's reachable set, otherwise emit assumeTrue.
+            // Preserves coverage of deserializers that DO still route the
+            // magic when others have dropped it.
+            val perDeserializerLines = linkedDeserializers?.map { clz ->
+                val magicReachable = !isLegacy || isEncrypted ||
+                    constructor.tl.key.constructorId in reachableMagicsPerDeserializer[clz].orEmpty()
+                if (magicReachable) {
+                    val clz2 = clz.packageName + "." + clz.fullName
+                    "test_TLdeserialize(org.telegram.tgnet.model.generated.TlGen_${type}.${constructor.codegenDataClassName}::class, " +
+                            "${clz2}::TLdeserialize, ${if (isLegacy && !isEncrypted) constructor.layerLast.toString() else "null"})"
+                } else {
+                    "assumeTrue(\"Test skipped, magic dropped from dispatcher\", false)"
+                }
+            }
+
+            // When every line is a skip the @Test method does nothing, so
+            // collapse to a single skip statement; otherwise emit the mixed
+            // list (real-call + skip lines coexist — the test runs the calls
+            // and stops on the first assumeTrue, which is fine because the
+            // call lines are independent test_TLdeserialize invocations and
+            // each opens with `buffer.rewind()`).
+            val lines = when {
+                perDeserializerLines == null ->
+                    listOf("assumeTrue(\"Test skipped, link error\", false)")
+                perDeserializerLines.all { it.startsWith("assumeTrue(") } ->
+                    listOf("assumeTrue(\"Test skipped, magic dropped from dispatcher\", false)")
+                else -> perDeserializerLines.filterNot { it.startsWith("assumeTrue(") }
+            }
 
             val b = when {
                 isEncrypted -> testEncryptedBuilder
@@ -251,10 +315,12 @@ abstract class GenerateSchemeTask : DefaultTask() {
                 else        -> testActualBuilder
             }
 
+            // One addStatement per call so KotlinPoet emits each as a sibling
+            // statement node (not continuation-indented under the first).
             val fs = FunSpec.builder(name)
                 .addAnnotation(ClassName("org.junit", "Test"))
                 .addModifiers(KModifier.PUBLIC)
-                .addStatement(code)
+            lines.forEach { fs.addStatement(it) }
 
             if (!isEncrypted && isLegacy) {
                 val l = comments[constructor.layerLast - 1][constructor.tl.key.name.type] ?: emptyList()
