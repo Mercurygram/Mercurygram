@@ -6,6 +6,12 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.13.0'
+        // Required by :TMessagesProj_AppTests (test-only). Shipping modules
+        // are pure Java; pulling the kotlin gradle plugin here costs only
+        // a configure-time classpath entry, no APK delta. Version must be
+        // ≥2.1 — AGP 8.13 pulls kotlin-stdlib 2.1.x transitively, and the
+        // 1.9.20 compiler can't read 2.1 metadata (KT-class load error).
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20"
     }
 }
 repositories {
