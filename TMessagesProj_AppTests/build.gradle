@@ -23,8 +23,8 @@ dependencies {
     androidTestImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test:runner:1.5.2'
-    androidTestImplementation "org.jetbrains.kotlin:kotlin-test:1.9.20"
-    androidTestImplementation "org.jetbrains.kotlin:kotlin-test-junit:1.9.20"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-test:2.1.20"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-test-junit:2.1.20"
     androidTestImplementation "com.appmattus.fixture:fixture:1.2.0"
 }
 
@@ -36,6 +36,34 @@ android {
 
     sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
     testBuildType "debug"
+
+    // [MG] com.appmattus.fixture pulls libnarcissus-{macos,win}-*.{dylib,dll}
+    // into androidTest classpath. AGP repackages them under `lib/` in the
+    // APK, then PackageManager fails install with
+    // INSTALL_FAILED_NO_MATCHING_ABIS (sees lib/ dir without a matching ABI
+    // subfolder). Strip host natives — only Android .so under lib/<abi>/
+    // belong here.
+    packaging {
+        resources {
+            excludes += ['lib/*.dylib', 'lib/*.dll']
+        }
+    }
+
+    // [MG] Gradle Managed Devices — headless local test target. Mirrors the
+    // CI emulator (API 30, x86_64, AOSP "default" system image) so
+    // `./gradlew :TMessagesProj_AppTests:api30DebugAndroidTest` runs the
+    // same matrix locally without manual AVD setup.
+    testOptions {
+        managedDevices {
+            localDevices {
+                api30 {
+                    device = "Pixel 5"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+            }
+        }
+    }
 
     lintOptions {
         disable 'MissingTranslation'
@@ -109,7 +137,11 @@ android {
     productFlavors {
         afat {
             ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+                // [MG] Test APK only runs on the x86_64 emulator (CI + GMD).
+                // Restricting to one ABI cuts assemble + native-link time ~75%
+                // (was 4 ABIs upstream); each ABI delta is just the native
+                // ndk-build/cmake step. Test APK never ships.
+                abiFilters "x86_64"
             }
             ext {
                 abiVersionCode = 9
