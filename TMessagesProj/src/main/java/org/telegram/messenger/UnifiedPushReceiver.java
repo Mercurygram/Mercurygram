@@ -165,7 +165,16 @@ public class UnifiedPushReceiver extends PushService {
             }
         }
 
-        // Fallback: wake up the app to fetch updates via MTProto
+        // Fallback: wake up the app to fetch updates via MTProto.
+        // MG: when embedded tor is on, the wake-up has to cover a tor cold
+        // bootstrap (10-30s) on top of the MTProto handshake. Bump the
+        // ref-counted wake budget by another 30s (total ~60s) and kick tor
+        // out of its idle-stopped state before MTProto attempts to connect.
+        final boolean torStartingForFallback = SharedConfig.mg_useTor;
+        if (torStartingForFallback) {
+            acquireWakeLock(pm);
+            it.belloworld.mercurygram.tor.MgTorController.getInstance().requestStartForPushFallback();
+        }
         AndroidUtilities.runOnUIThread(() -> {
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("UP PRE INIT APP");
@@ -187,6 +196,9 @@ public class UnifiedPushReceiver extends PushService {
                     }
                 } finally {
                     releaseWakeLock();
+                    if (torStartingForFallback) {
+                        releaseWakeLock();
+                    }
                 }
             });
         });

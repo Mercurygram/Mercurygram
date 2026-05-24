@@ -237,7 +237,10 @@ task patchNativeSources {
                 'TMessagesProj/jni/ffmpeg',
                 'TMessagesProj/jni/dav1d',
                 'TMessagesProj/jni/boringssl',
-                'TMessagesProj/jni/td'
+                'TMessagesProj/jni/td',
+                'TMessagesProj/jni/libevent',
+                'TMessagesProj/jni/openssl',
+                'TMessagesProj/jni/tor'
         }
         def ndkDir = android.ndkDirectory.toString()
         def ninjaPath = System.getenv('NINJA_PATH') ?: 'ninja'
@@ -282,6 +285,9 @@ def androidToScriptAbi = [
              ['patch_ffmpeg.sh',       androidAbis],
              ['build_boringssl.sh',    scriptAbis],
              ['build_tde2e.sh',        androidAbis],
+             ['build_libevent.sh',     androidAbis],
+             ['build_openssl.sh',      androidAbis],
+             ['build_tor.sh',          androidAbis],
             ].each { script, abis ->
                 exec {
                     workingDir "${projectDir}/jni"

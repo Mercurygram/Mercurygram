@@ -280,6 +280,7 @@
     <string name="MercurygramSettingsMedia">Медіа</string>
     <string name="MercurygramSettingsUpdates">Оновлення</string>
     <string name="MercurygramSettingsNotifications">Сповіщення</string>
+    <string name="MercurygramSettingsPrivacy">Конфіденційність</string>
     <string name="MercurygramMessageDetailsMenu">Показати «Деталі повідомлення»</string>
     <string name="MercurygramDisableAutoUpdate">Вимкнути вбудований оновлювач</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram більше не перевірятиме оновлення на GitHub під час запуску. Ручну перевірку можна запустити кнопкою нижче.</string>
@@ -311,4 +312,27 @@
     <string name="MercurygramDisableUnifiedPushAbout">Якщо вимкнено, Mercurygram повертається до опитування нових повідомлень. Програму буде перезапущено для застосування змін.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Щоб застосувати цю зміну, Mercurygram потрібно перезапустити. Продовжити?</string>
     <string name="MercurygramRestart">Перезапустити</string>
+    <string name="MercurygramReduceTrackingFingerprint">Зменшити мережеве відстеження</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Оновлює ключ сесії щогодини замість одного разу на добу. Ускладнює пасивну кореляцію вашого пристрою. Фонова мережева активність дещо зросте.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">Зменшити мережеве відстеження?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">Mercurygram ротуватиме ключ сесії щогодини замість одного разу на добу. Це ускладнить пасивному спостерігачу у вашій мережі кореляцію вашого пристрою, але не приховає факт використання Telegram і не захистить від аналізу трафіку (час, обсяг, контакти). Перший ключ сесії при новому вході все ще спостережний один раз, а фонова мережева активність дещо зросте. Продовжити?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Увімкнути</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Обліковий запис %1$s повернувся до стандартного режиму — сервер відхилив скорочений час життя ключа сесії.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Сервер відхилив скорочений час життя ключа сесії для: %1$s. Ці облікові записи використовують стандартний 24-годинний ключ. Вимкніть і знову увімкніть, щоб повторити.</string>
+    <string name="MercurygramTorRespawnGaveUp">Tor неодноразово аварійно завершувався. Автоматичний перезапуск призупинено — вимкніть і знову увімкніть Tor, щоб повторити.</string>
+    <string name="MercurygramTorUnavailable">Tor недоступний у цій збірці. Бібліотека Tor відсутня — перевстановіть Mercurygram з відповідним ABI.</string>
+    <string name="MercurygramTor">Використовувати Tor</string>
+    <string name="MercurygramTorAbout">Маршрутизує трафік протоколу Telegram (MTProto) через вбудований демон Tor, щоб подолати пасивне відстеження auth_key_id, яке дозволяє операторам мережі пов\'язати ваш обліковий запис із вашим реальним IP. Завантаження медіа та інший HTTP-трафік залишаються прямими, щоб застосунок залишався чутливим. Tor автоматично вимикається при простої застосунку для економії батареї та знову запускається за потреби. Функції, чутливі до затримок (дзвінки), можуть постраждати; Telegram все ще бачить вихідний вузол Tor.</string>
+    <string name="MercurygramTorProxyEntry">Tor (внутрішній)</string>
+    <string name="MercurygramTorEnableTitle">Використовувати Tor для Mercurygram?</string>
+    <string name="MercurygramTorEnableMessage">Mercurygram запустить вбудований демон Tor і маршрутизуватиме трафік протоколу Telegram (MTProto) через нього. Завантаження медіа та інший HTTP-трафік залишаються прямими. Перший bootstrap займає ~10–30 секунд. Tor автоматично зупиняється при простої застосунку для економії батареї та запускається знову при відновленні або отриманні push-сповіщення. Продовжити?</string>
+    <string name="MercurygramTorEnable">Увімкнути</string>
+    <string name="MercurygramTorBootstrap">Підключення через Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">Зупиняти Tor після простою</string>
+    <string name="MercurygramTorIdleTimeoutOff">Ніколи (завжди активний)</string>
+    <string name="MercurygramTorIdleTimeout1min">1 хвилина</string>
+    <string name="MercurygramTorIdleTimeout5min">5 хвилин</string>
+    <string name="MercurygramTorIdleTimeout15min">15 хвилин</string>
+    <string name="MercurygramTorIdleTimeout60min">1 година</string>
+    <string name="MercurygramTorActiveProxyLocked">Вимкніть Tor у налаштуваннях Mercurygram, щоб використовувати інший проксі.</string>
 </resources>

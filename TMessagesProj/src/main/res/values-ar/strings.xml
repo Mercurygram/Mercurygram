@@ -1247,6 +1247,7 @@
     <string name="MercurygramSettingsMedia">الوسائط</string>
     <string name="MercurygramSettingsUpdates">التحديثات</string>
     <string name="MercurygramSettingsNotifications">الإشعارات</string>
+    <string name="MercurygramSettingsPrivacy">الخصوصية</string>
     <string name="MercurygramMessageDetailsMenu">إظهار \"تفاصيل الرسالة\"</string>
     <string name="MercurygramDisableAutoUpdate">تعطيل المُحدِّث داخل التطبيق</string>
     <string name="MercurygramDisableAutoUpdateAbout">لن يتحقق Mercurygram بعد الآن من التحديثات على GitHub عند بدء التشغيل. لا يزال بإمكانك تشغيل فحص يدوي من الزر أدناه.</string>
@@ -1278,4 +1279,27 @@
     <string name="MercurygramDisableUnifiedPushAbout">عند تعطيله، يعود Mercurygram إلى استطلاع الرسائل الجديدة. سيُعاد تشغيل التطبيق لتطبيق التغيير.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">يحتاج Mercurygram إلى إعادة التشغيل لتطبيق هذا التغيير. هل تريد المتابعة؟</string>
     <string name="MercurygramRestart">إعادة التشغيل</string>
+    <string name="MercurygramReduceTrackingFingerprint">تقليل تتبع الشبكة</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">يحدّث مفتاح الجلسة كل ساعة بدلاً من مرة واحدة يومياً. يجعل الارتباط السلبي لجهازك أصعب. سيزداد نشاط الشبكة في الخلفية قليلاً.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">تقليل تتبع الشبكة؟</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">سيقوم Mercurygram بتدوير مفتاح الجلسة كل ساعة بدلاً من مرة واحدة يومياً. هذا يجعل من الصعب على مراقب سلبي في شبكتك ربط جهازك، ولكنه لا يخفي أنك تستخدم Telegram ولا يهزم تحليل حركة المرور (التوقيت، الحجم، جهات الاتصال). لا يزال مفتاح الجلسة الأول عند تسجيل دخول جديد قابلاً للمراقبة مرة واحدة، وسيزداد نشاط الشبكة في الخلفية قليلاً. متابعة؟</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">تفعيل</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">الحساب %1$s عاد إلى الوضع القياسي — رفض الخادم العمر المخفض لمفتاح الجلسة.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">رفض الخادم العمر المخفض لمفتاح الجلسة لـ: %1$s. تستخدم هذه الحسابات المفتاح القياسي لمدة 24 ساعة. أوقف وأعد التفعيل للمحاولة مرة أخرى.</string>
+    <string name="MercurygramTorRespawnGaveUp">تعطّل Tor مرارًا. تم إيقاف إعادة التشغيل التلقائي — أوقف Tor ثم أعد تفعيله للمحاولة مرة أخرى.</string>
+    <string name="MercurygramTorUnavailable">Tor غير متوفر في هذا الإصدار. مكتبة Tor مفقودة — أعد تثبيت Mercurygram بنواة معالج متطابقة.</string>
+    <string name="MercurygramTor">استخدام Tor</string>
+    <string name="MercurygramTorAbout">يوجه حركة بروتوكول Telegram (MTProto) عبر خادم Tor مدمج لهزيمة التتبع السلبي لـ auth_key_id الذي يسمح لمشغلي الشبكة بربط حسابك بعنوان IP الحقيقي. تظل تنزيلات الوسائط وحركة HTTP الأخرى مباشرة للحفاظ على استجابة التطبيق. ينقطع Tor تلقائيًا عند خمول التطبيق لتوفير البطارية ويُشغَّل مرة أخرى عند الحاجة. قد تتأثر الميزات الحساسة لزمن الاستجابة (المكالمات)؛ ولا يزال Telegram يرى مخرج Tor.</string>
+    <string name="MercurygramTorProxyEntry">Tor (داخلي)</string>
+    <string name="MercurygramTorEnableTitle">استخدام Tor لـ Mercurygram؟</string>
+    <string name="MercurygramTorEnableMessage">سيشغل Mercurygram خادم Tor المدمج ويوجه حركة بروتوكول Telegram (MTProto) عبره. تظل تنزيلات الوسائط وحركة HTTP الأخرى مباشرة. يستغرق الإقلاع الأولي حوالي 10-30 ثانية. يتوقف Tor تلقائيًا عند خمول التطبيق لتوفير البطارية، ويعمل مجددًا عند الاستئناف أو وصول إشعار. متابعة؟</string>
+    <string name="MercurygramTorEnable">تفعيل</string>
+    <string name="MercurygramTorBootstrap">الاتصال عبر Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">إيقاف Tor بعد الخمول</string>
+    <string name="MercurygramTorIdleTimeoutOff">أبدًا (يبقى يعمل)</string>
+    <string name="MercurygramTorIdleTimeout1min">دقيقة واحدة</string>
+    <string name="MercurygramTorIdleTimeout5min">5 دقائق</string>
+    <string name="MercurygramTorIdleTimeout15min">15 دقيقة</string>
+    <string name="MercurygramTorIdleTimeout60min">ساعة واحدة</string>
+    <string name="MercurygramTorActiveProxyLocked">قم بإيقاف تشغيل Tor في إعدادات Mercurygram لاستخدام بروكسي مختلف.</string>
 </resources>

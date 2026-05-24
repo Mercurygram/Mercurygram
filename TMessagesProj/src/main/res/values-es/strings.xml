@@ -1320,6 +1320,7 @@
     <string name="MercurygramSettingsMedia">Multimedia</string>
     <string name="MercurygramSettingsUpdates">Actualizaciones</string>
     <string name="MercurygramSettingsNotifications">Notificaciones</string>
+    <string name="MercurygramSettingsPrivacy">Privacidad</string>
     <string name="MercurygramMessageDetailsMenu">Mostrar \"Detalles del mensaje\"</string>
     <string name="MercurygramDisableAutoUpdate">Desactivar actualizador interno</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram dejará de comprobar actualizaciones en GitHub al iniciar. Aún puedes iniciar una comprobación manual con el botón de abajo.</string>
@@ -1351,4 +1352,27 @@
     <string name="MercurygramDisableUnifiedPushAbout">Cuando está desactivado, Mercurygram vuelve al sondeo de nuevos mensajes. La aplicación se reiniciará para aplicar el cambio.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram debe reiniciarse para aplicar este cambio. ¿Continuar?</string>
     <string name="MercurygramRestart">Reiniciar</string>
+    <string name="MercurygramReduceTrackingFingerprint">Reducir rastreo de red</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Actualiza la clave de sesión cada hora en lugar de una vez al día. Dificulta la correlación pasiva de tu dispositivo. La actividad de red en segundo plano aumentará ligeramente.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">¿Reducir rastreo de red?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">Mercurygram rotará la clave de sesión cada hora en lugar de una vez al día. Esto dificulta a un observador pasivo en tu red correlacionar tu dispositivo, pero no oculta que usas Telegram y no impide el análisis de tráfico (tiempos, volumen, contactos). La primera clave de sesión al iniciar sesión sigue siendo observable una vez y la actividad de red en segundo plano aumentará ligeramente. ¿Continuar?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Activar</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">La cuenta %1$s volvió al modo estándar — el servidor rechazó la duración reducida de la clave de sesión.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">El servidor rechazó la duración reducida de la clave de sesión para: %1$s. Esas cuentas usan la clave estándar de 24 h. Desactiva y vuelve a activar para reintentar.</string>
+    <string name="MercurygramTorRespawnGaveUp">Tor falló repetidamente. Reinicio automático en pausa — desactiva y reactiva Tor para reintentar.</string>
+    <string name="MercurygramTorUnavailable">Tor no está disponible en esta versión. Falta la biblioteca de Tor — reinstala Mercurygram con una ABI compatible.</string>
+    <string name="MercurygramTor">Usar Tor</string>
+    <string name="MercurygramTorAbout">Enruta el tráfico del protocolo de Telegram (MTProto) a través de un demonio Tor integrado para derrotar el rastreo pasivo de auth_key_id que permite a los operadores de red vincular tu cuenta con tu IP real. Las descargas de medios y otro tráfico HTTP siguen siendo directos para mantener la app responsiva. Tor se desconecta automáticamente cuando la app está inactiva para ahorrar batería y se reanuda cuando es necesario. Las funciones sensibles a la latencia (llamadas) pueden verse afectadas; Telegram sigue viendo el nodo de salida de Tor.</string>
+    <string name="MercurygramTorProxyEntry">Tor (interno)</string>
+    <string name="MercurygramTorEnableTitle">¿Usar Tor para Mercurygram?</string>
+    <string name="MercurygramTorEnableMessage">Mercurygram iniciará un demonio Tor integrado y enrutará el tráfico del protocolo de Telegram (MTProto) a través de él. Las descargas de medios y otro tráfico HTTP siguen siendo directos. El bootstrap tarda ~10–30 segundos la primera vez. Tor se detiene automáticamente cuando la app ha estado inactiva para ahorrar batería, y se reinicia al reanudar o al recibir un push. ¿Continuar?</string>
+    <string name="MercurygramTorEnable">Activar</string>
+    <string name="MercurygramTorBootstrap">Conectando a través de Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">Detener Tor tras inactividad</string>
+    <string name="MercurygramTorIdleTimeoutOff">Nunca (siempre activo)</string>
+    <string name="MercurygramTorIdleTimeout1min">1 minuto</string>
+    <string name="MercurygramTorIdleTimeout5min">5 minutos</string>
+    <string name="MercurygramTorIdleTimeout15min">15 minutos</string>
+    <string name="MercurygramTorIdleTimeout60min">1 hora</string>
+    <string name="MercurygramTorActiveProxyLocked">Desactiva Tor en los ajustes de Mercurygram para usar otro proxy.</string>
 </resources>

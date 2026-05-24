@@ -326,6 +326,12 @@ last['commit'] = sha
 last['ndk'] = ndk
 last['versionCode'] = new_vc
 last.pop('disable', None)  # recipe template may carry a disable from a broken release
+# libevent + tor autogen.sh need autotools (aclocal/automake/autoconf/
+# libtoolize) + pkg-config; live recipe sudo: block lacks them.
+AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
+sudo_list = last.setdefault('sudo', [])
+if AUTOTOOLS_LINE not in sudo_list:
+    sudo_list.append(AUTOTOOLS_LINE)
 if build_tag:
     # Append (don't replace): preserve the recipe's existing prebuild
     # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
@@ -380,6 +386,12 @@ last['commit'] = sha
 last['ndk'] = ndk
 last['versionCode'] = new_vc
 last.pop('disable', None)
+# libevent + tor autogen.sh need autotools (aclocal/automake/autoconf/
+# libtoolize) + pkg-config; live recipe sudo: block lacks them.
+AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
+sudo_list = last.setdefault('sudo', [])
+if AUTOTOOLS_LINE not in sudo_list:
+    sudo_list.append(AUTOTOOLS_LINE)
 if build_tag:
     # Append (don't replace): preserve the recipe's existing prebuild
     # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
@@ -417,6 +429,12 @@ last['commit'] = sha
 last['versionCode'] = vc
 last['ndk'] = ndk
 last.pop('disable', None)
+# libevent + tor autogen.sh need autotools (aclocal/automake/autoconf/
+# libtoolize) + pkg-config; live recipe sudo: block lacks them.
+AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
+sudo_list = last.setdefault('sudo', [])
+if AUTOTOOLS_LINE not in sudo_list:
+    sudo_list.append(AUTOTOOLS_LINE)
 if build_tag:
     # Append (don't replace): preserve the recipe's existing prebuild
     # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would

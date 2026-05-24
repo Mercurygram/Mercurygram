@@ -31,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
@@ -175,7 +176,16 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         }
 
         public void setProxy(SharedConfig.ProxyInfo proxyInfo) {
-            textView.setText(proxyInfo.address + ":" + proxyInfo.port);
+            if (proxyInfo.mgInternal) {
+                // MG: synthetic entry owned by MgTorController. Suppress the
+                // edit (info) button — there is nothing user-tunable about
+                // the embedded Tor SOCKS port.
+                textView.setText(getString(R.string.MercurygramTorProxyEntry));
+                checkImageView.setVisibility(GONE);
+            } else {
+                textView.setText(proxyInfo.address + ":" + proxyInfo.port);
+                checkImageView.setVisibility(VISIBLE);
+            }
             currentInfo = proxyInfo;
         }
 
@@ -465,6 +475,26 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                     return;
                 }
                 SharedConfig.ProxyInfo info = proxyList.get(position - proxyStartRow);
+                // MG: synthetic Tor entry is already the current proxy by
+                // construction; tap-to-select would just rewrite the same
+                // values and is misleading (the user might infer they can
+                // switch away by tapping a different row, but that change
+                // wouldn't outlive the next bootstrap).
+                if (info.mgInternal) return;
+                // MG: while Tor mode is on, MgTorController owns the active
+                // proxy (the synthetic mgInternal entry above). Letting the
+                // user tap-select a different proxy here would call
+                // ConnectionsManager.setProxySettings() with the tapped
+                // server and route MTProto through it directly while the
+                // "Use Tor" switch in MG settings still reads ON — silently
+                // violating the privacy invariant the toggle promises. Tell
+                // the user where to turn Tor off and bail.
+                if (SharedConfig.mg_useTor) {
+                    Toast.makeText(getParentActivity(),
+                            LocaleController.getString(R.string.MercurygramTorActiveProxyLocked),
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
                 useProxySettings = true;
                 SharedPreferences.Editor editor = MessagesController.getGlobalMainSettings().edit();
                 editor.putString("proxy_ip", info.address);
@@ -502,7 +532,13 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 builder.setNegativeButton(getString(R.string.Cancel), null);
                 builder.setTitle(getString(R.string.DeleteProxyTitle));
                 builder.setPositiveButton(getString(R.string.Delete), (dialog, which) -> {
-                    for (SharedConfig.ProxyInfo info : proxyList) {
+                    // MG: snapshot the list first — deleteProxy mutates
+                    // proxyList in place. Skip mgInternal entries so a
+                    // delete-all sweep doesn't yank MgTorController's
+                    // synthetic entry (and call ConnectionsManager.setProxySettings(false)
+                    // which would route MTProto direct while Tor is still on).
+                    for (SharedConfig.ProxyInfo info : new ArrayList<>(proxyList)) {
+                        if (info.mgInternal) continue;
                         SharedConfig.deleteProxy(info);
                     }
                     useProxyForCalls = false;
@@ -527,6 +563,9 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         });
         listView.setOnItemLongClickListener((view, position) -> {
             if (position >= proxyStartRow && position < proxyEndRow) {
+                // MG: don't let the synthetic Tor entry enter selection mode
+                // — its actions (share link, delete) don't apply to it.
+                if (proxyList.get(position - proxyStartRow).mgInternal) return false;
                 listAdapter.toggleSelected(position);
                 return true;
             }

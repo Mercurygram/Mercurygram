@@ -116,6 +116,7 @@
         tools:replace="android:supportsRtl"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true"
+        android:memtagMode="async"
     >
         <!-- usesCleartextTraffic for browser supporting opening http:// links -->
 
