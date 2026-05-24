@@ -21,6 +21,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UnifiedPushReceiver;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.RadioColorCell;
@@ -56,6 +57,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_DISABLE_UNIFIED_PUSH = 30;
     private static final int ID_UNIFIED_PUSH_DISTRIBUTOR = 31;
     private static final int ID_UNIFIED_PUSH_GATEWAY = 32;
+    private static final int ID_REDUCE_TRACKING_FINGERPRINT = 40;
+    private static final int ID_USE_TOR = 41;
+    private static final int ID_TOR_IDLE_TIMEOUT = 42;
 
     @Override
     protected CharSequence getTitle() {
@@ -102,6 +106,42 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_DISABLE_LIVE_PHOTOS, LocaleController.getString(R.string.MercurygramDisableLivePhotos))
                 .setChecked(getUserConfig().disableLivePhotosByDefault));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableLivePhotosAbout)));
+
+        items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsPrivacy)));
+        items.add(UItem.asCheck(ID_REDUCE_TRACKING_FINGERPRINT,
+                        LocaleController.getString(R.string.MercurygramReduceTrackingFingerprint))
+                .setChecked(SharedConfig.reduceTrackingFingerprint));
+        String reduceAbout = LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintAbout);
+        // If any active account got force-disabled out of reduced mode by the
+        // ladder-exhaustion path (native onReducedTempKeyExhausted), call it
+        // out so the user can see the toggle is "on" while specific accounts
+        // are actually running standard 24h temp keys.
+        String exhaustedNames = collectExhaustedAccountNames();
+        if (SharedConfig.reduceTrackingFingerprint && exhaustedNames != null) {
+            reduceAbout = reduceAbout + "\n\n" + LocaleController.formatString(
+                    "MercurygramReduceTrackingFingerprintExhaustedFooter",
+                    R.string.MercurygramReduceTrackingFingerprintExhaustedFooter,
+                    exhaustedNames);
+        }
+        items.add(UItem.asShadow(reduceAbout));
+
+        items.add(UItem.asCheck(ID_USE_TOR, LocaleController.getString(R.string.MercurygramTor))
+                .setChecked(SharedConfig.mg_useTor));
+        if (SharedConfig.mg_useTor) {
+            items.add(UItem.asButton(ID_TOR_IDLE_TIMEOUT,
+                    LocaleController.getString(R.string.MercurygramTorIdleTimeout),
+                    idleTimeoutLabel(SharedConfig.mg_torIdleStopMinutes)));
+        }
+        String torAbout = LocaleController.getString(R.string.MercurygramTorAbout);
+        // Surface the unavailable-lib state so the user understands why an
+        // enable tap toasts an error instead of starting bootstrap. Hidden
+        // when mg_useTor=true (the toggle UI itself reflects the live state,
+        // and bailOutUnavailable already flipped the flag off if the lib is
+        // missing on this build).
+        if (!SharedConfig.mg_useTor && !it.belloworld.mercurygram.tor.MgTorNative.isAvailable()) {
+            torAbout = torAbout + "\n\n" + LocaleController.getString(R.string.MercurygramTorUnavailable);
+        }
+        items.add(UItem.asShadow(torAbout));
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
@@ -220,6 +260,15 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_UNIFIED_PUSH_GATEWAY:
                 showGatewayDialog();
                 break;
+            case ID_REDUCE_TRACKING_FINGERPRINT:
+                handleReduceTrackingFingerprintClick();
+                break;
+            case ID_USE_TOR:
+                handleUseTorClick();
+                break;
+            case ID_TOR_IDLE_TIMEOUT:
+                handleTorIdleTimeoutClick();
+                break;
         }
     }
 
@@ -267,6 +316,245 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         TextView positive = (TextView) dialog.getButton(DialogInterface.BUTTON_POSITIVE);
         if (positive != null) {
             positive.setTextColor(getThemedColor(Theme.key_text_RedBold));
+        }
+    }
+
+    private void handleUseTorClick() {
+        Context context = getParentActivity();
+        if (context == null) return;
+        if (SharedConfig.mg_useTor) {
+            SharedConfig.toggleMgUseTor();
+            // stop() blocks up to 5s on daemon.join + 2s on the control-port
+            // SIGNAL SHUTDOWN write. Dispatch via globalQueue so the UI
+            // thread never sees an ANR; globalQueue also serializes against
+            // start() so a rapid off/on toggle from another caller (resume,
+            // push wake) cannot race the in-flight shutdown.
+            Utilities.globalQueue.postRunnable(() ->
+                    it.belloworld.mercurygram.tor.MgTorController.getInstance().stop());
+            refreshList();
+            return;
+        }
+        if (!it.belloworld.mercurygram.tor.MgTorNative.isAvailable()) {
+            Toast.makeText(context,
+                    LocaleController.getString(R.string.MercurygramTorUnavailable),
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramTorEnableTitle))
+                .setMessage(LocaleController.getString(R.string.MercurygramTorEnableMessage))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .setPositiveButton(LocaleController.getString(R.string.MercurygramTorEnable),
+                        (d, which) -> {
+                            // Snapshot the user's pre-existing proxy entry
+                            // BEFORE start() publishes the blocking stub —
+                            // restored from stop() on toggle-off so the
+                            // user's SOCKS5 / MTProto-proxy config isn't
+                            // silently destroyed by the Tor cycle.
+                            it.belloworld.mercurygram.tor.MgTorController.snapshotCurrentProxy();
+                            SharedConfig.toggleMgUseTor();
+                            // userInitiatedStart resets unexpectedRespawnCount
+                            // so a prior session's 3-crash gave-up state can't
+                            // immediately silence the user's fresh toggle-on.
+                            Utilities.globalQueue.postRunnable(() ->
+                                    it.belloworld.mercurygram.tor.MgTorController.getInstance().userInitiatedStart());
+                            refreshList();
+                            showTorBootstrapDialog();
+                        })
+                .create();
+        showDialog(dialog);
+        TextView positive = (TextView) dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        if (positive != null) {
+            positive.setTextColor(getThemedColor(Theme.key_text_RedBold));
+        }
+    }
+
+    private void showTorBootstrapDialog() {
+        Context context = getParentActivity();
+        if (context == null) return;
+        TextView body = new TextView(context);
+        body.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        body.setText(LocaleController.formatString("MercurygramTorBootstrap",
+                R.string.MercurygramTorBootstrap, 0));
+        // Tracks whether the dismiss was user-explicit (Cancel button, back
+        // press, tap-outside) versus passive (activity recreate on rotation,
+        // OOM kill, fragment teardown). Passive dismisses must NOT flip the
+        // toggle off — that would silently revert mg_useTor whenever an
+        // unrelated event killed the dialog during the 10–30 s cold bootstrap.
+        final java.util.concurrent.atomic.AtomicBoolean userCancelled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramTor))
+                .setView(body)
+                .setNegativeButton(LocaleController.getString(R.string.Cancel),
+                        (d, which) -> userCancelled.set(true))
+                .create();
+        // Fires for back press AND tap-outside (default cancelable=true) —
+        // both are user-explicit. Does NOT fire when dismiss() is called for
+        // other reasons (activity destruction, ready/abort programmatic
+        // dismiss), so it cleanly separates "user said no" from "the window
+        // went away on its own".
+        dialog.setOnCancelListener(d -> userCancelled.set(true));
+        final AtomicReference<it.belloworld.mercurygram.tor.MgTorController.ProgressListener> selfRef = new AtomicReference<>();
+        // Flips true once onReady fires; dismiss before that with userCancelled
+        // also true is treated as a user-initiated cancel and tears tor down +
+        // flips the toggle back off so the user is not silently left on a
+        // half-bootstrapped state.
+        final java.util.concurrent.atomic.AtomicBoolean ready = new java.util.concurrent.atomic.AtomicBoolean(false);
+        // Stops the user-initiated-cancel branch from also firing the
+        // settings-side toggle-off path (which itself dispatches stop()).
+        final java.util.concurrent.atomic.AtomicBoolean abortHandled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        it.belloworld.mercurygram.tor.MgTorController.ProgressListener listener =
+                new it.belloworld.mercurygram.tor.MgTorController.ProgressListener() {
+                    @Override
+                    public void onProgress(int percent, String tag, String summary) {
+                        AndroidUtilities.runOnUIThread(() -> body.setText(
+                                LocaleController.formatString("MercurygramTorBootstrap",
+                                        R.string.MercurygramTorBootstrap, percent)));
+                    }
+                    @Override
+                    public void onReady(int socksPort) {
+                        ready.set(true);
+                        AndroidUtilities.runOnUIThread(() -> {
+                            it.belloworld.mercurygram.tor.MgTorController.getInstance().removeProgressListener(selfRef.get());
+                            try { dialog.dismiss(); } catch (Throwable ignored) {}
+                        });
+                    }
+                    @Override
+                    public void onFailed(String reason) {
+                        // onBootstrapFailed in the controller already posts
+                        // stop() to globalQueue and re-pins the blocking stub.
+                        // Mark the abort as handled so the dismiss listener
+                        // below doesn't double-dispatch a redundant stop().
+                        abortHandled.set(true);
+                        AndroidUtilities.runOnUIThread(() -> {
+                            it.belloworld.mercurygram.tor.MgTorController.getInstance().removeProgressListener(selfRef.get());
+                            try { dialog.dismiss(); } catch (Throwable ignored) {}
+                            Toast.makeText(context, reason != null ? reason : "tor failed", Toast.LENGTH_LONG).show();
+                        });
+                    }
+                };
+        selfRef.set(listener);
+        it.belloworld.mercurygram.tor.MgTorController.getInstance().addProgressListener(listener);
+        dialog.setOnDismissListener(d -> {
+            it.belloworld.mercurygram.tor.MgTorController.getInstance().removeProgressListener(listener);
+            if (ready.get() || abortHandled.get()) return;
+            // Passive dismiss (activity recreate on rotation, fragment
+            // teardown, system OOM): keep mg_useTor on and let the
+            // controller's existing lifecycle drive bootstrap to completion
+            // in the background. setOnCancelListener / the Cancel button
+            // flip userCancelled iff the user truly opted out.
+            if (!userCancelled.get()) return;
+            // User dismissed (Cancel / tap-outside / back) before bootstrap
+            // completed. Treat as opt-out: flip the toggle, tear down the
+            // half-up daemon. Going through globalQueue keeps stop() off the
+            // UI thread (5s daemon.join + 2s control-port shutdown).
+            if (SharedConfig.mg_useTor) {
+                SharedConfig.toggleMgUseTor();
+            }
+            Utilities.globalQueue.postRunnable(() ->
+                    it.belloworld.mercurygram.tor.MgTorController.getInstance().stop());
+            refreshList();
+        });
+        showDialog(dialog);
+    }
+
+    private void handleTorIdleTimeoutClick() {
+        Context context = getParentActivity();
+        if (context == null) return;
+        final int[] choices = {0, 1, 5, 15, 60};
+        AtomicReference<Dialog> dialogRef = new AtomicReference<>();
+        LinearLayout linearLayout = new LinearLayout(context);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        int current = SharedConfig.mg_torIdleStopMinutes;
+        for (int i = 0; i < choices.length; i++) {
+            final int minutes = choices[i];
+            RadioColorCell cell = new RadioColorCell(context);
+            cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
+            cell.setCheckColor(Theme.getColor(Theme.key_radioBackground),
+                    Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
+            cell.setTextAndValue(idleTimeoutLabel(minutes), minutes == current);
+            cell.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL));
+            linearLayout.addView(cell);
+            cell.setOnClickListener(v -> {
+                SharedConfig.setMgTorIdleStopMinutes(minutes);
+                refreshList();
+                Dialog d = dialogRef.get();
+                if (d != null) d.dismiss();
+            });
+        }
+        Dialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramTorIdleTimeout))
+                .setView(linearLayout)
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .create();
+        dialogRef.set(dialog);
+        showDialog(dialog);
+    }
+
+    private static String idleTimeoutLabel(int minutes) {
+        switch (minutes) {
+            case 0: return LocaleController.getString(R.string.MercurygramTorIdleTimeoutOff);
+            case 1: return LocaleController.getString(R.string.MercurygramTorIdleTimeout1min);
+            case 5: return LocaleController.getString(R.string.MercurygramTorIdleTimeout5min);
+            case 15: return LocaleController.getString(R.string.MercurygramTorIdleTimeout15min);
+            case 60: return LocaleController.getString(R.string.MercurygramTorIdleTimeout60min);
+            default: return Integer.toString(minutes);
+        }
+    }
+
+    private void handleReduceTrackingFingerprintClick() {
+        if (SharedConfig.reduceTrackingFingerprint) {
+            SharedConfig.toggleReduceTrackingFingerprint();
+            refreshList();
+            return;
+        }
+        Context context = getParentActivity();
+        if (context == null) {
+            return;
+        }
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningTitle))
+                .setMessage(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningMessage))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .setPositiveButton(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintEnable),
+                        (d, which) -> {
+                            // Fresh enable cycle: clear any stale per-account
+                            // exhaustion flag so the footer doesn't shame the
+                            // user with a result from a prior cycle. Native
+                            // ladder state is already cleared by the toggle's
+                            // setReducedTempKeyMode(false→true) path.
+                            clearReducedTrackingExhaustedFlags();
+                            SharedConfig.toggleReduceTrackingFingerprint();
+                            refreshList();
+                        })
+                .create();
+        showDialog(dialog);
+        TextView positive = (TextView) dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        if (positive != null) {
+            positive.setTextColor(getThemedColor(Theme.key_text_RedBold));
+        }
+    }
+
+    private static String collectExhaustedAccountNames() {
+        StringBuilder sb = null;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig uc = UserConfig.getInstance(a);
+            if (!uc.isClientActivated() || !uc.mgReducedTrackingExhausted) continue;
+            String name = uc.getCurrentUser() != null
+                    ? org.telegram.messenger.UserObject.getFirstName(uc.getCurrentUser())
+                    : "#" + (a + 1);
+            if (sb == null) sb = new StringBuilder(name);
+            else sb.append(", ").append(name);
+        }
+        return sb == null ? null : sb.toString();
+    }
+
+    private static void clearReducedTrackingExhaustedFlags() {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig uc = UserConfig.getInstance(a);
+            if (!uc.mgReducedTrackingExhausted) continue;
+            uc.mgReducedTrackingExhausted = false;
+            uc.saveConfig(false);
         }
     }
 

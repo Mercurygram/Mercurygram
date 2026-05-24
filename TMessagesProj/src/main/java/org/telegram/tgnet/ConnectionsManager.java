@@ -601,6 +601,14 @@ public class ConnectionsManager extends BaseController {
         native_setPushConnectionEnabled(currentAccount, value);
     }
 
+    public void rotateTempAuthKeys() {
+        native_rotateTempAuthKeys(currentAccount);
+    }
+
+    public void setReducedTempKeyMode(boolean enabled) {
+        native_setReducedTempKeyMode(currentAccount, enabled);
+    }
+
     public void init(int version, int layer, int apiId, String deviceModel, String systemVersion, String appVersion, String langCode, String systemLangCode, String configPath, String logPath, String regId, String cFingerprint, int timezoneOffset, long userId, boolean userPremium, boolean enablePushConnection) {
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
         String proxyAddress = preferences.getString("proxy_ip", "");
@@ -740,6 +748,11 @@ public class ConnectionsManager extends BaseController {
                 appResumeCount = 0;
             }
         }
+        // MG: drive embedded tor daemon lifecycle off app foreground/background.
+        // Guarded by mg_useTor so the call is zero-cost when tor is off.
+        if (!byScreenState && SharedConfig.mg_useTor) {
+            it.belloworld.mercurygram.tor.MgTorController.getInstance().onAppPausedChanged(currentAccount, appResumeCount);
+        }
         if (appResumeCount == 0) {
             if (lastPauseTime == 0) {
                 lastPauseTime = System.currentTimeMillis();
@@ -805,6 +818,44 @@ public class ConnectionsManager extends BaseController {
             if (accountInstance.getUserConfig().getClientUserId() != 0) {
                 accountInstance.getUserConfig().clearConfig();
                 accountInstance.getMessagesController().performLogout(0);
+            }
+        });
+    }
+
+    // MG: native side calls this when the reduced-temp-key TTL ladder
+    // exhausts (server rejected even the 24h fallback) for ONE account.
+    // Disable native reduced mode only for that account so the other
+    // accounts keep their TTL reduction. The user-facing SharedConfig flag
+    // stays on — non-temp-key mitigations (FileLoadOperation CDN refusal,
+    // MgNetworkChangeWatcher rotations) are unrelated to the temp-key
+    // server policy and remain in effect. Persist a per-account flag and
+    // surface a one-time toast so the user is not silently downgraded;
+    // the Privacy screen reads the flag and shows a footer enumerating
+    // exhausted accounts.
+    public static void onReducedTempKeyExhausted(final int currentAccount) {
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                ConnectionsManager.getInstance(currentAccount).setReducedTempKeyMode(false);
+                UserConfig uc = UserConfig.getInstance(currentAccount);
+                if (uc.mgReducedTrackingExhausted) {
+                    return;
+                }
+                uc.mgReducedTrackingExhausted = true;
+                uc.saveConfig(false);
+                Context ctx = ApplicationLoader.applicationContext;
+                if (ctx == null) return;
+                String name = uc.getCurrentUser() != null
+                        ? org.telegram.messenger.UserObject.getFirstName(uc.getCurrentUser())
+                        : "#" + (currentAccount + 1);
+                android.widget.Toast.makeText(
+                        ctx,
+                        LocaleController.formatString(
+                                "MercurygramReduceTrackingFingerprintExhaustedToast",
+                                org.telegram.messenger.R.string.MercurygramReduceTrackingFingerprintExhaustedToast,
+                                name),
+                        android.widget.Toast.LENGTH_LONG).show();
+            } catch (Throwable t) {
+                FileLog.e(t);
             }
         });
     }
@@ -970,6 +1021,8 @@ public class ConnectionsManager extends BaseController {
     public static native void native_setSystemLangCode(int currentAccount, String langCode);
     public static native void native_setJava(boolean useJavaByteBuffers);
     public static native void native_setPushConnectionEnabled(int currentAccount, boolean value);
+    public static native void native_rotateTempAuthKeys(int currentAccount);
+    public static native void native_setReducedTempKeyMode(int currentAccount, boolean enabled);
     public static native void native_applyDnsConfig(int currentAccount, long address, String phone, int date);
     public static native long native_checkProxy(int currentAccount, String address, int port, String username, String password, String secret, RequestTimeDelegate requestTimeDelegate);
     public static native void native_onHostNameResolved(String host, long address, String ip);

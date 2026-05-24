@@ -59,6 +59,22 @@ set_target_properties(tde2e PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}
 add_library(tdutils STATIC IMPORTED)
 set_target_properties(tdutils PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/td/build/${ANDROID_ABI}/tdutils/libtdutils.a)
 
+# MG: embedded tor stack. Built into a dedicated libmgtor.so so its OpenSSL
+# copy stays isolated from libtmessages.so's BoringSSL — both crypto libs
+# export the same C ABI symbol names (EVP_*, SSL_*, BIO_*), so co-linking
+# them into one .so would silently let the linker pick one per call site.
+# Separate .so + dlopen scope keeps the two crypto worlds disjoint.
+add_library(mg_tor STATIC IMPORTED)
+set_target_properties(mg_tor PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/tor/build/${ANDROID_ABI}/lib/libtor.a)
+add_library(mg_tor_ssl STATIC IMPORTED)
+set_target_properties(mg_tor_ssl PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/openssl/build/${ANDROID_ABI}/lib/libssl.a)
+add_library(mg_tor_crypto STATIC IMPORTED)
+set_target_properties(mg_tor_crypto PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/openssl/build/${ANDROID_ABI}/lib/libcrypto.a)
+add_library(mg_tor_event STATIC IMPORTED)
+set_target_properties(mg_tor_event PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/libevent/build/${ANDROID_ABI}/lib/libevent.a)
+add_library(mg_tor_event_pthreads STATIC IMPORTED)
+set_target_properties(mg_tor_event_pthreads PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/libevent/build/${ANDROID_ABI}/lib/libevent_pthreads.a)
+
 #tgnet
 #add_library(mozjpeg STATIC
 #        mozjpeg/cjpeg.c mozjpeg/cdjpeg.c mozjpeg/rdgif.c mozjpeg/rdppm.c mozjpeg/rdjpeg.c mozjpeg/rdswitch.c mozjpeg/rdbmp.c
@@ -685,6 +701,35 @@ if(QUIET_BUILD)
             target_compile_options(${_tgt} PRIVATE -w)
         endif()
     endforeach()
+endif()
+
+# MG: libmgtor.so — embedded tor daemon JNI surface (isolated from
+# libtmessages.so to avoid the openssl-vs-boringssl symbol collision).
+# Only Java_..._MgTorNative_* entry points are exported; the rest of
+# libtor + openssl + libevent stays internal via --exclude-libs.
+add_library(mgtor SHARED tor_jni.c)
+target_include_directories(mgtor PRIVATE
+        ${CMAKE_HOME_DIRECTORY}/tor/build/${ANDROID_ABI}/include
+        ${CMAKE_HOME_DIRECTORY}/openssl/build/${ANDROID_ABI}/include
+        ${CMAKE_HOME_DIRECTORY}/libevent/build/${ANDROID_ABI}/include)
+target_link_options(mgtor PRIVATE
+        "-Wl,--build-id=none"
+        "-Wl,--hash-style=gnu"
+        "-Wl,-Bsymbolic"
+        "-Wl,--gc-sections"
+        "-Wl,-z,max-page-size=16384"
+        "-Wl,-z,common-page-size=16384"
+        "-Wl,--exclude-libs=libtor.a:libssl.a:libcrypto.a:libevent.a:libevent_pthreads.a")
+# libtor's TOR_INTERNAL_LIBS bundle has back-references between subarchives
+# and forward-references into openssl + libevent. Wrap in --start-group so
+# the linker re-scans until all references resolve.
+target_link_libraries(mgtor
+        -Wl,--start-group
+        mg_tor mg_tor_ssl mg_tor_crypto mg_tor_event mg_tor_event_pthreads
+        -Wl,--end-group
+        z log android dl m)
+if(QUIET_BUILD)
+    target_compile_options(mgtor PRIVATE -w)
 endif()
 
 include(AndroidNdkModules)
