@@ -1,0 +1,320 @@
+apply plugin: 'com.android.application'
+
+// Derive rootProject.ext.MG_VERSION_NAME / MG_VERSION_CODE from MG_BUILD_TAG.
+// Plugin tracks main release-for-release: same MG_BUILD_TAG → same versionCode
+// (modulo per-ABI offset), same signing key. The main app's MgTorClient binds
+// this plugin's IMgTorService only if the installed plugin's signing cert hash
+// matches the constant baked into main.
+apply from: "$rootDir/gradle/mg-version.gradle"
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+// Per-ABI F-Droid optimization: if the requested Gradle task set targets a single
+// afatFd* flavor, limit CMake to that ABI. Mirrors TMessagesProj/build.gradle's
+// detectSingleFdAbi() — keep in sync.
+def detectSingleFdAbi() {
+    def fdFlavorToAbi = [
+        'AfatFdArm64'  : 'arm64-v8a',
+        'AfatFdArm32'  : 'armeabi-v7a',
+        'AfatFdX86_64' : 'x86_64',
+        'AfatFdX86'    : 'x86',
+    ]
+    def detectedAbis = [] as Set
+    gradle.startParameter.taskNames.each { taskName ->
+        def matched = fdFlavorToAbi.sort { -it.key.length() }.find { flavor, _ ->
+            taskName.contains(flavor)
+        }
+        if (matched) detectedAbis << matched.value
+    }
+    return detectedAbis.size() == 1 ? detectedAbis.first() : null
+}
+def singleFdAbi = detectSingleFdAbi()
+
+def getProps(String propName) {
+    def propsFile = rootProject.file('local.properties')
+    if (propsFile.exists()) {
+        def props = new Properties()
+        props.load(new FileInputStream(propsFile))
+        return props[propName]
+    }
+    return ""
+}
+
+configurations.all {
+    // appcompat 1.7 transitively pulls kotlin-stdlib-jdk7/jdk8 1.6.21; their
+    // classes were merged into kotlin-stdlib 1.8.0+ and AGP's duplicate-class
+    // check fails. Drop the legacy sub-jars — the main stdlib already provides
+    // everything they contained.
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core:1.16.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+}
+
+android {
+    compileSdkVersion 35
+    buildToolsVersion '35.0.0'
+    ndkVersion "27.2.12479018"
+
+    namespace 'it.belloworld.mercurygram.plugin.tor'
+
+    defaultConfig {
+        applicationId 'it.belloworld.mercurygram.plugin.tor'
+        minSdkVersion 24
+        targetSdkVersion 35
+        versionName rootProject.ext.MG_VERSION_NAME
+        versionCode rootProject.ext.MG_VERSION_CODE
+
+        multiDexEnabled true
+
+        // Limit CMake to a single ABI for per-ABI F-Droid builds; no effect on fat builds.
+        if (singleFdAbi) ndk.abiFilters singleFdAbi
+
+        externalNativeBuild {
+            cmake {
+                version '3.10.2'
+                def cmakeArgs = ['-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-24']
+                if (getProps('QUIET_NATIVE_BUILD')) {
+                    cmakeArgs += '-DQUIET_BUILD=ON'
+                }
+                arguments(*cmakeArgs)
+            }
+        }
+    }
+
+    sourceSets.main.jniLibs.srcDirs = ['./jni/']
+
+    externalNativeBuild {
+        cmake {
+            path 'jni/CMakeLists.txt'
+        }
+    }
+
+    // Match main app: compressed .so for smaller F-Droid download.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            // libsnowflake.so is a Go executable (pluggable transport), not a
+            // linked lib. build_snowflake.sh already strips it deterministically
+            // (-s -w); block AGP's post-package strip so it ships our exact
+            // reproducible bytes and its Go runtime isn't corrupted.
+            keepDebugSymbols += '**/libsnowflake.so'
+            // libobfs4proxy.so is the lyrebird Go executable (obfs4 transport);
+            // same treatment as libsnowflake.so.
+            keepDebugSymbols += '**/libobfs4proxy.so'
+        }
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
+    aaptOptions {
+        cruncherEnabled = false
+    }
+
+    lintOptions {
+        disable 'MissingTranslation'
+        disable 'ExtraTranslation'
+        checkReleaseBuilds false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file(findProperty('RELEASE_STORE_FILE') ?: "../TMessagesProj/config/release.keystore")
+            storePassword RELEASE_STORE_PASSWORD
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+            enableV1Signing true
+            enableV2Signing true
+            enableV3Signing true
+            enableV4Signing false
+        }
+
+        release {
+            storeFile file(findProperty('RELEASE_STORE_FILE') ?: "../TMessagesProj/config/release.keystore")
+            storePassword RELEASE_STORE_PASSWORD
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+            // Match main app release signing exactly — F-Droid reproducible build
+            // requires identical signing block layout, and signature pinning in
+            // main relies on byte-equal cert across both APKs.
+            enableV1Signing false
+            enableV2Signing true
+            enableV3Signing true
+            enableV4Signing false
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            jniDebuggable true
+            signingConfig signingConfigs.debug
+            // No applicationIdSuffix: the plugin ships only as the unsuffixed
+            // release package. A .beta main (debug, release.keystore-signed)
+            // binds this same package — see MgTorClient.pluginPackage().
+            minifyEnabled false
+            shrinkResources false
+            ndk.debugSymbolLevel = 'FULL'
+        }
+
+        release {
+            debuggable false
+            jniDebuggable false
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            ndk.debugSymbolLevel = 'FULL'
+        }
+    }
+
+    flavorDimensions "minApi"
+
+    productFlavors {
+        afatFdArm32 {
+            ndk { abiFilters "armeabi-v7a" }
+            ext { abiVersionCode = 7 }
+        }
+        afatFdArm64 {
+            ndk { abiFilters "arm64-v8a" }
+            ext { abiVersionCode = 8 }
+        }
+        afatFdX86 {
+            ndk { abiFilters "x86" }
+            ext { abiVersionCode = 3 }
+        }
+        afatFdX86_64 {
+            ndk { abiFilters "x86_64" }
+            ext { abiVersionCode = 4 }
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def flavorName = variant.productFlavors.get(0).name
+            def isBeta = variant.buildType.name == "debug" && project.hasProperty("MG_BETA_VERSION_CODE")
+            if (isBeta) {
+                outputFileName = "${flavorName}.apk"
+                output.versionCodeOverride = Integer.parseInt(MG_BETA_VERSION_CODE)
+                output.versionNameOverride = MG_BETA_VERSION_NAME
+            } else {
+                outputFileName = "${flavorName}.apk"
+                output.versionCodeOverride = defaultConfig.versionCode * 10 + variant.productFlavors.get(0).abiVersionCode
+            }
+        }
+    }
+
+    variantFilter { variant ->
+        // Only build release variants for the per-ABI F-Droid flavors.
+        if (variant.buildType.name != "release" && !project.hasProperty("MG_PLUGIN_DEBUG_BUILDS")) {
+            setIgnore(true)
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
+        aidl = true
+    }
+}
+
+// Submodule init + per-ABI native build tasks for libevent, openssl, tor.
+// Mirrors the structure in TMessagesProj/build.gradle (post-Tor-strip): this
+// module owns the Tor stack exclusively.
+task patchNativeSources {
+    description = 'Init native submodules for plugin (libevent, openssl, tor, snowflake, lyrebird).'
+    doLast {
+        exec {
+            workingDir rootDir
+            commandLine 'git', 'submodule', 'update', '--init',
+                'TMessagesProj_PluginTor/jni/libevent',
+                'TMessagesProj_PluginTor/jni/openssl',
+                'TMessagesProj_PluginTor/jni/tor',
+                'TMessagesProj_PluginTor/jni/snowflake',
+                'TMessagesProj_PluginTor/jni/lyrebird'
+        }
+    }
+}
+
+['buildNativeLibsArm64'  : ['arm64-v8a'],
+ 'buildNativeLibsArm32'  : ['armeabi-v7a'],
+ 'buildNativeLibsX86_64' : ['x86_64'],
+ 'buildNativeLibsX86'    : ['x86'],
+].each { taskName, androidAbis ->
+    tasks.register(taskName) {
+        description = "Build plugin native libraries for ${androidAbis}."
+        dependsOn patchNativeSources
+        doLast {
+            def ndkDir = android.ndkDirectory.toString()
+            def ninjaPath = System.getenv('NINJA_PATH') ?: 'ninja'
+            def quietBuild = getProps('QUIET_NATIVE_BUILD') ? '1' : '0'
+            [['build_libevent.sh',  androidAbis],
+             ['build_openssl.sh',   androidAbis],
+             ['build_tor.sh',       androidAbis],
+             // Snowflake pluggable transport (Go). Standalone executable shipped
+             // as jni/<abi>/libsnowflake.so (jniLibs, not CMake). Needs `go` on
+             // PATH; F-Droid recipe provisions a pinned toolchain.
+             ['build_snowflake.sh', androidAbis],
+             // lyrebird (obfs4 transport, Go). Standalone executable shipped as
+             // jni/<abi>/libobfs4proxy.so. Same Go toolchain as snowflake.
+             ['build_lyrebird.sh', androidAbis],
+            ].each { script, abis ->
+                exec {
+                    workingDir "${projectDir}/jni"
+                    environment 'NDK', ndkDir
+                    environment 'NINJA_PATH', ninjaPath
+                    environment 'QUIET_BUILD', quietBuild
+                    commandLine(['bash', script] + abis)
+                }
+            }
+        }
+    }
+}
+
+// Sequential ordering when fat builds run all four (matches main module pattern).
+tasks.named('buildNativeLibsArm32').configure  { mustRunAfter 'buildNativeLibsArm64'  }
+tasks.named('buildNativeLibsX86_64').configure { mustRunAfter 'buildNativeLibsArm32'  }
+tasks.named('buildNativeLibsX86').configure    { mustRunAfter 'buildNativeLibsX86_64' }
+
+task buildNativeLibs(description: 'Build plugin native libraries for all ABIs.') {
+    dependsOn 'buildNativeLibsArm64', 'buildNativeLibsArm32',
+              'buildNativeLibsX86_64', 'buildNativeLibsX86'
+}
+
+afterEvaluate {
+    def abiToTask = [
+        'arm64-v8a'   : 'buildNativeLibsArm64',
+        'armeabi-v7a' : 'buildNativeLibsArm32',
+        'x86_64'      : 'buildNativeLibsX86_64',
+        'x86'         : 'buildNativeLibsX86',
+    ]
+    def fallbackTask = singleFdAbi ? abiToTask[singleFdAbi] : 'buildNativeLibs'
+    tasks.matching {
+        it.name.matches('configureCMake.*') ||
+            it.name.matches('buildCMake.*') ||
+            it.name.matches('externalNativeBuild.*')
+    }.configureEach { task ->
+        def matched = abiToTask.find { abi, _ -> task.name.contains(abi) }
+        task.dependsOn tasks.named(matched ? matched.value : fallbackTask)
+    }
+    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach { mergeTask ->
+        abiToTask.each { _, nativeTaskName ->
+            mergeTask.mustRunAfter(tasks.named(nativeTaskName))
+        }
+    }
+}
