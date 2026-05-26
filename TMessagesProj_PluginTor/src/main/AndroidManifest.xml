@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        Two-cert allowlist permission: apps signed with the same key as the
+        plugin OR any cert in mg_known_main_certs may bind the service.
+        Mercurygram ships under two signing keys (developer keystore +
+        F-Droid per-app key); the knownSigner extension lets a main app
+        signed with either bind a plugin signed with either.
+
+        protectionLevel="signature|knownSigner" requires API 31+. On older
+        devices the OS treats it as plain "signature" — strict cert match —
+        so a F-Droid main + dev-signed plugin combination fails to bind.
+        The Tor toggle is hidden in that configuration; see
+        MercurygramSettingsActivity for the gate.
+
+        Two layers protect the SOCKS endpoint:
+          1) The OS enforces the manifest permission (signature OR knownCerts).
+          2) MgTorClient additionally allowlists both cert SHA-256s at runtime
+             — belt-and-braces against malicious same-AppID-prefix apps and a
+             second line of defense if Android ever loosens knownSigner.
+    -->
+    <permission
+        android:name="it.belloworld.mercurygram.plugin.tor.BIND"
+        android:protectionLevel="signature|knownSigner"
+        android:knownCerts="@array/mg_known_main_certs" />
+    <uses-permission android:name="it.belloworld.mercurygram.plugin.tor.BIND" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!--
+        foregroundServiceType="specialUse" rather than "dataSync": Android 15
+        (API 35) imposes a 6h/day cumulative cap on dataSync FGS. A long-
+        running privacy tunnel exceeds this with idle-stop disabled, and the
+        OS-imposed kill is otherwise indistinguishable from a plugin crash
+        on the main side (rebind backoff -> MAX_ABORTIVE_BINDS -> "plugin
+        crash loop" ERROR). "specialUse" has no per-day cap and matches the
+        actual workload (not user content sync but background network
+        proxy). The PROPERTY_SPECIAL_USE_FGS_SUBTYPE on the service tag
+        below documents the justification per the API contract.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:label="@string/MercurygramTorPluginAppName"
+        android:allowBackup="false"
+        android:memtagMode="async"
+        android:supportsRtl="true"
+        tools:targetApi="35">
+
+        <!--
+            memtagMode="async": the Tor daemon lives in the :tor process, so
+            the MTE policy declared in MAIN's manifest does not apply here.
+            tor_jni.c relies on this declaration so the kernel's allowed-tcf
+            mask permits prctl(PR_SET_TAGGED_ADDR_CTRL, PR_MTE_TCF_NONE);
+            without it the prctl returns EINVAL on MTE-strict devices
+            (Pixel 10 / Android 16) and the daemon SIGSEGVs in
+            pthread_cond_wait on first start.
+        -->
+
+        <service
+            android:name=".MgTorService"
+            android:exported="true"
+            android:permission="it.belloworld.mercurygram.plugin.tor.BIND"
+            android:foregroundServiceType="specialUse"
+            android:process=":tor">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="tor_anonymity_network_client" />
+            <intent-filter>
+                <action android:name="it.belloworld.mercurygram.plugin.tor.BIND" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>
