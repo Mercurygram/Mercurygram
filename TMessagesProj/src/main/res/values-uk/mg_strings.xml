@@ -6,6 +6,7 @@
     <string name="MercurygramSettingsMedia">Медіа</string>
     <string name="MercurygramSettingsUpdates">Оновлення</string>
     <string name="MercurygramSettingsNotifications">Сповіщення</string>
+    <string name="MercurygramSettingsPrivacy">Конфіденційність</string>
     <string name="MercurygramMessageDetailsMenu">Показати «Деталі повідомлення»</string>
     <string name="MercurygramDisableAutoUpdate">Вимкнути вбудований оновлювач</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram більше не перевірятиме оновлення на GitHub під час запуску. Ручну перевірку можна запустити кнопкою нижче.</string>
@@ -37,4 +38,11 @@
     <string name="MercurygramDisableUnifiedPushAbout">Якщо вимкнено, Mercurygram повертається до опитування нових повідомлень. Програму буде перезапущено для застосування змін.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Щоб застосувати цю зміну, Mercurygram потрібно перезапустити. Продовжити?</string>
     <string name="MercurygramRestart">Перезапустити</string>
+    <string name="MercurygramReduceTrackingFingerprint">Зменшити мережеве відстеження</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Оновлює ключ сесії щогодини замість одного разу на добу. Ускладнює пасивну кореляцію вашого пристрою. Фонова мережева активність дещо зросте.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">Зменшити мережеве відстеження?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">Mercurygram ротуватиме ключ сесії щогодини замість одного разу на добу. Це ускладнить пасивному спостерігачу у вашій мережі кореляцію вашого пристрою, але не приховає факт використання Telegram і не захистить від аналізу трафіку (час, обсяг, контакти). Перший ключ сесії при новому вході все ще спостережний один раз, а фонова мережева активність дещо зросте. Продовжити?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Увімкнути</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Обліковий запис %1$s повернувся до стандартного режиму — сервер відхилив скорочений час життя ключа сесії.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Сервер відхилив скорочений час життя ключа сесії для: %1$s. Ці облікові записи використовують стандартний 24-годинний ключ. Вимкніть і знову увімкніть, щоб повторити.</string>
 </resources>

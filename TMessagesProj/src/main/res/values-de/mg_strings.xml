@@ -6,6 +6,7 @@
     <string name="MercurygramSettingsMedia">Medien</string>
     <string name="MercurygramSettingsUpdates">Updates</string>
     <string name="MercurygramSettingsNotifications">Benachrichtigungen</string>
+    <string name="MercurygramSettingsPrivacy">Datenschutz</string>
     <string name="MercurygramMessageDetailsMenu">\"Nachrichtendetails\" anzeigen</string>
     <string name="MercurygramDisableAutoUpdate">In-App-Updater deaktivieren</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram sucht beim Start nicht mehr auf GitHub nach Updates. Du kannst die Suche weiterhin manuell über die Schaltfläche unten anstoßen.</string>
@@ -37,4 +38,11 @@
     <string name="MercurygramDisableUnifiedPushAbout">Wenn deaktiviert, fällt Mercurygram auf Polling neuer Nachrichten zurück. Die App wird neu gestartet, um die Änderung anzuwenden.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram muss neu gestartet werden, um diese Änderung anzuwenden. Fortfahren?</string>
     <string name="MercurygramRestart">Neu starten</string>
+    <string name="MercurygramReduceTrackingFingerprint">Netzwerk-Tracking reduzieren</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Aktualisiert den Sitzungsschlüssel jede Stunde statt einmal täglich. Erschwert die passive Korrelation deines Geräts. Die Netzwerkaktivität im Hintergrund nimmt leicht zu.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">Netzwerk-Tracking reduzieren?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">Mercurygram rotiert den Sitzungsschlüssel jede Stunde statt einmal täglich. Dies erschwert einem passiven Beobachter in deinem Netzwerk die Korrelation deines Geräts, verbirgt aber nicht, dass du Telegram verwendest, und verhindert keine Datenverkehrsanalyse (Zeitpunkt, Volumen, Kontakte). Der erste Sitzungsschlüssel bei einem neuen Login bleibt einmal beobachtbar, und die Netzwerkaktivität im Hintergrund nimmt leicht zu. Fortfahren?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Aktivieren</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Konto %1$s wurde auf den Standardmodus zurückgesetzt — der Server hat die verkürzte Sitzungsschlüssel-Lebensdauer abgelehnt.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Der Server hat die verkürzte Sitzungsschlüssel-Lebensdauer für: %1$s abgelehnt. Diese Konten verwenden den 24-Stunden-Standardschlüssel. Aus- und wieder einschalten, um es erneut zu versuchen.</string>
 </resources>
