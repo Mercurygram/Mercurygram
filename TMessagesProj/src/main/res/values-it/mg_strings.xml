@@ -6,6 +6,7 @@
     <string name="MercurygramSettingsMedia">Media</string>
     <string name="MercurygramSettingsUpdates">Aggiornamenti</string>
     <string name="MercurygramSettingsNotifications">Notifiche</string>
+    <string name="MercurygramSettingsPrivacy">Privacy</string>
     <string name="MercurygramMessageDetailsMenu">Mostra \"Dettagli messaggio\"</string>
     <string name="MercurygramDisableAutoUpdate">Disabilita aggiornamenti in-app</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram non controllerà più la presenza di aggiornamenti su GitHub all\'avvio. Puoi comunque avviare un controllo manuale con il pulsante qui sotto.</string>
@@ -35,6 +36,13 @@
     <string name="MercurygramEditHistoryRevision">Revisione %1$d di %2$d</string>
     <string name="MercurygramDisableUnifiedPush">Disabilita UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">Quando è disabilitato, Mercurygram smette di ricevere notifiche push. La consegna in background dipende allora dalla connessione di Telegram: attiva Connessione in background o Servizio Keep-Alive in Impostazioni → Notifiche e suoni se vuoi comunque ricevere i messaggi ad app chiusa.</string>
+    <string name="MercurygramReduceTrackingFingerprint">Riduci tracciamento di rete</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Aggiorna la chiave di sessione ogni ora invece di una volta al giorno. Rende più difficile la correlazione passiva del tuo dispositivo. L\'attività di rete in background aumenterà leggermente.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">Ridurre il tracciamento di rete?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">Mercurygram ruoterà la chiave di sessione ogni ora invece di una volta al giorno. Questo rende più difficile a un osservatore passivo sulla tua rete correlare il tuo dispositivo, ma non nasconde che usi Telegram e non impedisce l\'analisi del traffico (tempi, volume, contatti). La prima chiave di sessione su un nuovo accesso resta osservabile una volta e l\'attività di rete in background aumenterà leggermente. Continuare?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Attiva</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">L\'account %1$s è tornato alla modalità standard — il server ha rifiutato la durata ridotta della chiave di sessione.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Il server ha rifiutato la durata ridotta della chiave di sessione per: %1$s. Questi account usano la chiave standard da 24h. Disattiva e riattiva per riprovare.</string>
     <string name="NtfyDefaultServerDisableUP">Disattiva UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">Il server ntfy.sh predefinito ha limiti di frequenza molto bassi e blocca il gateway push di Mercurygram. Le notifiche push non funzioneranno in modo affidabile.</string>
     <string name="NtfyDefaultServerNoAlternative">Nessun distributore alternativo installato. UnifiedPush verrà disattivato. Puoi riattivarlo dopo aver installato un distributore compatibile con un server self-hosted.</string>

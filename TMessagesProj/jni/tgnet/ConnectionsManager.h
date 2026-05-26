@@ -74,6 +74,11 @@ public:
     void setSystemLangCode(std::string langCode);
     void updateDcSettings(uint32_t datacenterId, bool workaround, bool ifLoadingTryAgain);
     void setPushConnectionEnabled(bool value);
+    void rotateTempAuthKeys();
+    void setReducedTempKeyMode(bool enabled);
+    int32_t getEffectiveTempKeyExpiry();
+    bool onTempKeyBindFailedRecover();
+    void onTempKeyBindSucceeded();
     void applyDnsConfig(NativeByteBuffer *buffer, std::string phone, int32_t date);
     int64_t checkProxy(std::string address, uint16_t port, std::string username, std::string password, std::string secret, onRequestTimeFunc requestTimeFunc, jobject ptr1);
 
@@ -137,7 +142,13 @@ private:
     void checkProxyInternal(ProxyCheckInfo *proxyCheckInfo);
 
     int32_t instanceNum = 0;
-    uint32_t configVersion = 5;
+    // v6 reserves a slot for MG reducedTempKeyLadderIdx in tgnet.dat.
+    // Intermediate climbs (idx 1, idx 2 before cap) are NOT persisted — only
+    // the ladder-exhausted path writes a non-zero idx, and even then resets
+    // it back to 0 on the same write. The slot remains in the schema so the
+    // format stays compatible with installs that wrote a non-zero idx before
+    // the two-strike rule landed; loaders just clamp into range.
+    uint32_t configVersion = 6;
     Config *config = nullptr;
 
     std::list<EventObject *> events;
@@ -243,6 +254,21 @@ private:
     bool registeredForInternalPush = false;
     bool pushConnectionEnabled = true;
     int32_t currentPerformanceClass = -1;
+
+    // MG: reduced temp-key TTL state. Ladder bumps up on bindTempAuthKey
+    // failure so a server-side policy tightening can't cause user logout.
+    // Indexes into REDUCED_TEMP_KEY_LADDER (defined in .cpp). Resets to 0
+    // on disable. effectiveTempKeyExpireTime is what Handshake.cpp reads.
+    // Both flags are written from the JNI/UI thread (toggle path) and read
+    // from the network thread (Handshake.cpp), so they MUST be atomic.
+    // consecutiveLadderFailures requires TWO back-to-back
+    // ENCRYPTED_MESSAGE_INVALID rejections at the same ladder step before
+    // climbing — a single spurious server-side glitch must not persistently
+    // downgrade the user's privacy mode. Reset to 0 on successful bind.
+    std::atomic<bool> reducedTempKeyEnabled{false};
+    std::atomic<int32_t> reducedTempKeyLadderIdx{0};
+    std::atomic<int32_t> effectiveTempKeyExpireTime{TEMP_AUTH_KEY_EXPIRE_TIME};
+    std::atomic<int32_t> consecutiveLadderFailures{0};
 
     std::map<uint32_t, std::vector<std::unique_ptr<NetworkMessage>>> genericMessagesToDatacenters;
     std::map<uint32_t, std::vector<std::unique_ptr<NetworkMessage>>> genericMediaMessagesToDatacenters;
