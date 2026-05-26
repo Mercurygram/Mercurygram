@@ -18,6 +18,14 @@ public class MgAccountConfig {
     public boolean messageDetailsMenu = false;
     public boolean disableLivePhotosByDefault = false;
     public boolean savedMessagesHistory = false;
+    // MG: the reduced temp-key TTL ladder (1h→6h→24h) exhausted on this
+    // account — server kept rejecting bindTempAuthKey, so native reduced
+    // mode was force-disabled here while the global SharedConfig toggle
+    // stays on (other accounts may still be running reduced mode). Surfaced
+    // as a footer under Settings → Mercurygram → Privacy so the user is
+    // not silently downgraded. Reset when the user re-enables the global
+    // toggle (off→on cycle).
+    public boolean mgReducedTrackingExhausted = false;
 
     public void save(SharedPreferences.Editor editor) {
         editor.putBoolean("rearRoundCamera", rearRoundCamera);
@@ -26,6 +34,7 @@ public class MgAccountConfig {
         editor.putBoolean("messageDetailsMenu", messageDetailsMenu);
         editor.putBoolean("disableLivePhotosByDefault", disableLivePhotosByDefault);
         editor.putBoolean("savedMessagesHistory", savedMessagesHistory);
+        editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
     public void load(SharedPreferences preferences) {
@@ -35,6 +44,7 @@ public class MgAccountConfig {
         messageDetailsMenu = preferences.getBoolean("messageDetailsMenu", false);
         disableLivePhotosByDefault = preferences.getBoolean("disableLivePhotosByDefault", false);
         savedMessagesHistory = preferences.getBoolean("savedMessagesHistory", false);
+        mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
     public void reset() {
@@ -44,5 +54,6 @@ public class MgAccountConfig {
         messageDetailsMenu = false;
         disableLivePhotosByDefault = false;
         savedMessagesHistory = false;
+        mgReducedTrackingExhausted = false;
     }
 }
