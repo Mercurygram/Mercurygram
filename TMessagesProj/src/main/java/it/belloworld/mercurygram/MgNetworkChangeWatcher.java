@@ -249,6 +249,16 @@ public final class MgNetworkChangeWatcher {
     }
 
     private static void rotateAllAccounts() {
+        // Skip when Tor is on: every MTProto byte already leaves the device
+        // through the Tor SOCKS port and exits at a Tor relay whose IP is
+        // unrelated to the user's network. Passive on-path observers on the
+        // user's own network never see auth_key_id at all, so rotating it
+        // adds no privacy benefit and would only burn a fresh PFS handshake
+        // per non-CDN DC across the multi-hop circuit on every Wi-Fi ↔ cell
+        // handoff. When mg_useTor is true and bootstrap hasn't completed yet
+        // the rotation would also bounce off the blocking stub on 127.0.0.1:1
+        // and retry, wasting handshakes for no gain.
+        if (SharedConfig.mg_useTor) return;
         // Defer the temp-key wipe until the socket has finished the
         // post-foreground getDifference on the *warm* key. Clearing it mid-sync
         // forces a fresh PFS handshake before the diff can go out, so a chat
