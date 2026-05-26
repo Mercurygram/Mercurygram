@@ -481,7 +481,8 @@ void Handshake::processHandshakeResponse_resPQ(TLObject *message, int64_t messag
                     tl_p_q_inner_data_temp->dc = currentDatacenter->datacenterId;
                 }
             }
-            tl_p_q_inner_data_temp->expires_in = TEMP_AUTH_KEY_EXPIRE_TIME;
+            tempKeyExpireInSecs = ConnectionsManager::getInstance(currentDatacenter->instanceNum).getEffectiveTempKeyExpiry();
+            tl_p_q_inner_data_temp->expires_in = tempKeyExpireInSecs;
             RAND_bytes(tl_p_q_inner_data_temp->new_nonce->bytes, 32);
             authNewNonce = new ByteArray(tl_p_q_inner_data_temp->new_nonce.get());
             innerData = tl_p_q_inner_data_temp;
@@ -856,7 +857,7 @@ void Handshake::processHandshakeResponse_serverDHParamsAnswer(TLObject *message,
                 TL_auth_bindTempAuthKey *request = new TL_auth_bindTempAuthKey();
                 request->initFunc = [&, request, connection](int64_t messageId) {
                     TL_bind_auth_key_inner *inner = new TL_bind_auth_key_inner();
-                    inner->expires_at = ConnectionsManager::getInstance(currentDatacenter->instanceNum).getCurrentTime() + timeDifference + TEMP_AUTH_KEY_EXPIRE_TIME;
+                    inner->expires_at = ConnectionsManager::getInstance(currentDatacenter->instanceNum).getCurrentTime() + timeDifference + tempKeyExpireInSecs;
                     inner->perm_auth_key_id = currentDatacenter->authKeyPermId;
                     inner->temp_auth_key_id = authKeyTempPendingId;
                     RAND_bytes((uint8_t *) &inner->nonce, 8);
@@ -883,6 +884,12 @@ void Handshake::processHandshakeResponse_serverDHParamsAnswer(TLObject *message,
                     authKeyPendingRequestId = 0;
                     if (response != nullptr && typeid(*response) == typeid(TL_boolTrue)) {
                         if (LOGS_ENABLED) DEBUG_D("account%u dc%u handshake: bind completed", currentDatacenter->instanceNum, currentDatacenter->datacenterId);
+                        // MG: clears the reduce-tracking ladder's
+                        // consecutive-failure counter so a successful bind at
+                        // any step doesn't get treated as part of a future
+                        // climb. See ConnectionsManager::onTempKeyBindFailedRecover()
+                        // for the two-strike rule.
+                        ConnectionsManager::getInstance(currentDatacenter->instanceNum).onTempKeyBindSucceeded();
                         ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([&] {
                             ByteArray *authKey = authKeyTempPending;
                             authKeyTempPending = nullptr;
@@ -917,6 +924,25 @@ void Handshake::processHandshakeResponse_serverDHParamsAnswer(TLObject *message,
             beginHandshake(false);
         } else {
             if (LOGS_ENABLED) DEBUG_E("account%u dc%u handshake: server declined DH params, type = %d", currentDatacenter->instanceNum, currentDatacenter->datacenterId, handshakeType);
+            // MG: a valid dh_gen_fail on the Temp handshake is how the server
+            // rejects our shortened expires_in (probe-temp-key-ttl.py: this
+            // maps to "server rejected expires_in", not the corrupted-answer
+            // case handled by the invalid-hash branch above). Feed the same
+            // ladder the bindTempAuthKey failure path uses, see
+            // ConnectionsManager::onTempKeyBindFailedRecover() for the ladder
+            // and two-strike rule. Scoped to HandshakeTypeTemp only (not
+            // MediaTemp): the Temp and MediaTemp handshakes for a DC run as a
+            // pair (see Datacenter::beginHandshake callers) and would
+            // otherwise double-count one server-side TTL rejection as two
+            // strikes on the shared per-account counter. No temp key exists
+            // yet at this stage, so unlike the bind-failure path there is
+            // nothing to clear or evict here; the return value is ignored,
+            // both outcomes (retry, or ladder bump/exhaust) leave
+            // getEffectiveTempKeyExpiry() correct for the next attempt's
+            // req_DH_params.
+            if (handshakeType == HandshakeTypeTemp) {
+                ConnectionsManager::getInstance(currentDatacenter->instanceNum).onTempKeyBindFailedRecover();
+            }
             beginHandshake(false);
         }
         authKeyAuxHashBuffer->reuse();
