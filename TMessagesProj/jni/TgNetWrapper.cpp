@@ -27,6 +27,7 @@ jmethodID jclass_ConnectionsManager_onUnparsedMessageReceived;
 jmethodID jclass_ConnectionsManager_onUpdate;
 jmethodID jclass_ConnectionsManager_onSessionCreated;
 jmethodID jclass_ConnectionsManager_onLogout;
+jmethodID jclass_ConnectionsManager_onReducedTempKeyExhausted;
 jmethodID jclass_ConnectionsManager_onConnectionStateChanged;
 jmethodID jclass_ConnectionsManager_onInternalPushReceived;
 jmethodID jclass_ConnectionsManager_onUpdateConfig;
@@ -289,6 +290,14 @@ void setPushConnectionEnabled(JNIEnv *env, jclass c, jint instanceNum, jboolean 
     ConnectionsManager::getInstance(instanceNum).setPushConnectionEnabled(value);
 }
 
+void rotateTempAuthKeys(JNIEnv *env, jclass c, jint instanceNum) {
+    ConnectionsManager::getInstance(instanceNum).rotateTempAuthKeys();
+}
+
+void setReducedTempKeyMode(JNIEnv *env, jclass c, jint instanceNum, jboolean enabled) {
+    ConnectionsManager::getInstance(instanceNum).setReducedTempKeyMode(enabled);
+}
+
 void applyDnsConfig(JNIEnv *env, jclass c, jint instanceNum, jlong address, jstring phone, jint date) {
     const char *phoneStr = env->GetStringUTFChars(phone, 0);
 
@@ -353,6 +362,10 @@ class Delegate : public ConnectiosManagerDelegate {
     
     void onLogout(int32_t instanceNum) {
         jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onLogout, instanceNum);
+    }
+
+    void onReducedTempKeyExhausted(int32_t instanceNum) {
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onReducedTempKeyExhausted, instanceNum);
     }
     
     void onUpdateConfig(TL_config *config, int32_t instanceNum) {
@@ -551,6 +564,8 @@ static JNINativeMethod ConnectionsManagerMethods[] = {
         {"native_setIpStrategy", "(IB)V", (void *) setIpStrategy},
         {"native_setNetworkAvailable", "(IZIZ)V", (void *) setNetworkAvailable},
         {"native_setPushConnectionEnabled", "(IZ)V", (void *) setPushConnectionEnabled},
+        {"native_rotateTempAuthKeys", "(I)V", (void *) rotateTempAuthKeys},
+        {"native_setReducedTempKeyMode", "(IZ)V", (void *) setReducedTempKeyMode},
         {"native_setJava", "(Z)V", (void *) setJava},
         {"native_applyDnsConfig", "(IJLjava/lang/String;I)V", (void *) applyDnsConfig},
         {"native_checkProxy", "(ILjava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/telegram/tgnet/RequestTimeDelegate;)J", (void *) checkProxy},
@@ -642,6 +657,10 @@ extern "C" int registerNativeTgNetFunctions(JavaVM *vm, JNIEnv *env) {
     }
     jclass_ConnectionsManager_onLogout = env->GetStaticMethodID(jclass_ConnectionsManager, "onLogout", "(I)V");
     if (jclass_ConnectionsManager_onLogout == 0) {
+        return JNI_FALSE;
+    }
+    jclass_ConnectionsManager_onReducedTempKeyExhausted = env->GetStaticMethodID(jclass_ConnectionsManager, "onReducedTempKeyExhausted", "(I)V");
+    if (jclass_ConnectionsManager_onReducedTempKeyExhausted == 0) {
         return JNI_FALSE;
     }
     jclass_ConnectionsManager_onConnectionStateChanged = env->GetStaticMethodID(jclass_ConnectionsManager, "onConnectionStateChanged", "(II)V");
