@@ -56,6 +56,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_DISABLE_UNIFIED_PUSH = 30;
     private static final int ID_UNIFIED_PUSH_DISTRIBUTOR = 31;
     private static final int ID_UNIFIED_PUSH_GATEWAY = 32;
+    private static final int ID_REDUCE_TRACKING_FINGERPRINT = 40;
 
     @Override
     protected CharSequence getTitle() {
@@ -102,6 +103,24 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_DISABLE_LIVE_PHOTOS, LocaleController.getString(R.string.MercurygramDisableLivePhotos))
                 .setChecked(getUserConfig().disableLivePhotosByDefault));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableLivePhotosAbout)));
+
+        items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsPrivacy)));
+        items.add(UItem.asCheck(ID_REDUCE_TRACKING_FINGERPRINT,
+                        LocaleController.getString(R.string.MercurygramReduceTrackingFingerprint))
+                .setChecked(SharedConfig.reduceTrackingFingerprint));
+        String reduceAbout = LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintAbout);
+        // If any active account got force-disabled out of reduced mode by the
+        // ladder-exhaustion path (native onReducedTempKeyExhausted), call it
+        // out so the user can see the toggle is "on" while specific accounts
+        // are actually running standard 24h temp keys.
+        String exhaustedNames = collectExhaustedAccountNames();
+        if (SharedConfig.reduceTrackingFingerprint && exhaustedNames != null) {
+            reduceAbout = reduceAbout + "\n\n" + LocaleController.formatString(
+                    "MercurygramReduceTrackingFingerprintExhaustedFooter",
+                    R.string.MercurygramReduceTrackingFingerprintExhaustedFooter,
+                    exhaustedNames);
+        }
+        items.add(UItem.asShadow(reduceAbout));
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
@@ -219,6 +238,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_UNIFIED_PUSH_GATEWAY:
                 showGatewayDialog();
+                break;
+            case ID_REDUCE_TRACKING_FINGERPRINT:
+                handleReduceTrackingFingerprintClick();
                 break;
         }
     }
@@ -388,5 +410,61 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                     refreshList();
                 })
                 .show();
+    }
+
+    private void handleReduceTrackingFingerprintClick() {
+        if (SharedConfig.reduceTrackingFingerprint) {
+            SharedConfig.toggleReduceTrackingFingerprint();
+            refreshList();
+            return;
+        }
+        Context context = getParentActivity();
+        if (context == null) {
+            return;
+        }
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningTitle))
+                .setMessage(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningMessage))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .setPositiveButton(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintEnable),
+                        (d, which) -> {
+                            // Fresh enable cycle: clear any stale per-account
+                            // exhaustion flag so the footer doesn't shame the
+                            // user with a result from a prior cycle. Native
+                            // ladder state is already cleared by the toggle's
+                            // setReducedTempKeyMode(false→true) path.
+                            clearReducedTrackingExhaustedFlags();
+                            SharedConfig.toggleReduceTrackingFingerprint();
+                            refreshList();
+                        })
+                .create();
+        showDialog(dialog);
+        TextView positive = (TextView) dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        if (positive != null) {
+            positive.setTextColor(getThemedColor(Theme.key_text_RedBold));
+        }
+    }
+
+    private static String collectExhaustedAccountNames() {
+        StringBuilder sb = null;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig uc = UserConfig.getInstance(a);
+            if (!uc.isClientActivated() || !uc.mgReducedTrackingExhausted) continue;
+            String name = uc.getCurrentUser() != null
+                    ? org.telegram.messenger.UserObject.getFirstName(uc.getCurrentUser())
+                    : "#" + (a + 1);
+            if (sb == null) sb = new StringBuilder(name);
+            else sb.append(", ").append(name);
+        }
+        return sb == null ? null : sb.toString();
+    }
+
+    private static void clearReducedTrackingExhaustedFlags() {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig uc = UserConfig.getInstance(a);
+            if (!uc.mgReducedTrackingExhausted) continue;
+            uc.mgReducedTrackingExhausted = false;
+            uc.saveConfig(false);
+        }
     }
 }
