@@ -5962,6 +5962,16 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     private boolean firstAppUpdateCheck = true;
     public void checkAppUpdate(boolean force, Browser.Progress progress) {
         it.belloworld.mercurygram.MgUpdateChecker.checkForUpdates(force);
+        // After a same-MG_VERSION_CODE main bump (e.g. 12.7.3.2.7 → .2.8)
+        // the companion Tor plugin sits at the old versionName but is
+        // never re-prompted because handleConnected's AIDL gate only
+        // catches AIDL-breaking changes. Surface a one-shot prompt on
+        // the auto cold-start path so the user can roll the plugin
+        // forward to match main; force=true callers (debug menu,
+        // Settings "Check now") only refresh the main check.
+        if (!force) {
+            it.belloworld.mercurygram.tor.MgTorClient.maybePromptPluginUpdate(this);
+        }
 
         if (!ApplicationLoader.isStandaloneBuild() && !ApplicationLoader.isBetaBuild()) {
             return;
