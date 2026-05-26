@@ -1359,4 +1359,25 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Activar</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">La cuenta %1$s volvió al modo estándar — el servidor rechazó la duración reducida de la clave de sesión.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">El servidor rechazó la duración reducida de la clave de sesión para: %1$s. Esas cuentas usan la clave estándar de 24 h. Desactiva y vuelve a activar para reintentar.</string>
+    <string name="MercurygramTorRespawnGaveUp">Tor falló repetidamente. Reinicio automático en pausa — desactiva y reactiva Tor para reintentar.</string>
+    <string name="MercurygramTorPluginMissing">Complemento de Tor no instalado. Instálalo para activar Tor.</string>
+    <string name="MercurygramTor">Usar Tor</string>
+    <string name="MercurygramTorAbout">Enruta el tráfico del protocolo de Telegram (MTProto) a través de un demonio Tor integrado para derrotar el rastreo pasivo de auth_key_id que permite a los operadores de red vincular tu cuenta con tu IP real. Las descargas de medios y otro tráfico HTTP siguen siendo directos para mantener la app responsiva. Tor se desconecta automáticamente cuando la app está inactiva para ahorrar batería y se reanuda cuando es necesario. Las funciones sensibles a la latencia (llamadas) pueden verse afectadas; Telegram sigue viendo el nodo de salida de Tor.</string>
+    <string name="MercurygramTorProxyEntry">Tor (interno)</string>
+    <string name="MercurygramTorEnableTitle">¿Usar Tor para Mercurygram?</string>
+    <string name="MercurygramTorEnableMessage">Mercurygram iniciará un demonio Tor integrado y enrutará el tráfico del protocolo de Telegram (MTProto) a través de él. Las descargas de medios y otro tráfico HTTP siguen siendo directos. El bootstrap tarda ~10–30 segundos la primera vez. Tor se detiene automáticamente cuando la app ha estado inactiva para ahorrar batería, y se reinicia al reanudar o al recibir un push. ¿Continuar?</string>
+    <string name="MercurygramTorEnable">Activar</string>
+    <string name="MercurygramTorBootstrap">Conectando a través de Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">Detener Tor tras inactividad</string>
+    <string name="MercurygramTorIdleTimeoutOff">Nunca (siempre activo)</string>
+    <string name="MercurygramTorIdleTimeout1min">1 minuto</string>
+    <string name="MercurygramTorIdleTimeout5min">5 minutos</string>
+    <string name="MercurygramTorIdleTimeout15min">15 minutos</string>
+    <string name="MercurygramTorIdleTimeout60min">1 hora</string>
+    <string name="MercurygramTorActiveProxyLocked">Desactiva Tor en los ajustes de Mercurygram para usar otro proxy.</string>
+    <string name="MercurygramTorInstallPlugin">Instalar complemento Tor</string>
+    <string name="MercurygramTorPluginDownloading">Descargando complemento Tor…</string>
+    <string name="MercurygramTorPluginDownloadFailed">No se pudo descargar el complemento Tor. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="MercurygramTorPluginOutdated">Se requiere actualizar el complemento Tor</string>
+    <string name="MercurygramTorPluginSignatureMismatch">Complemento Tor: firma no coincide — vinculación rechazada</string>
 </resources>
