@@ -86,6 +86,20 @@ These patches were originally derived from the Telegram-FOSS effort, but Mercury
 - Force static map previews from Telegram
 - No content restrictions
 
+### Privacy & anti-tracking (Mercurygram-only)
+
+Mercurygram adds MTProto-layer mitigations that upstream Telegram and Telegram-FOSS do not ship:
+
+- **Reduce network tracking** — opt-in toggle at *Settings → Mercurygram → Privacy*. Defends against the passive `auth_key_id` fingerprint described in the OCCRP / Symbolic Software review of May 2026 ([review-confirms-telegram-tracking-vulnerability](https://www.occrp.org/en/news/review-confirms-telegram-tracking-vulnerability)). MTProto's outer obfuscation2 stream cipher is recoverable from on-wire bytes (the AES-CTR keys are derived from the visible 64-byte TCP-handshake bytes via a public algorithm), so a passive observer with a full pcap from connection start can decode the obfuscation and read the 8-byte `auth_key_id` at the front of every MTProto frame. That id is stable enough to correlate a device across IP/network changes even though message contents stay encrypted. When the toggle is on:
+  - Every default-network change (Wi-Fi ↔ cellular, VPN flip, IP rebind) forces a fresh PFS temp-key handshake so `auth_key_id` rotates across network boundaries (`MgNetworkChangeWatcher` + native `ConnectionsManager::rotateTempAuthKeys()`).
+  - The CDN-redirect (`upload.fileCdnRedirect`) path is refused once per file download and the request is reissued against the main DC, keeping the long-lived permanent `auth_key_id` (which CDN nodes use because PFS is off there) off the wire.
+  - `TEMP_AUTH_KEY_EXPIRE_TIME` is shortened from 24 h to 1 h via a runtime variable, with a `1h → 6h → 24h` ladder that bumps the TTL on a `bindTempAuthKey` `ENCRYPTED_MESSAGE_INVALID` rejection — protects against a future server-side policy tightening without logging the user out (when the ladder exhausts the toggle auto-disables). Probed lower bound on DC2 in 2026-05 is 60 s; 1 h leaves a 60× safety margin. See [`scripts/probe-temp-key-ttl.py`](scripts/probe-temp-key-ttl.py) to re-measure the floor after a rebase.
+- **Hidden accounts** — additional accounts can be marked hidden behind the existing passcode (*Settings → Mercurygram → General → Hidden accounts*); they don't appear in the account switcher when the passcode is locked.
+- **Anti-delete & anti-edit message history** — opt-in per-account (*Settings → Mercurygram → General → Save deleted & edited messages*). Server-deleted messages stay in the chat as a grayed-out ghost; edited messages keep all previous versions accessible from the message menu. Self-destructing / TTL / secret-chat messages are never recorded (api/terms §1.4).
+- **De-googled UnifiedPush + WebPush** — no Google Play Services / Firebase Cloud Messaging anywhere in the binary; push notifications use [UnifiedPush](https://unifiedpush.org) with end-to-end WebPush encryption (`aesgcm` Draft 4 — decrypted locally; the gateway only sees ciphertext). See [UnifiedPush WebPush gateway](#unifiedpush-webpush-gateway).
+- **DoH resolving disabled** — upstream Telegram falls back to Google DoH when normal DNS fails, which leaks the user's proxy/IP to Google. Mercurygram drops that path; Android's system DNS-over-TLS handles the same encryption-in-transit need without the leak.
+- **Native crypto built from source** — BoringSSL, FFmpeg, libvpx, dav1d, and tde2e are compiled from source at build time instead of shipping upstream prebuilts (no opaque third-party binaries in the APK).
+
 ## Notes
 
 In order to have reliable notifications, it may be necessary to set battery
