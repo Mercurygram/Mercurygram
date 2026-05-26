@@ -27,11 +27,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Both APKs always run in parallel. plugin.tor is soft-fail
+  # (continue-on-error) until metadata/it.belloworld.mercurygram.plugin.tor.yml
+  # is merged into fdroiddata. Once the recipe lands, drop the
+  # continue-on-error expression.
   reproducible:
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     permissions:
       contents: read
+    continue-on-error: ${{ matrix.app == 'plugin.tor' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [main, plugin.tor]
+
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -39,7 +50,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Run reproducibility check (real fdroidserver, podman)
+      - name: Run reproducibility check (real fdroidserver, podman) — ${{ matrix.app }}
         env:
           ARG: ${{ inputs.arg }}
           ARG2: ${{ inputs.arg2 }}
@@ -48,6 +59,6 @@ jobs:
           arg=$(printf '%s' "$ARG" | xargs)        # trim whitespace
           arg2=$(printf '%s' "$ARG2" | xargs)
           case "${{ inputs.mode }}" in
-            verify) scripts/check-reproducibility.sh verify "$arg" "$arg2" ;;
-            *)      scripts/check-reproducibility.sh determinism "$arg" ;;
+            verify) scripts/check-reproducibility.sh --app=${{ matrix.app }} verify "$arg" "$arg2" ;;
+            *)      scripts/check-reproducibility.sh --app=${{ matrix.app }} determinism "$arg" ;;
           esac

@@ -1418,4 +1418,26 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Aktivieren</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Konto %1$s wurde auf den Standardmodus zurückgesetzt — der Server hat die verkürzte Sitzungsschlüssel-Lebensdauer abgelehnt.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Der Server hat die verkürzte Sitzungsschlüssel-Lebensdauer für: %1$s abgelehnt. Diese Konten verwenden den 24-Stunden-Standardschlüssel. Aus- und wieder einschalten, um es erneut zu versuchen.</string>
+    <string name="MercurygramTorRespawnGaveUp">Tor ist wiederholt abgestürzt. Auto-Neustart pausiert — Tor aus- und wieder einschalten, um es erneut zu versuchen.</string>
+    <string name="MercurygramTorPluginMissing">Tor-Plugin nicht installiert. Installiere es, um Tor zu aktivieren.</string>
+    <string name="MercurygramTor">Tor verwenden</string>
+    <string name="MercurygramTorAbout">Leitet den Telegram-Protokollverkehr (MTProto) über einen eingebetteten Tor-Daemon, um das passive auth_key_id-Tracking abzuwehren, mit dem Netzbetreiber dein Konto deiner echten IP zuordnen können. Mediendownloads und sonstiger HTTP-Verkehr bleiben direkt, damit die App reaktionsschnell bleibt. Tor trennt die Verbindung automatisch, wenn die App inaktiv ist, um Akku zu sparen, und startet bei Bedarf neu. Latenzkritische Funktionen (Anrufe) können beeinträchtigt sein; Telegram sieht weiterhin den Tor-Ausgangsknoten.</string>
+    <string name="MercurygramTorProxyEntry">Tor (intern)</string>
+    <string name="MercurygramTorEnableTitle">Tor für Mercurygram verwenden?</string>
+    <string name="MercurygramTorEnableMessage">Mercurygram startet einen eingebetteten Tor-Daemon und leitet den Telegram-Protokollverkehr (MTProto) darüber. Mediendownloads und sonstiger HTTP-Verkehr bleiben direkt. Der erste Bootstrap dauert ca. 10–30 Sekunden. Tor wird automatisch beendet, wenn die App inaktiv war, um Akku zu sparen, und startet bei Wiederaufnahme oder eingehendem Push erneut. Fortfahren?</string>
+    <string name="MercurygramTorEnable">Aktivieren</string>
+    <string name="MercurygramTorBootstrap">Verbinde über Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">Tor nach Inaktivität stoppen</string>
+    <string name="MercurygramTorIdleTimeoutOff">Nie (immer aktiv)</string>
+    <string name="MercurygramTorIdleTimeout1min">1 Minute</string>
+    <string name="MercurygramTorIdleTimeout5min">5 Minuten</string>
+    <string name="MercurygramTorIdleTimeout15min">15 Minuten</string>
+    <string name="MercurygramTorIdleTimeout60min">1 Stunde</string>
+    <string name="MercurygramTorActiveProxyLocked">Deaktiviere Tor in den Mercurygram-Einstellungen, um einen anderen Proxy zu verwenden.</string>
+    <string name="MercurygramTorInstallPlugin">Tor-Plugin installieren</string>
+    <string name="MercurygramTorPluginDownloading">Tor-Plugin wird heruntergeladen…</string>
+    <string name="MercurygramTorPluginDownloadFailed">Tor-Plugin konnte nicht heruntergeladen werden. Verbindung prüfen und erneut versuchen.</string>
+    <string name="MercurygramTorPluginOutdated">Tor-Plugin-Update erforderlich</string>
+    <string name="MercurygramUpdateTorPlugin">Tor-Plugin aktualisieren</string>
+    <string name="MercurygramTorPluginSignatureMismatch">Tor-Plugin: Signatur stimmt nicht überein — Bindung verweigert</string>
 </resources>
