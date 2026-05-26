@@ -45,6 +45,7 @@ public class MgUpdateChecker {
 
     private static Boolean isFdroidBuildCached = null;
     private static final AtomicBoolean isDownloading = new AtomicBoolean(false);
+    private static final AtomicBoolean isDownloadingPlugin = new AtomicBoolean(false);
 
     public interface ProgressCallback {
         void onProgress(long downloaded, long total);
@@ -340,6 +341,96 @@ public class MgUpdateChecker {
                 AndroidUtilities.runOnUIThread(() -> callback.onError(e.getMessage()));
             } finally {
                 isDownloading.set(false);
+                if (conn != null) conn.disconnect();
+            }
+        });
+    }
+
+    /**
+     * In-app Tor plugin install. Mirrors {@link #downloadUpdate} but:
+     *  - Resolves the asset URL by convention from the current main tag —
+     *    main + plugin share MG_BUILD_TAG release-for-release (see AGENTS.md
+     *    "Tor plugin"). No GitHub API call needed.
+     *  - Reuses {@link #verifyApkSignature}: plugin APK is signed with the
+     *    same keystore as main on the GitHub channel (signing-key invariant),
+     *    so MG_CERT_SHA256 matches.
+     *  - Writes to cache/mg_tor_plugin.apk, not mg_update.apk, so a
+     *    concurrent main updater download can't clobber and so a later
+     *    main installUpdate(...) doesn't accidentally install the plugin.
+     * F-Droid channel callers must gate on {@link #isFdroidBuild()} before
+     * calling — F-Droid plugin is signed with a different cert; this method
+     * also short-circuits as a safety net.
+     */
+    public static void downloadPlugin(ProgressCallback callback) {
+        if (!isDownloadingPlugin.compareAndSet(false, true)) return;
+        if (isFdroidBuild()) {
+            isDownloadingPlugin.set(false);
+            AndroidUtilities.runOnUIThread(() -> callback.onError("F-Droid channel"));
+            return;
+        }
+        if (Build.SUPPORTED_ABIS.length == 0) {
+            isDownloadingPlugin.set(false);
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Unsupported ABI"));
+            return;
+        }
+        final String tag = currentInstallVersion();
+        if (tag == null || tag.isEmpty()) {
+            isDownloadingPlugin.set(false);
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Unknown current version"));
+            return;
+        }
+        final String abi = Build.SUPPORTED_ABIS[0];
+        final String url = "https://github.com/Mercurygram/Mercurygram/releases/download/"
+                + tag + "/Mercurygram-tor-plugin-" + tag + "-" + abi + ".apk";
+
+        Utilities.globalQueue.postRunnable(() -> {
+            HttpURLConnection conn = null;
+            try {
+                File cacheDir = new File(ApplicationLoader.getFilesDirFixed(), "cache");
+                if (!cacheDir.exists()) cacheDir.mkdirs();
+                File apkFile = new File(cacheDir, "mg_tor_plugin.apk");
+
+                conn = (HttpURLConnection) new URL(url).openConnection();
+                conn.setInstanceFollowRedirects(true);
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(30000);
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode != 200) {
+                    final int rc = responseCode;
+                    AndroidUtilities.runOnUIThread(() -> callback.onError("HTTP " + rc));
+                    return;
+                }
+
+                long total = conn.getContentLength();
+                InputStream is = new BufferedInputStream(conn.getInputStream());
+                FileOutputStream fos = new FileOutputStream(apkFile);
+                byte[] buf = new byte[8192];
+                long downloaded = 0;
+                int len;
+                final long totalFinal = total;
+                while ((len = is.read(buf)) != -1) {
+                    fos.write(buf, 0, len);
+                    downloaded += len;
+                    final long dl = downloaded;
+                    AndroidUtilities.runOnUIThread(() -> callback.onProgress(dl, totalFinal));
+                }
+                fos.close();
+                is.close();
+
+                if (!verifyApkSignature(apkFile)) {
+                    apkFile.delete();
+                    AndroidUtilities.runOnUIThread(() -> callback.onError("Signature verification failed"));
+                    return;
+                }
+
+                final File result = apkFile;
+                AndroidUtilities.runOnUIThread(() -> callback.onComplete(result));
+            } catch (Exception e) {
+                FileLog.e(e);
+                AndroidUtilities.runOnUIThread(() -> callback.onError(e.getMessage()));
+            } finally {
+                isDownloadingPlugin.set(false);
                 if (conn != null) conn.disconnect();
             }
         });

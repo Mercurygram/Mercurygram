@@ -1,0 +1,132 @@
+# =====================================================================
+# F-Droid recipe TEMPLATE for the Mercurygram Tor plugin companion APK.
+#
+# THIS FILE IS NOT A LIVE RECIPE. fdroidserver scans metadata/*.yml in the
+# fdroiddata repo, not in this repo (where this .template file lives). The
+# real recipe must be MR'd into:
+#     https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/
+# at the path:
+#     metadata/it.belloworld.mercurygram.plugin.tor.yml
+#
+# Copy this file there, drop the .template suffix, replace placeholders
+# (versionName / versionCode / commit), and submit the MR alongside any
+# update to the main recipe (it.belloworld.mercurygram.yml). The plugin's
+# release cycle is locked to the main app — same tag, same signing key,
+# same per-ABI versionCode offsets.
+#
+# After the initial MR is merged, future releases are synced automatically
+# by .github/scripts/fdroid_sync.py --app=plugin.tor from the release
+# workflow, which appends one Builds: entry per ABI per release.
+# =====================================================================
+
+Categories:
+  - Internet
+License: GPL-2.0-or-later
+AuthorName: Timothy Redaelli
+AuthorEmail: timothy.redaelli@gmail.com
+WebSite: https://github.com/drizzt/Mercurygram
+SourceCode: https://github.com/drizzt/Mercurygram
+IssueTracker: https://github.com/drizzt/Mercurygram/issues
+
+# Companion APK to it.belloworld.mercurygram. Bundles the Tor stack
+# (libevent + openssl + tor) and exposes IMgTorService via AIDL; the main
+# Mercurygram APK binds it only when the installed plugin's signing cert
+# matches the hash baked into the main app. Same signing key, same tag
+# stream, same source repo — separate AppID and recipe so users can
+# install the privacy-network bridge independently of the chat app.
+AutoName: Mercurygram Tor Plugin
+Description: |-
+    Tor companion plugin for Mercurygram. Installs a separate
+    background service that exposes a local SOCKS5 proxy speaking the
+    Tor protocol, used by Mercurygram for MTProto-over-Tor.
+
+    Functionally a no-op without the main Mercurygram app installed.
+
+RepoType: git
+Repo: https://github.com/drizzt/Mercurygram.git
+
+# NOTE on F-Droid distribution and the signing-cert pin:
+# MgTorClient self-pins — at runtime it compares the plugin's signing cert
+# SHA-256 against MAIN's own signing cert SHA-256. Both APKs must therefore
+# come from the same distribution channel (both from GitHub releases OR
+# both from F-Droid). Without AllowedAPKSigningKeys on both recipes,
+# F-Droid signs main with per-app key A and the plugin with per-app key B,
+# the certs don't match, and the pin (plus the signature-level BIND
+# permission) refuses the connection.
+#
+# Adding AllowedAPKSigningKeys to main is a breaking upgrade for existing
+# F-Droid main installs (PackageInstaller rejects a cert swap), so it's
+# postponed until a coordinated migration is planned. Until then, F-Droid
+# users cannot use the Tor toggle; the install prompt in MgTorClient
+# directs them to the GitHub release page.
+
+Builds:
+  # Sample entry: arm64-v8a flavor.
+  # fdroid_sync.py uses the most recent same-flavor entry as a template
+  # when appending a new release, so the initial MR must include at
+  # minimum one Builds entry per ABI (afatFdArm64 / afatFdArm32 /
+  # afatFdX86_64 / afatFdX86). Duplicate this block 4× before
+  # submitting, swapping the `gradle:` flavor, `output:` path's flavor
+  # directory, and `versionCode` per the offset table:
+  #   afatFdX86    -> +3
+  #   afatFdX86_64 -> +4
+  #   afatFdArm32  -> +7
+  #   afatFdArm64  -> +8
+  # where the base is (APP_VERSION_CODE * 100 + M) * 10, M = the 4th
+  # tag component (see gradle/mg-version.gradle + fdroid_sync.py).
+  - versionName: 0.0.0.0  # placeholder — replace with the tag verbatim
+    versionCode: 0        # placeholder — replace with (base*10 + 8) for arm64
+    commit: 0000000000000000000000000000000000000000  # placeholder — tag sha
+    subdir: TMessagesProj_App
+    sudo:
+      # Base toolchain. Java 17 from bookworm is the version AGP wants;
+      # buildserver-trixie ships Java 21, which AGP rejects.
+      - apt-get install -y -t bookworm openjdk-17-jdk-headless
+      - update-java-alternatives -a
+      # tor + libevent + openssl autogen.sh need autotools + pkg-config.
+      # Plugin does NOT pull ffmpeg / boringssl / dav1d / libvpx — those
+      # are stripped out of the plugin module. Keep the sudo list lean.
+      - apt-get install -y automake autoconf libtool pkg-config
+    srclibs: []
+    gradle:
+      - afatFdArm64
+    prebuild:
+      # Submodule init: plugin only needs the Tor stack submodules.
+      # The main recipe's prebuild inits boringssl/ffmpeg/etc — those
+      # checkouts would be wasted for the plugin module, so we restrict
+      # the init to the three the plugin actually builds.
+      - git submodule update --init
+          TMessagesProj_PluginTor/jni/libevent
+          TMessagesProj_PluginTor/jni/openssl
+          TMessagesProj_PluginTor/jni/tor
+      # Quiet the native build logs (CMake -DQUIET_BUILD=ON path).
+      # Plugin reads QUIET_NATIVE_BUILD via getProps() from
+      # rootProject.file('local.properties') — write to ../local.properties
+      # so it lands at repo root.
+      - echo 'QUIET_NATIVE_BUILD=true' >> ../local.properties
+      # MG_BUILD_TAG is load-bearing: gradle/mg-version.gradle derives
+      # MG_VERSION_NAME and MG_VERSION_CODE from it. The container build
+      # has no git tag, so the prebuild writes it explicitly. Replace
+      # <tag> with the same tag as `versionName` above. fdroid_sync.py
+      # appends this line automatically for every Builds entry added by
+      # the release pipeline. Write to ../gradle.properties (REPO ROOT):
+      # prebuild runs from <build>/<subdir>, and only root gradle.properties
+      # is merged into every subproject's property bag — so plugin's
+      # apply-from-mg-version.gradle sees MG_BUILD_TAG during a main build
+      # too, and vice versa. Subdir gradle.properties is only visible to
+      # the subproject that owns it.
+      - printf '\nMG_BUILD_TAG=<tag>\n' >> ../gradle.properties
+    output: TMessagesProj_PluginTor/build/outputs/apk/afatFdArm64/release/afatFdArm64.apk
+    ndk: 27.2.12479018  # keep in lockstep with TMessagesProj/build.gradle's ndkVersion
+
+# Placeholders — set from main recipe's CurrentVersion / CurrentVersionCode
+# at the time of each release sync (fdroid_sync.py handles this).
+CurrentVersion: 0.0.0.0
+CurrentVersionCode: 0
+
+# TODO(fdroid): confirm `subdir:` setting at first MR — the main recipe
+# uses `subdir: TMessagesProj_App` (gradle is invoked from there). For
+# the plugin, fdroidserver still runs gradle from the repo root, so
+# `subdir:` may want to be `TMessagesProj_PluginTor` or left unset; the
+# main recipe (which lives in fdroiddata, not in this repo) is the
+# canonical reference. Resolve before opening the MR.

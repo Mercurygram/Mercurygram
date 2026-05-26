@@ -19,3 +19,15 @@
 	url = https://github.com/tdlib/td
 	shallow = true
 	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/libevent"]
+	path = TMessagesProj_PluginTor/jni/libevent
+	url = https://github.com/libevent/libevent.git
+	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/tor"]
+	path = TMessagesProj_PluginTor/jni/tor
+	url = https://github.com/guardianproject/tor.git
+	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/openssl"]
+	path = TMessagesProj_PluginTor/jni/openssl
+	url = https://github.com/openssl/openssl.git
+	ignore = all

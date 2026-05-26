@@ -1286,4 +1286,25 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">تفعيل</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">الحساب %1$s عاد إلى الوضع القياسي — رفض الخادم العمر المخفض لمفتاح الجلسة.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">رفض الخادم العمر المخفض لمفتاح الجلسة لـ: %1$s. تستخدم هذه الحسابات المفتاح القياسي لمدة 24 ساعة. أوقف وأعد التفعيل للمحاولة مرة أخرى.</string>
+    <string name="MercurygramTorRespawnGaveUp">تعطّل Tor مرارًا. تم إيقاف إعادة التشغيل التلقائي — أوقف Tor ثم أعد تفعيله للمحاولة مرة أخرى.</string>
+    <string name="MercurygramTorPluginMissing">إضافة Tor غير مثبتة. ثبّتها لتفعيل Tor.</string>
+    <string name="MercurygramTor">استخدام Tor</string>
+    <string name="MercurygramTorAbout">يوجه حركة بروتوكول Telegram (MTProto) عبر خادم Tor مدمج لهزيمة التتبع السلبي لـ auth_key_id الذي يسمح لمشغلي الشبكة بربط حسابك بعنوان IP الحقيقي. تظل تنزيلات الوسائط وحركة HTTP الأخرى مباشرة للحفاظ على استجابة التطبيق. ينقطع Tor تلقائيًا عند خمول التطبيق لتوفير البطارية ويُشغَّل مرة أخرى عند الحاجة. قد تتأثر الميزات الحساسة لزمن الاستجابة (المكالمات)؛ ولا يزال Telegram يرى مخرج Tor.</string>
+    <string name="MercurygramTorProxyEntry">Tor (داخلي)</string>
+    <string name="MercurygramTorEnableTitle">استخدام Tor لـ Mercurygram؟</string>
+    <string name="MercurygramTorEnableMessage">سيشغل Mercurygram خادم Tor المدمج ويوجه حركة بروتوكول Telegram (MTProto) عبره. تظل تنزيلات الوسائط وحركة HTTP الأخرى مباشرة. يستغرق الإقلاع الأولي حوالي 10-30 ثانية. يتوقف Tor تلقائيًا عند خمول التطبيق لتوفير البطارية، ويعمل مجددًا عند الاستئناف أو وصول إشعار. متابعة؟</string>
+    <string name="MercurygramTorEnable">تفعيل</string>
+    <string name="MercurygramTorBootstrap">الاتصال عبر Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">إيقاف Tor بعد الخمول</string>
+    <string name="MercurygramTorIdleTimeoutOff">أبدًا (يبقى يعمل)</string>
+    <string name="MercurygramTorIdleTimeout1min">دقيقة واحدة</string>
+    <string name="MercurygramTorIdleTimeout5min">5 دقائق</string>
+    <string name="MercurygramTorIdleTimeout15min">15 دقيقة</string>
+    <string name="MercurygramTorIdleTimeout60min">ساعة واحدة</string>
+    <string name="MercurygramTorActiveProxyLocked">قم بإيقاف تشغيل Tor في إعدادات Mercurygram لاستخدام بروكسي مختلف.</string>
+    <string name="MercurygramTorInstallPlugin">تثبيت إضافة Tor</string>
+    <string name="MercurygramTorPluginDownloading">جارٍ تنزيل إضافة Tor…</string>
+    <string name="MercurygramTorPluginDownloadFailed">فشل تنزيل إضافة Tor. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="MercurygramTorPluginOutdated">يلزم تحديث إضافة Tor</string>
+    <string name="MercurygramTorPluginSignatureMismatch">إضافة Tor: عدم تطابق التوقيع — تم رفض الربط</string>
 </resources>

@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SharedConfig {
     /**
@@ -204,6 +205,46 @@ public class SharedConfig {
                 .putBoolean("mg_reduceTrackingFingerprint", reduceTrackingFingerprint)
                 .commit();
         applyReduceTrackingFingerprintToNative();
+    }
+
+    // Privacy-critical pref: commit() (synchronous). A crash between flip and
+    // disk write would leave mg_useTor=false on next launch, defeating the
+    // toggle and letting MTProto connect direct.
+    public static void toggleMgUseTor() {
+        mg_useTor = !mg_useTor;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_useTor", mg_useTor)
+                .commit();
+    }
+
+    public static void setMgTorIdleStopMinutes(int minutes) {
+        if (minutes < 0) minutes = 0;
+        int previous = mg_torIdleStopMinutes;
+        mg_torIdleStopMinutes = minutes;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putInt("mg_torIdleStopMinutes", minutes)
+                .apply();
+        if (previous == minutes) return;
+        try {
+            // The plugin caches idleStopMinutes from the bind-time push;
+            // without this AIDL re-push the user's new threshold doesn't
+            // reach the controller until the next bind cycle (e.g. plugin
+            // crash + recover), so 5→60 keeps killing tor at 5 minutes
+            // and 60→5 leaves it running for the longer window.
+            it.belloworld.mercurygram.tor.MgTorClient.getInstance().pushIdleStopMinutesIfBound();
+            // 0 → non-zero: idleCheck previously cancelled the ticker, so
+            // the new finite idle never fires without an explicit re-arm.
+            // pushAggregatedClientPaused has the side-effect of arming
+            // the ticker if any client is paused; no-ops when tor isn't
+            // running.
+            if (previous <= 0 && minutes > 0) {
+                it.belloworld.mercurygram.tor.MgTorClient.getInstance().resumeIdleTickerIfNeeded();
+            }
+        } catch (Throwable t) {
+            FileLog.e(t);
+        }
     }
 
     // Propagate the reduce-tracking flag to the native MTProto layer for every
@@ -413,6 +454,8 @@ public class SharedConfig {
 
     // Mercurygram: Privacy
     public static boolean reduceTrackingFingerprint = false;
+    public static boolean mg_useTor = false;
+    public static int mg_torIdleStopMinutes = 5;
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -595,6 +638,11 @@ public class SharedConfig {
         public boolean checking;
         public boolean available;
         public long availableCheckTime;
+        // MG: synthetic entry owned by MgTorController. Never serialized
+        // (saveProxyList skips), never user-editable/deletable, never
+        // tap-selectable in ProxyListActivity. Exists only so the in-bar
+        // proxy-active indicator shows while Tor routes MTProto.
+        public boolean mgInternal;
 
         public ProxyInfo(String address, int port, String username, String password, String secret) {
             this.address = address;
@@ -634,7 +682,15 @@ public class SharedConfig {
         }
     }
 
-    public static ArrayList<ProxyInfo> proxyList = new ArrayList<>();
+    // MG: CopyOnWriteArrayList rather than ArrayList. The MG Tor plugin
+    // mutates this list (publishMgInternalTorProxy / clearMgInternalTorProxy)
+    // from MgTorClient's worker thread + the binder callback hop, while
+    // ProxyListActivity / DialogsActivity / ProxyRotationController iterate
+    // it from the UI / stage thread. ArrayList would throw
+    // ConcurrentModificationException on coincident timing; CopyOnWrite
+    // gives lock-free snapshot iteration at the cost of an array copy per
+    // mutation (negligible — proxyList is typically <10 entries).
+    public static List<ProxyInfo> proxyList = new CopyOnWriteArrayList<>();
     private static boolean proxyListLoaded;
     public static ProxyInfo currentProxy;
 
@@ -707,6 +763,8 @@ public class SharedConfig {
                 editor.putBoolean("mg_disableAutoUpdate", disableAutoUpdate);
                 editor.putBoolean("mg_acceptPreReleaseUpdates", acceptPreReleaseUpdates);
                 editor.putBoolean("mg_reduceTrackingFingerprint", reduceTrackingFingerprint);
+                editor.putBoolean("mg_useTor", mg_useTor);
+                editor.putInt("mg_torIdleStopMinutes", mg_torIdleStopMinutes);
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -929,6 +987,8 @@ public class SharedConfig {
             acceptPreReleaseUpdates = preferences.getBoolean("mg_acceptPreReleaseUpdates", false);
             useSystemFont = preferences.getBoolean("mg_useSystemFont", false);
             reduceTrackingFingerprint = preferences.getBoolean("mg_reduceTrackingFingerprint", false);
+            mg_useTor = preferences.getBoolean("mg_useTor", false);
+            mg_torIdleStopMinutes = preferences.getInt("mg_torIdleStopMinutes", 5);
             migratePerAccountSettingsV1(preferences);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
@@ -1839,13 +1899,64 @@ public class SharedConfig {
             data.cleanup();
         }
         if (currentProxy == null && !TextUtils.isEmpty(proxyAddress)) {
+            // MG: never let a 127.0.0.1 proxy_ip materialize via the ad-hoc
+            // fallback. The only writers of 127.0.0.1 here are
+            // MgTorController (blocking stub port=1 before bootstrap, live
+            // ephemeral port after bootstrap) — both belong to the in-memory
+            // synthetic entry injected by publishMgInternalTorProxy(). Gating
+            // only on mg_useTor would still surface "127.0.0.1:1" as a real
+            // list entry if a crash landed between toggleMgUseTor(false)
+            // committing the flag and MgTorController.stop() committing
+            // proxy_enabled=false, wedging next launch on the dead stub with
+            // no UI affordance to clear it. Any legit user-added 127.0.0.1
+            // proxy lives in proxy_list (processed above) and is unaffected.
+            if ("127.0.0.1".equals(proxyAddress)) {
+                return;
+            }
             ProxyInfo info = currentProxy = new ProxyInfo(proxyAddress, proxyPort, proxyUsername, proxyPassword, proxySecret);
             proxyList.add(0, info);
         }
     }
 
+    // MG: invoked by MgTorController.onBootstrapReady once tor is at
+    // PROGRESS=100 and a live SOCKS port is persisted. Inserts a synthetic
+    // ProxyInfo into the in-memory proxyList (no persist) and sets
+    // currentProxy so ConnectionsManager.isProxyEnabled() returns true and
+    // LaunchActivity's drawer/proxy-active indicator updates. Idempotent.
+    public static ProxyInfo publishMgInternalTorProxy(int port) {
+        loadProxyList();
+        clearMgInternalTorProxy();
+        ProxyInfo info = new ProxyInfo("127.0.0.1", port, "", "", "");
+        info.mgInternal = true;
+        info.available = true;
+        proxyList.add(0, info);
+        currentProxy = info;
+        return info;
+    }
+
+    // MG: invoked by MgTorController.stop() / onDaemonExited(). Removes
+    // every mgInternal entry from the in-memory list. If currentProxy was
+    // the synthetic entry, clears it — the caller (snapshot restore) sets
+    // a real currentProxy if the user had one before enabling Tor.
+    public static void clearMgInternalTorProxy() {
+        for (int i = proxyList.size() - 1; i >= 0; i--) {
+            ProxyInfo info = proxyList.get(i);
+            if (info.mgInternal) {
+                if (currentProxy == info) currentProxy = null;
+                proxyList.remove(i);
+            }
+        }
+    }
+
     public static void saveProxyList() {
         List<ProxyInfo> infoToSerialize = new ArrayList<>(proxyList);
+        // MG: never persist MgTorController's synthetic entry — its address
+        // is the loopback stub and its port is the ephemeral SOCKS port
+        // (rebound per Tor session). Serializing would leave a stale entry
+        // in proxy_list JSON after every Tor restart.
+        for (int i = infoToSerialize.size() - 1; i >= 0; i--) {
+            if (infoToSerialize.get(i).mgInternal) infoToSerialize.remove(i);
+        }
         Collections.sort(infoToSerialize, (o1, o2) -> {
             long bias1 = SharedConfig.currentProxy == o1 ? -200000 : 0;
             if (!o1.available) {
