@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SHA-256 fingerprints of every signing key accepted by main's BIND
+    binding to the plugin. Referenced from AndroidManifest.xml as
+    android:knownCerts="@array/mg_known_main_certs".
+
+    Mercurygram is a dual-distribution app: GitHub (dev keystore) and
+    F-Droid (per-app key assigned by the F-Droid build server). Both
+    signing keys are declared in the F-Droid recipe's
+    AllowedAPKSigningKeys list — this array mirrors that list so the
+    OS-level BIND permission (signature|knownSigner on API 31+) accepts
+    a main app signed with either cert.
+
+    The plugin itself follows the same dual-distribution pattern; main's
+    runtime self-pin (MgTorClient.verifyPluginSignature) likewise
+    allowlists both fingerprints. Updating this array means updating the
+    pin allowlist in MgTorClient AND the F-Droid recipe's
+    AllowedAPKSigningKeys for both apps — all four entries are intended
+    to stay in lockstep.
+
+    On Android <12 the knownSigner protectionLevel doesn't exist; the OS
+    falls back to strict signature match. F-Droid main is therefore
+    incompatible with the plugin on pre-Android-12 devices — the Tor
+    toggle is hidden in that configuration.
+-->
+<resources>
+    <string-array name="mg_known_main_certs" translatable="false">
+        <!-- Developer keystore (GitHub releases + reproducible-built F-Droid APKs). -->
+        <item>1e73de100e2646be671afad2cb4bb471538e062a745ae5adbe6c7d1666fd1ee9</item>
+        <!-- F-Droid per-app key for it.belloworld.mercurygram. -->
+        <item>feb802f2f14cee16efd9fec5d809fa3bef7a2b349b989f816d42aad9c39ef77a</item>
+    </string-array>
+</resources>
