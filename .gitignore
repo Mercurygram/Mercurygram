@@ -8,6 +8,12 @@ TMessagesProj/.cxx/
 TMessagesProj/jniLibs/
 TMessagesProj/jniRes/
 TMessagesProj/jni.bak/
+# Pluggable-transport binaries built by jni/build_snowflake.sh / build_lyrebird.sh
+# into the plugin's jniLibs root (jni/<abi>/). Built from source, never committed.
+TMessagesProj_PluginTor/jni/arm64-v8a/
+TMessagesProj_PluginTor/jni/armeabi-v7a/
+TMessagesProj_PluginTor/jni/x86/
+TMessagesProj_PluginTor/jni/x86_64/
 **/.DS_Store
 TMessagesProj/afat/
 TMessagesProj_App/afat/

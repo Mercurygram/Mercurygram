@@ -768,6 +768,11 @@ public class ConnectionsManager extends BaseController {
                 appResumeCount = 0;
             }
         }
+        // MG: drive embedded tor daemon lifecycle off app foreground/background.
+        // Guarded by mg_useTor so the call is zero-cost when tor is off.
+        if (!byScreenState && SharedConfig.mg_useTor) {
+            it.belloworld.mercurygram.tor.MgTorClient.getInstance().onAppPausedChanged(currentAccount, appResumeCount);
+        }
         if (appResumeCount == 0) {
             if (lastPauseTime == 0) {
                 lastPauseTime = System.currentTimeMillis();
@@ -981,6 +986,8 @@ public class ConnectionsManager extends BaseController {
     }
 
     public static void setProxySettings(boolean enabled, String address, int port, String username, String password, String secret) {
+        // MG: Tor owns the single native proxy slot while mg_useTor is on.
+        if (it.belloworld.mercurygram.tor.MgTorClient.blocksProxyWrite(enabled, address, port)) return;
         if (address == null) {
             address = "";
         }
