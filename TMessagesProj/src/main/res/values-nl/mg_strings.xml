@@ -6,6 +6,7 @@
     <string name="MercurygramSettingsMedia">Media</string>
     <string name="MercurygramSettingsUpdates">Updates</string>
     <string name="MercurygramSettingsNotifications">Meldingen</string>
+    <string name="MercurygramSettingsPrivacy">Privacy</string>
     <string name="MercurygramMessageDetailsMenu">\"Berichtdetails\" tonen</string>
     <string name="MercurygramDisableAutoUpdate">In-app-updater uitschakelen</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram controleert bij het opstarten niet meer op updates op GitHub. Je kunt nog steeds handmatig controleren via de knop hieronder.</string>
@@ -35,6 +36,13 @@
     <string name="MercurygramEditHistoryRevision">Revisie %1$d van %2$d</string>
     <string name="MercurygramDisableUnifiedPush">UnifiedPush uitschakelen</string>
     <string name="MercurygramDisableUnifiedPushAbout">Wanneer uitgeschakeld ontvangt Mercurygram geen pushmeldingen meer. Bezorging op de achtergrond hangt dan af van Telegrams eigen verbinding: schakel Achtergrondverbinding of Keep-Alive-service in bij Instellingen → Meldingen en geluiden als je toch berichten wilt ontvangen terwijl de app gesloten is.</string>
+    <string name="MercurygramReduceTrackingFingerprint">Netwerktracking verminderen</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Vernieuwt de sessiesleutel elk uur in plaats van eens per dag. Maakt passieve correlatie van je apparaat moeilijker. De netwerkactiviteit op de achtergrond neemt iets toe.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">Netwerktracking verminderen?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">Mercurygram roteert de sessiesleutel elk uur in plaats van eens per dag. Dit maakt het moeilijker voor een passieve waarnemer op je netwerk om je apparaat te correleren, maar verbergt niet dat je Telegram gebruikt en verslaat geen verkeersanalyse (timing, volume, contacten). De eerste sessiesleutel bij een nieuwe login blijft één keer waarneembaar en de netwerkactiviteit op de achtergrond neemt iets toe. Doorgaan?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Inschakelen</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Account %1$s is teruggeschakeld naar de standaardmodus — de server weigerde de verkorte levensduur van de sessiesleutel.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">De server weigerde de verkorte levensduur van de sessiesleutel voor: %1$s. Deze accounts gebruiken de standaardsleutel van 24 uur. Schakel uit en weer in om opnieuw te proberen.</string>
     <string name="NtfyDefaultServerDisableUP">UnifiedPush uitschakelen</string>
     <string name="NtfyDefaultServerMessage">De standaard ntfy.sh-server heeft zeer lage snelheidslimieten en blokkeert Mercurygrams push-gateway. Pushmeldingen zullen niet betrouwbaar werken.</string>
     <string name="NtfyDefaultServerNoAlternative">Er zijn geen alternatieve distributeurs geïnstalleerd. UnifiedPush wordt uitgeschakeld. Je kunt het opnieuw inschakelen nadat je een compatibele distributeur met een zelf gehoste server hebt geïnstalleerd.</string>
