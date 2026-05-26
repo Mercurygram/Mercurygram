@@ -63,10 +63,20 @@ public class ProxyRotationController implements NotificationCenter.NotificationC
             return;
         }
 
+        // While the Tor toggle is ON, the synthetic mgInternal entry is the
+        // ONLY proxy MTProto may use — otherwise rotation could rank a
+        // user's leftover SOCKS5/MTProto-proxy entry above it by ping and
+        // silently switch off Tor while the "Use Tor" switch still reads
+        // ON. ProxyListActivity already blocks tap-select on non-mgInternal
+        // entries in this state; mirror the same invariant here.
+        if (SharedConfig.mg_useTor) {
+            return;
+        }
+
         List<SharedConfig.ProxyInfo> sortedList = new ArrayList<>(SharedConfig.proxyList);
         Collections.sort(sortedList, (o1, o2) -> Long.compare(o1.ping, o2.ping));
         for (SharedConfig.ProxyInfo info : sortedList) {
-            if (info == SharedConfig.currentProxy || info.checking || !info.available) {
+            if (info == SharedConfig.currentProxy || info.checking || !info.available || info.mgInternal) {
                 continue;
             }
 

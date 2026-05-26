@@ -44,6 +44,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_CHECK_FOR_UPDATES_NOW = 22;
     private static final int ID_UNIFIED_PUSH = 30;
     private static final int ID_REDUCE_TRACKING_FINGERPRINT = 40;
+    private static final int ID_TOR_SETTINGS = 41;
 
     @Override
     protected CharSequence getTitle() {
@@ -106,6 +107,16 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                     exhaustedNames);
         }
         items.add(UItem.asShadow(reduceAbout));
+
+        // Tor lives on its own screen so the proxy list can reach it too
+        // (that screen is available before login, where Settings is not).
+        if (!it.belloworld.mercurygram.tor.MgTorClient.isFdroidPreS()) {
+            items.add(UItem.asButton(ID_TOR_SETTINGS,
+                    LocaleController.getString(R.string.MercurygramTor),
+                    LocaleController.getString(SharedConfig.mg_useTor
+                            ? R.string.NotificationsOn : R.string.NotificationsOff)));
+            items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTorAbout)));
+        }
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
@@ -211,6 +222,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_REDUCE_TRACKING_FINGERPRINT:
                 handleReduceTrackingFingerprintClick();
                 break;
+            case ID_TOR_SETTINGS:
+                presentFragment(new MgTorSettingsActivity());
+                break;
         }
     }
 
@@ -273,23 +287,6 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         }
     }
 
-    private void confirmClearSavedHistory() {
-        Context context = getParentActivity();
-        if (context == null) {
-            return;
-        }
-        new AlertDialog.Builder(context)
-                .setTitle(LocaleController.getString(R.string.MercurygramClearSavedHistory))
-                .setMessage(LocaleController.getString(R.string.MercurygramClearSavedHistoryConfirm))
-                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
-                .setPositiveButton(LocaleController.getString(R.string.Delete), (dialog, which) -> {
-                    MgMessageHistory.getInstance().clearAll();
-                    refreshList();
-                })
-                .show();
-    }
-
-
     private void handleReduceTrackingFingerprintClick() {
         if (SharedConfig.reduceTrackingFingerprint) {
             SharedConfig.toggleReduceTrackingFingerprint();
@@ -340,5 +337,21 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             uc.mg.mgReducedTrackingExhausted = false;
             uc.saveConfig(false);
         }
+    }
+
+    private void confirmClearSavedHistory() {
+        Context context = getParentActivity();
+        if (context == null) {
+            return;
+        }
+        new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramClearSavedHistory))
+                .setMessage(LocaleController.getString(R.string.MercurygramClearSavedHistoryConfirm))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .setPositiveButton(LocaleController.getString(R.string.Delete), (dialog, which) -> {
+                    MgMessageHistory.getInstance().clearAll();
+                    refreshList();
+                })
+                .show();
     }
 }
