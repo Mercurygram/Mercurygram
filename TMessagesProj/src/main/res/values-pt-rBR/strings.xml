@@ -1253,6 +1253,7 @@
     <string name="MercurygramSettingsMedia">Mídia</string>
     <string name="MercurygramSettingsUpdates">Atualizações</string>
     <string name="MercurygramSettingsNotifications">Notificações</string>
+    <string name="MercurygramSettingsPrivacy">Privacidade</string>
     <string name="MercurygramMessageDetailsMenu">Mostrar \"Detalhes da mensagem\"</string>
     <string name="MercurygramDisableAutoUpdate">Desativar atualizador interno</string>
     <string name="MercurygramDisableAutoUpdateAbout">O Mercurygram não verificará mais atualizações no GitHub na inicialização. Você ainda pode iniciar uma verificação manual pelo botão abaixo.</string>
@@ -1284,4 +1285,11 @@
     <string name="MercurygramDisableUnifiedPushAbout">Quando desativado, o Mercurygram volta a sondar por novas mensagens. O aplicativo será reiniciado para aplicar a alteração.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">O Mercurygram precisa ser reiniciado para aplicar esta alteração. Continuar?</string>
     <string name="MercurygramRestart">Reiniciar</string>
+    <string name="MercurygramReduceTrackingFingerprint">Reduzir rastreamento de rede</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Atualiza a chave de sessão a cada hora em vez de uma vez por dia. Dificulta a correlação passiva do seu dispositivo. A atividade de rede em segundo plano aumentará um pouco.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">Reduzir rastreamento de rede?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">O Mercurygram rotacionará a chave de sessão a cada hora em vez de uma vez por dia. Isso dificulta para um observador passivo na sua rede correlacionar seu dispositivo, mas não esconde que você usa o Telegram e não impede análise de tráfego (tempo, volume, contatos). A primeira chave de sessão em um novo login ainda é observável uma vez e a atividade de rede em segundo plano aumentará um pouco. Continuar?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Ativar</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">A conta %1$s voltou ao modo padrão — o servidor rejeitou a duração reduzida da chave de sessão.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">O servidor rejeitou a duração reduzida da chave de sessão para: %1$s. Essas contas usam a chave padrão de 24h. Desative e reative para tentar novamente.</string>
 </resources>

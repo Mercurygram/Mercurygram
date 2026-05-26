@@ -71,6 +71,14 @@ public class UserConfig extends BaseController {
     public boolean messageDetailsMenu = false;
     public boolean disableLivePhotosByDefault = false;
     public boolean savedMessagesHistory = false;
+    // MG: the reduced temp-key TTL ladder (1h→6h→24h) exhausted on this
+    // account — server kept rejecting bindTempAuthKey, so native reduced
+    // mode was force-disabled here while the global SharedConfig toggle
+    // stays on (other accounts may still be running reduced mode). Surfaced
+    // as a footer under Settings → Mercurygram → Privacy so the user is
+    // not silently downgraded. Reset when the user re-enables the global
+    // toggle (off→on cycle).
+    public boolean mgReducedTrackingExhausted = false;
     public boolean hasSecureData;
     public int loginTime;
     public TLRPC.TL_help_termsOfService unacceptedTermsOfService;
@@ -178,6 +186,7 @@ public class UserConfig extends BaseController {
                     editor.putBoolean("messageDetailsMenu", messageDetailsMenu);
                     editor.putBoolean("disableLivePhotosByDefault", disableLivePhotosByDefault);
                     editor.putBoolean("savedMessagesHistory", savedMessagesHistory);
+                    editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
                     editor.putBoolean("hasSecureData", hasSecureData);
                     editor.putBoolean("notificationsSettingsLoaded4", notificationsSettingsLoaded);
                     editor.putBoolean("notificationsSignUpSettingsLoaded", notificationsSignUpSettingsLoaded);
@@ -337,6 +346,7 @@ public class UserConfig extends BaseController {
             messageDetailsMenu = preferences.getBoolean("messageDetailsMenu", false);
             disableLivePhotosByDefault = preferences.getBoolean("disableLivePhotosByDefault", false);
             savedMessagesHistory = preferences.getBoolean("savedMessagesHistory", false);
+            mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
             hasSecureData = preferences.getBoolean("hasSecureData", false);
             notificationsSettingsLoaded = preferences.getBoolean("notificationsSettingsLoaded4", false);
             notificationsSignUpSettingsLoaded = preferences.getBoolean("notificationsSignUpSettingsLoaded", false);
@@ -517,6 +527,7 @@ public class UserConfig extends BaseController {
         messageDetailsMenu = false;
         disableLivePhotosByDefault = false;
         savedMessagesHistory = false;
+        mgReducedTrackingExhausted = false;
         unreadDialogsLoaded = true;
         hasValidDialogLoadIds = true;
         unacceptedTermsOfService = null;
