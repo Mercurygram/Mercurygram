@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="MercurygramTorPluginAppName">Mercurygram Tor Plugin</string>
+    <string name="MercurygramTorPluginNotificationChannel">Tor</string>
+    <string name="MercurygramTorPluginNotificationTitle">Tor active</string>
+    <string name="MercurygramTorPluginNotificationBootstrap">Tor bootstrapping…</string>
+    <string name="MercurygramTorPluginNotificationReady">Tor ready</string>
+</resources>
