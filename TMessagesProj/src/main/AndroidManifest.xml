@@ -86,6 +86,11 @@
 
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
+    <!-- Plugin Tor companion (TMessagesProj_PluginTor). Signature-level
+         permission gates bindService against the IMgTorService.BIND action;
+         both APKs share the signing key by invariant. -->
+    <uses-permission android:name="it.belloworld.mercurygram.plugin.tor.BIND" />
+
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW"/>
@@ -98,6 +103,21 @@
         <intent>
             <action android:name="android.intent.action.INSTALL_PACKAGE"/>
         </intent>
+        <!-- Tor plugin Service visibility on API 30+. The intent-action form
+             covers every applicationId variant (.beta / .web debug suffixes)
+             without enumerating them. -->
+        <intent>
+            <action android:name="it.belloworld.mercurygram.plugin.tor.BIND" />
+        </intent>
+        <!-- Belt-and-braces: explicit <package> entries so
+             PackageManager.getPackageInfo(name, 0) succeeds even on Android
+             releases that tighten intent-action-based package visibility
+             (the intent block above resolves the Service via
+             queryIntentServices; a stricter future API revision could
+             require explicit declaration for plain getPackageInfo lookups
+             that MgTorClient.isPluginInstalled relies on). -->
+        <package android:name="it.belloworld.mercurygram.plugin.tor" />
+        <package android:name="it.belloworld.mercurygram.plugin.tor.beta" />
     </queries>
 
     <application
