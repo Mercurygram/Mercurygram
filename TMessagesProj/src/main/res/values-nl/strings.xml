@@ -1127,4 +1127,26 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Inschakelen</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Account %1$s is teruggeschakeld naar de standaardmodus — de server weigerde de verkorte levensduur van de sessiesleutel.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">De server weigerde de verkorte levensduur van de sessiesleutel voor: %1$s. Deze accounts gebruiken de standaardsleutel van 24 uur. Schakel uit en weer in om opnieuw te proberen.</string>
+    <string name="MercurygramTorRespawnGaveUp">Tor is herhaaldelijk gecrasht. Automatisch opnieuw starten gepauzeerd — schakel Tor uit en weer in om opnieuw te proberen.</string>
+    <string name="MercurygramTorPluginMissing">Tor-plug-in niet geïnstalleerd. Installeer deze om Tor in te schakelen.</string>
+    <string name="MercurygramTor">Tor gebruiken</string>
+    <string name="MercurygramTorAbout">Routeert het Telegram-protocolverkeer (MTProto) via een ingebouwde Tor-daemon om passieve auth_key_id-tracking te verslaan waarmee netwerkbeheerders je account aan je echte IP kunnen koppelen. Mediadownloads en ander HTTP-verkeer blijven direct zodat de app responsief blijft. Tor wordt automatisch losgekoppeld wanneer de app inactief is om batterij te besparen, en herstart wanneer nodig. Latency-gevoelige functies (oproepen) kunnen eronder lijden; Telegram ziet nog steeds de Tor-uitgang.</string>
+    <string name="MercurygramTorProxyEntry">Tor (intern)</string>
+    <string name="MercurygramTorEnableTitle">Tor voor Mercurygram gebruiken?</string>
+    <string name="MercurygramTorEnableMessage">Mercurygram start een ingebouwde Tor-daemon en routeert het Telegram-protocolverkeer (MTProto) hierdoor. Mediadownloads en ander HTTP-verkeer blijven direct. De eerste bootstrap duurt ~10–30 seconden. Tor stopt automatisch wanneer de app inactief is om batterij te besparen, en start opnieuw bij hervatten of als er een push binnenkomt. Doorgaan?</string>
+    <string name="MercurygramTorEnable">Inschakelen</string>
+    <string name="MercurygramTorBootstrap">Verbinden via Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">Tor stoppen na inactiviteit</string>
+    <string name="MercurygramTorIdleTimeoutOff">Nooit (blijft actief)</string>
+    <string name="MercurygramTorIdleTimeout1min">1 minuut</string>
+    <string name="MercurygramTorIdleTimeout5min">5 minuten</string>
+    <string name="MercurygramTorIdleTimeout15min">15 minuten</string>
+    <string name="MercurygramTorIdleTimeout60min">1 uur</string>
+    <string name="MercurygramTorActiveProxyLocked">Schakel Tor uit in de Mercurygram-instellingen om een andere proxy te gebruiken.</string>
+    <string name="MercurygramTorInstallPlugin">Tor-plug-in installeren</string>
+    <string name="MercurygramTorPluginDownloading">Tor-plug-in downloaden…</string>
+    <string name="MercurygramTorPluginDownloadFailed">Kan Tor-plug-in niet downloaden. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="MercurygramTorPluginOutdated">Tor-plug-in-update vereist</string>
+    <string name="MercurygramUpdateTorPlugin">Tor-plug-in bijwerken</string>
+    <string name="MercurygramTorPluginSignatureMismatch">Tor-plug-in: handtekening komt niet overeen — koppeling geweigerd</string>
 </resources>

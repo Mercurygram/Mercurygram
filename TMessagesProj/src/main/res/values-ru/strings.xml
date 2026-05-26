@@ -306,4 +306,26 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Включить</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Аккаунт %1$s вернулся в стандартный режим — сервер отклонил сокращённое время жизни ключа сессии.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Сервер отклонил сокращённое время жизни ключа сессии для: %1$s. Эти аккаунты используют стандартный ключ на 24 часа. Отключите и включите снова, чтобы повторить.</string>
+    <string name="MercurygramTorRespawnGaveUp">Tor многократно завершался с ошибкой. Автоперезапуск приостановлен — отключите и включите Tor, чтобы повторить попытку.</string>
+    <string name="MercurygramTorPluginMissing">Плагин Tor не установлен. Установите его, чтобы включить Tor.</string>
+    <string name="MercurygramTor">Использовать Tor</string>
+    <string name="MercurygramTorAbout">Маршрутизирует трафик протокола Telegram (MTProto) через встроенный демон Tor, чтобы победить пассивное отслеживание auth_key_id, позволяющее операторам сети связать ваш аккаунт с вашим реальным IP. Загрузки медиа и другой HTTP-трафик остаются прямыми, чтобы приложение оставалось отзывчивым. Tor автоматически отключается при простое приложения для экономии батареи и запускается снова при необходимости. Функции, чувствительные к задержкам (звонки), могут пострадать; Telegram по-прежнему видит выходной узел Tor.</string>
+    <string name="MercurygramTorProxyEntry">Tor (внутренний)</string>
+    <string name="MercurygramTorEnableTitle">Использовать Tor для Mercurygram?</string>
+    <string name="MercurygramTorEnableMessage">Mercurygram запустит встроенный демон Tor и направит трафик протокола Telegram (MTProto) через него. Загрузки медиа и другой HTTP-трафик остаются прямыми. Первичный bootstrap занимает ~10–30 секунд. Tor автоматически останавливается при простое приложения для экономии батареи и снова запускается при возобновлении или при получении push-уведомления. Продолжить?</string>
+    <string name="MercurygramTorEnable">Включить</string>
+    <string name="MercurygramTorBootstrap">Подключение через Tor… %1$d%%</string>
+    <string name="MercurygramTorIdleTimeout">Останавливать Tor после простоя</string>
+    <string name="MercurygramTorIdleTimeoutOff">Никогда (всегда активен)</string>
+    <string name="MercurygramTorIdleTimeout1min">1 минута</string>
+    <string name="MercurygramTorIdleTimeout5min">5 минут</string>
+    <string name="MercurygramTorIdleTimeout15min">15 минут</string>
+    <string name="MercurygramTorIdleTimeout60min">1 час</string>
+    <string name="MercurygramTorActiveProxyLocked">Отключите Tor в настройках Mercurygram, чтобы использовать другой прокси.</string>
+    <string name="MercurygramTorInstallPlugin">Установить плагин Tor</string>
+    <string name="MercurygramTorPluginDownloading">Загрузка плагина Tor…</string>
+    <string name="MercurygramTorPluginDownloadFailed">Не удалось загрузить плагин Tor. Проверьте подключение и повторите попытку.</string>
+    <string name="MercurygramTorPluginOutdated">Требуется обновление плагина Tor</string>
+    <string name="MercurygramUpdateTorPlugin">Обновить плагин Tor</string>
+    <string name="MercurygramTorPluginSignatureMismatch">Плагин Tor: несоответствие подписи — подключение отклонено</string>
 </resources>
