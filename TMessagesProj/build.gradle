@@ -240,6 +240,10 @@ android {
     }
 
     namespace 'org.telegram.messenger'
+
+    buildFeatures {
+        aidl = true
+    }
 }
 
 
