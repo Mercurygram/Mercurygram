@@ -21,6 +21,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UnifiedPushReceiver;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.RadioColorCell;
@@ -57,6 +58,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_UNIFIED_PUSH_DISTRIBUTOR = 31;
     private static final int ID_UNIFIED_PUSH_GATEWAY = 32;
     private static final int ID_REDUCE_TRACKING_FINGERPRINT = 40;
+    private static final int ID_USE_TOR = 41;
+    private static final int ID_TOR_IDLE_TIMEOUT = 42;
+    private static final int ID_UPDATE_TOR_PLUGIN = 43;
 
     @Override
     protected CharSequence getTitle() {
@@ -121,6 +125,50 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                     exhaustedNames);
         }
         items.add(UItem.asShadow(reduceAbout));
+
+        // F-Droid main on pre-Android-12 can't bind the plugin (plugin's
+        // BIND permission uses knownSigner, API 31+ only); skip the row
+        // entirely rather than show a toggle that would never work.
+        if (!it.belloworld.mercurygram.tor.MgTorClient.isFdroidPreS()) {
+            items.add(UItem.asCheck(ID_USE_TOR, LocaleController.getString(R.string.MercurygramTor))
+                    .setChecked(SharedConfig.mg_useTor));
+            if (SharedConfig.mg_useTor) {
+                items.add(UItem.asButton(ID_TOR_IDLE_TIMEOUT,
+                        LocaleController.getString(R.string.MercurygramTorIdleTimeout),
+                        idleTimeoutLabel(SharedConfig.mg_torIdleStopMinutes)));
+            }
+            // Manual plugin update/repair (mirrors the main "Check for updates
+            // now" button). Shown whenever the plugin is installed on the
+            // GitHub channel; F-Droid drives plugin updates from its catalog so
+            // the row is hidden there. Subtitle reflects freshness from disk.
+            if (it.belloworld.mercurygram.tor.MgTorClient.isPluginInstalled()
+                    && !MgUpdateChecker.isFdroidBuild()) {
+                // "needs update" = hard floor breach (blocks binding) OR soft
+                // versionName drift. Including the floor breach guarantees this
+                // repair row offers the install when handleUseTorClick refuses
+                // to bind, even in a tag layout where the breach doesn't show
+                // up as plain versionName drift.
+                boolean pluginNeedsUpdate =
+                        it.belloworld.mercurygram.tor.MgTorClient.isPluginUpdateRequired()
+                        || it.belloworld.mercurygram.tor.MgTorClient.isPluginUpdateAvailable();
+                String pluginSubtitle = pluginNeedsUpdate
+                        ? LocaleController.getString(R.string.MercurygramTorPluginOutdated)
+                        : LocaleController.getString(R.string.YourVersionIsLatest);
+                items.add(UItem.asButton(ID_UPDATE_TOR_PLUGIN,
+                        LocaleController.getString(R.string.MercurygramUpdateTorPlugin),
+                        pluginSubtitle));
+            }
+            String torAbout = LocaleController.getString(R.string.MercurygramTorAbout);
+            // Surface the unavailable-lib state so the user understands why an
+            // enable tap toasts an error instead of starting bootstrap. Hidden
+            // when mg_useTor=true (the toggle UI itself reflects the live state,
+            // and bailOutUnavailable already flipped the flag off if the lib is
+            // missing on this build).
+            if (!SharedConfig.mg_useTor && !it.belloworld.mercurygram.tor.MgTorClient.isPluginInstalled()) {
+                torAbout = torAbout + "\n\n" + LocaleController.getString(R.string.MercurygramTorPluginMissing);
+            }
+            items.add(UItem.asShadow(torAbout));
+        }
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
@@ -242,6 +290,27 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_REDUCE_TRACKING_FINGERPRINT:
                 handleReduceTrackingFingerprintClick();
                 break;
+            case ID_USE_TOR:
+                handleUseTorClick();
+                break;
+            case ID_TOR_IDLE_TIMEOUT:
+                handleTorIdleTimeoutClick();
+                break;
+            case ID_UPDATE_TOR_PLUGIN:
+                if (it.belloworld.mercurygram.tor.MgTorClient.isPluginUpdateRequired()
+                        || it.belloworld.mercurygram.tor.MgTorClient.isPluginUpdateAvailable()) {
+                    // runPluginInstall shows its own delayed spinner and toasts
+                    // MercurygramTorPluginDownloadFailed on error.
+                    MgUpdateChecker.runPluginInstall(this::getParentActivity);
+                } else {
+                    Activity parent = getParentActivity();
+                    if (parent != null) {
+                        Toast.makeText(parent,
+                                LocaleController.getString(R.string.YourVersionIsLatest),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
         }
     }
 
@@ -289,6 +358,338 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         TextView positive = (TextView) dialog.getButton(DialogInterface.BUTTON_POSITIVE);
         if (positive != null) {
             positive.setTextColor(getThemedColor(Theme.key_text_RedBold));
+        }
+    }
+
+    private void handleUseTorClick() {
+        Context context = getParentActivity();
+        if (context == null) return;
+        if (SharedConfig.mg_useTor) {
+            SharedConfig.toggleMgUseTor();
+            // stop() blocks up to 5s on daemon.join + 2s on the control-port
+            // SIGNAL SHUTDOWN write. Dispatch via globalQueue so the UI
+            // thread never sees an ANR; globalQueue also serializes against
+            // start() so a rapid off/on toggle from another caller (resume,
+            // push wake) cannot race the in-flight shutdown.
+            Utilities.globalQueue.postRunnable(() ->
+                    it.belloworld.mercurygram.tor.MgTorClient.getInstance().stop());
+            refreshList();
+            return;
+        }
+        // Proactive compatibility gate: if an installed plugin sits below
+        // the AIDL/security floor (MgTorClient.MIN_PLUGIN_MG_VERSION_CODE),
+        // force the update BEFORE binding. This is a disk-only check, so it
+        // catches a plugin too stale to even bind — relying on the bind to
+        // discover the version would be fragile across an AIDL break. The
+        // toggle stays OFF; the user updates, returns, and re-enables.
+        // (Plugin absent → isPluginUpdateRequired() is false; the
+        // PLUGIN_NOT_INSTALLED install flow below still handles install.)
+        if (it.belloworld.mercurygram.tor.MgTorClient.isPluginUpdateRequired()) {
+            promptInstallOrUpdatePlugin(context,
+                    it.belloworld.mercurygram.tor.MgTorClient.State.PLUGIN_OUTDATED);
+            return;
+        }
+        // No pre-check on isAvailable(): pre-bind the state is always
+        // PLUGIN_NOT_INSTALLED, which would short-circuit every legitimate
+        // first-toggle attempt. The bootstrap dialog's onState listener
+        // surfaces PLUGIN_NOT_INSTALLED / OUTDATED / SIGNATURE_MISMATCH if
+        // the bind that userInitiatedStart kicks off actually fails.
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramTorEnableTitle))
+                .setMessage(LocaleController.getString(R.string.MercurygramTorEnableMessage))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .setPositiveButton(LocaleController.getString(R.string.MercurygramTorEnable),
+                        (d, which) -> {
+                            // Snapshot the user's pre-existing proxy entry
+                            // BEFORE start() publishes the blocking stub —
+                            // restored from stop() on toggle-off so the
+                            // user's SOCKS5 / MTProto-proxy config isn't
+                            // silently destroyed by the Tor cycle.
+                            it.belloworld.mercurygram.tor.MgTorClient.snapshotCurrentProxy();
+                            SharedConfig.toggleMgUseTor();
+                            // userInitiatedStart routes through the plugin's
+                            // start() path. The plugin deliberately does NOT
+                            // reset unexpectedRespawnCount on a user toggle —
+                            // a flapping daemon could otherwise burn battery
+                            // as resume / push wake-ups keep clearing the
+                            // budget. The cap auto-resets on a successful
+                            // onBootstrapReady, so a prior session that hit
+                            // "respawn gave up" still gets one fresh attempt
+                            // per toggle-on (state==STOPPED → start runs
+                            // once); a re-crash trips the cap again until
+                            // the plugin process is reclaimed.
+                            Utilities.globalQueue.postRunnable(() ->
+                                    it.belloworld.mercurygram.tor.MgTorClient.getInstance().userInitiatedStart());
+                            refreshList();
+                            showTorBootstrapDialog();
+                        })
+                .create();
+        // Positive button stays default-themed: enabling Tor is a privacy
+        // enhancement, not a destructive or data-loss action. The Telegram
+        // convention reserves the red emphasis for destructive paths
+        // (Log out, Delete chat, Disable encryption) and Mercurygram's
+        // toggle-off branch above flips mg_useTor without a confirm dialog,
+        // so the activate dialog is the only Tor confirm flow — no need
+        // to flag it as cautionary in red.
+        showDialog(dialog);
+    }
+
+    private void showTorBootstrapDialog() {
+        Context context = getParentActivity();
+        if (context == null) return;
+        TextView body = new TextView(context);
+        body.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        body.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        body.setText(LocaleController.formatString("MercurygramTorBootstrap",
+                R.string.MercurygramTorBootstrap, 0));
+        // Tracks whether the dismiss was user-explicit (Cancel button, back
+        // press, tap-outside) versus passive (activity recreate on rotation,
+        // OOM kill, fragment teardown). Passive dismisses must NOT flip the
+        // toggle off — that would silently revert mg_useTor whenever an
+        // unrelated event killed the dialog during the 10–30 s cold bootstrap.
+        final java.util.concurrent.atomic.AtomicBoolean userCancelled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramTor))
+                .setView(body)
+                .setNegativeButton(LocaleController.getString(R.string.Cancel),
+                        (d, which) -> userCancelled.set(true))
+                .create();
+        // Fires for back press AND tap-outside (default cancelable=true) —
+        // both are user-explicit. Does NOT fire when dismiss() is called for
+        // other reasons (activity destruction, ready/abort programmatic
+        // dismiss), so it cleanly separates "user said no" from "the window
+        // went away on its own".
+        dialog.setOnCancelListener(d -> userCancelled.set(true));
+        final AtomicReference<it.belloworld.mercurygram.tor.MgTorClient.ProgressListener> selfRef = new AtomicReference<>();
+        // Flips true once onReady fires; dismiss before that with userCancelled
+        // also true is treated as a user-initiated cancel and tears tor down +
+        // flips the toggle back off so the user is not silently left on a
+        // half-bootstrapped state.
+        final java.util.concurrent.atomic.AtomicBoolean ready = new java.util.concurrent.atomic.AtomicBoolean(false);
+        // Stops the user-initiated-cancel branch from also firing the
+        // settings-side toggle-off path (which itself dispatches stop()).
+        final java.util.concurrent.atomic.AtomicBoolean abortHandled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        it.belloworld.mercurygram.tor.MgTorClient.ProgressListener listener =
+                new it.belloworld.mercurygram.tor.MgTorClient.ProgressListener() {
+                    @Override
+                    public void onState(it.belloworld.mercurygram.tor.MgTorClient.State state) {
+                        // Plugin missing / wrong-sig / outdated → drive the
+                        // install-or-update flow. Without this branch the
+                        // dialog would hang on "0%" forever because the
+                        // controller never reaches onProgress / onReady /
+                        // onFailed; PLUGIN_NOT_INSTALLED arrives only via
+                        // onState.
+                        if (state != it.belloworld.mercurygram.tor.MgTorClient.State.PLUGIN_NOT_INSTALLED
+                                && state != it.belloworld.mercurygram.tor.MgTorClient.State.PLUGIN_OUTDATED
+                                && state != it.belloworld.mercurygram.tor.MgTorClient.State.PLUGIN_SIGNATURE_MISMATCH) {
+                            return;
+                        }
+                        abortHandled.set(true);
+                        final it.belloworld.mercurygram.tor.MgTorClient.State pluginState = state;
+                        AndroidUtilities.runOnUIThread(() -> {
+                            it.belloworld.mercurygram.tor.MgTorClient.getInstance().removeProgressListener(selfRef.get());
+                            try { dialog.dismiss(); } catch (Throwable ignored) {}
+                            // Roll the user's mg_useTor flip back: nothing is
+                            // routing traffic, the prior proxy snapshot needs
+                            // restoring, and silently leaving mg_useTor=true
+                            // would re-attempt the bind on every cold start.
+                            if (SharedConfig.mg_useTor) {
+                                SharedConfig.toggleMgUseTor();
+                            }
+                            Utilities.globalQueue.postRunnable(() ->
+                                    it.belloworld.mercurygram.tor.MgTorClient.getInstance().stop());
+                            refreshList();
+                            promptInstallOrUpdatePlugin(context, pluginState);
+                        });
+                    }
+                    @Override
+                    public void onProgress(int percent, String tag, String summary) {
+                        AndroidUtilities.runOnUIThread(() -> body.setText(
+                                LocaleController.formatString("MercurygramTorBootstrap",
+                                        R.string.MercurygramTorBootstrap, percent)));
+                    }
+                    @Override
+                    public void onReady(int socksPort) {
+                        ready.set(true);
+                        AndroidUtilities.runOnUIThread(() -> {
+                            it.belloworld.mercurygram.tor.MgTorClient.getInstance().removeProgressListener(selfRef.get());
+                            try { dialog.dismiss(); } catch (Throwable ignored) {}
+                        });
+                    }
+                    @Override
+                    public void onFailed(String reason) {
+                        // onBootstrapFailed in the controller already posts
+                        // stop() to globalQueue and re-pins the blocking stub.
+                        // Mark the abort as handled so the dismiss listener
+                        // below doesn't double-dispatch a redundant stop().
+                        abortHandled.set(true);
+                        AndroidUtilities.runOnUIThread(() -> {
+                            it.belloworld.mercurygram.tor.MgTorClient.getInstance().removeProgressListener(selfRef.get());
+                            try { dialog.dismiss(); } catch (Throwable ignored) {}
+                            Toast.makeText(context, reason != null ? reason : "tor failed", Toast.LENGTH_LONG).show();
+                        });
+                    }
+                };
+        selfRef.set(listener);
+        it.belloworld.mercurygram.tor.MgTorClient.getInstance().addProgressListener(listener);
+        dialog.setOnDismissListener(d -> {
+            it.belloworld.mercurygram.tor.MgTorClient.getInstance().removeProgressListener(listener);
+            if (ready.get() || abortHandled.get()) return;
+            // Passive dismiss (activity recreate on rotation, fragment
+            // teardown, system OOM): keep mg_useTor on and let the
+            // controller's existing lifecycle drive bootstrap to completion
+            // in the background. setOnCancelListener / the Cancel button
+            // flip userCancelled iff the user truly opted out.
+            if (!userCancelled.get()) return;
+            // User dismissed (Cancel / tap-outside / back) before bootstrap
+            // completed. Treat as opt-out: flip the toggle, tear down the
+            // half-up daemon. Going through globalQueue keeps stop() off the
+            // UI thread (5s daemon.join + 2s control-port shutdown).
+            if (SharedConfig.mg_useTor) {
+                SharedConfig.toggleMgUseTor();
+            }
+            Utilities.globalQueue.postRunnable(() ->
+                    it.belloworld.mercurygram.tor.MgTorClient.getInstance().stop());
+            refreshList();
+        });
+        showDialog(dialog);
+    }
+
+    private void promptInstallOrUpdatePlugin(Context context,
+                                             it.belloworld.mercurygram.tor.MgTorClient.State state) {
+        int msgRes;
+        switch (state) {
+            case PLUGIN_OUTDATED:
+                msgRes = R.string.MercurygramTorPluginOutdated;
+                break;
+            case PLUGIN_SIGNATURE_MISMATCH:
+                msgRes = R.string.MercurygramTorPluginSignatureMismatch;
+                break;
+            case PLUGIN_NOT_INSTALLED:
+            default:
+                msgRes = R.string.MercurygramTorInstallPlugin;
+                break;
+        }
+        // Signature mismatch isn't fixable by installing — fall back to a
+        // dismissible alert without an "Install" action.
+        AlertDialog.Builder b = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramTor))
+                .setMessage(LocaleController.getString(msgRes));
+        if (state == it.belloworld.mercurygram.tor.MgTorClient.State.PLUGIN_SIGNATURE_MISMATCH) {
+            b.setPositiveButton(LocaleController.getString(R.string.OK), null);
+        } else {
+            b.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+            b.setPositiveButton(LocaleController.getString(R.string.MercurygramTorInstallPlugin),
+                    (d, which) -> {
+                        // F-Droid channel: the plugin APK on F-Droid is signed
+                        // with a different cert and there's no in-app GitHub
+                        // path on that flavor — bounce to the F-Droid page.
+                        if (MgUpdateChecker.isFdroidBuild()) {
+                            try {
+                                context.startActivity(
+                                        it.belloworld.mercurygram.tor.MgTorClient.getInstance().buildPluginInstallIntent());
+                            } catch (Throwable ignored) {}
+                            return;
+                        }
+                        MgUpdateChecker.runPluginInstall(this::getParentActivity);
+                    });
+        }
+        showDialog(b.create());
+    }
+
+    private void handleTorIdleTimeoutClick() {
+        Context context = getParentActivity();
+        if (context == null) return;
+        final int[] choices = {0, 1, 5, 15, 60};
+        AtomicReference<Dialog> dialogRef = new AtomicReference<>();
+        LinearLayout linearLayout = new LinearLayout(context);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        int current = SharedConfig.mg_torIdleStopMinutes;
+        for (int i = 0; i < choices.length; i++) {
+            final int minutes = choices[i];
+            RadioColorCell cell = new RadioColorCell(context);
+            cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
+            cell.setCheckColor(Theme.getColor(Theme.key_radioBackground),
+                    Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
+            cell.setTextAndValue(idleTimeoutLabel(minutes), minutes == current);
+            cell.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL));
+            linearLayout.addView(cell);
+            cell.setOnClickListener(v -> {
+                SharedConfig.setMgTorIdleStopMinutes(minutes);
+                refreshList();
+                Dialog d = dialogRef.get();
+                if (d != null) d.dismiss();
+            });
+        }
+        Dialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramTorIdleTimeout))
+                .setView(linearLayout)
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .create();
+        dialogRef.set(dialog);
+        showDialog(dialog);
+    }
+
+    private static String idleTimeoutLabel(int minutes) {
+        switch (minutes) {
+            case 0: return LocaleController.getString(R.string.MercurygramTorIdleTimeoutOff);
+            case 1: return LocaleController.getString(R.string.MercurygramTorIdleTimeout1min);
+            case 5: return LocaleController.getString(R.string.MercurygramTorIdleTimeout5min);
+            case 15: return LocaleController.getString(R.string.MercurygramTorIdleTimeout15min);
+            case 60: return LocaleController.getString(R.string.MercurygramTorIdleTimeout60min);
+            default: return Integer.toString(minutes);
+        }
+    }
+
+    private void handleReduceTrackingFingerprintClick() {
+        if (SharedConfig.reduceTrackingFingerprint) {
+            SharedConfig.toggleReduceTrackingFingerprint();
+            refreshList();
+            return;
+        }
+        Context context = getParentActivity();
+        if (context == null) {
+            return;
+        }
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningTitle))
+                .setMessage(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningMessage))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .setPositiveButton(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintEnable),
+                        (d, which) -> {
+                            // Fresh enable cycle: clear any stale per-account
+                            // exhaustion flag so the footer doesn't shame the
+                            // user with a result from a prior cycle. Native
+                            // ladder state is already cleared by the toggle's
+                            // setReducedTempKeyMode(false→true) path.
+                            clearReducedTrackingExhaustedFlags();
+                            SharedConfig.toggleReduceTrackingFingerprint();
+                            refreshList();
+                        })
+                .create();
+        showDialog(dialog);
+    }
+
+    private static String collectExhaustedAccountNames() {
+        StringBuilder sb = null;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig uc = UserConfig.getInstance(a);
+            if (!uc.isClientActivated() || !uc.mgReducedTrackingExhausted) continue;
+            String name = uc.getCurrentUser() != null
+                    ? org.telegram.messenger.UserObject.getFirstName(uc.getCurrentUser())
+                    : "#" + (a + 1);
+            if (sb == null) sb = new StringBuilder(name);
+            else sb.append(", ").append(name);
+        }
+        return sb == null ? null : sb.toString();
+    }
+
+    private static void clearReducedTrackingExhaustedFlags() {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig uc = UserConfig.getInstance(a);
+            if (!uc.mgReducedTrackingExhausted) continue;
+            uc.mgReducedTrackingExhausted = false;
+            uc.saveConfig(false);
         }
     }
 
@@ -410,57 +811,5 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                     refreshList();
                 })
                 .show();
-    }
-
-    private void handleReduceTrackingFingerprintClick() {
-        if (SharedConfig.reduceTrackingFingerprint) {
-            SharedConfig.toggleReduceTrackingFingerprint();
-            refreshList();
-            return;
-        }
-        Context context = getParentActivity();
-        if (context == null) {
-            return;
-        }
-        AlertDialog dialog = new AlertDialog.Builder(context)
-                .setTitle(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningTitle))
-                .setMessage(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintWarningMessage))
-                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
-                .setPositiveButton(LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintEnable),
-                        (d, which) -> {
-                            // Fresh enable cycle: clear any stale per-account
-                            // exhaustion flag so the footer doesn't shame the
-                            // user with a result from a prior cycle. Native
-                            // ladder state is already cleared by the toggle's
-                            // setReducedTempKeyMode(false→true) path.
-                            clearReducedTrackingExhaustedFlags();
-                            SharedConfig.toggleReduceTrackingFingerprint();
-                            refreshList();
-                        })
-                .create();
-        showDialog(dialog);
-    }
-
-    private static String collectExhaustedAccountNames() {
-        StringBuilder sb = null;
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            UserConfig uc = UserConfig.getInstance(a);
-            if (!uc.isClientActivated() || !uc.mgReducedTrackingExhausted) continue;
-            String name = uc.getCurrentUser() != null
-                    ? org.telegram.messenger.UserObject.getFirstName(uc.getCurrentUser())
-                    : "#" + (a + 1);
-            if (sb == null) sb = new StringBuilder(name);
-            else sb.append(", ").append(name);
-        }
-        return sb == null ? null : sb.toString();
-    }
-
-    private static void clearReducedTrackingExhaustedFlags() {
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            UserConfig uc = UserConfig.getInstance(a);
-            if (!uc.mgReducedTrackingExhausted) continue;
-            uc.mgReducedTrackingExhausted = false;
-            uc.saveConfig(false);
-        }
     }
 }
