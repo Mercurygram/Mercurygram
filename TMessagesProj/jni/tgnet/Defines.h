@@ -156,6 +156,12 @@ typedef struct ConnectiosManagerDelegate {
     virtual void onPremiumFloodWait(int32_t instanceNum, int32_t requestToken, bool isUpload) = 0;
     virtual void onIntegrityCheckClassic(int32_t instanceNum, int32_t requestToken, std::string project, std::string nonce) = 0;
     virtual void onCaptchaCheck(int32_t instanceNum, int32_t requestToken, std::string action, std::string key_id) = 0;
+    // MG: fired when the reduced-temp-key TTL ladder exhausts (server rejected
+    // even the upstream 24h default). Java side must clear SharedConfig
+    // .reduceTrackingFingerprint so the toggle UI, CDN refusal path, and
+    // network-change rotator stop emitting further work that would re-trigger
+    // the same loop.
+    virtual void onReducedTempKeyExhausted(int32_t instanceNum) = 0;
 } ConnectiosManagerDelegate;
 
 typedef struct HandshakeDelegate {

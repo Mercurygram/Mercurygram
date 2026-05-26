@@ -6,6 +6,7 @@
     <string name="MercurygramSettingsMedia">الوسائط</string>
     <string name="MercurygramSettingsUpdates">التحديثات</string>
     <string name="MercurygramSettingsNotifications">الإشعارات</string>
+    <string name="MercurygramSettingsPrivacy">الخصوصية</string>
     <string name="MercurygramMessageDetailsMenu">إظهار \"تفاصيل الرسالة\"</string>
     <string name="MercurygramDisableAutoUpdate">تعطيل المُحدِّث داخل التطبيق</string>
     <string name="MercurygramDisableAutoUpdateAbout">لن يتحقق Mercurygram بعد الآن من التحديثات على GitHub عند بدء التشغيل. لا يزال بإمكانك تشغيل فحص يدوي من الزر أدناه.</string>
@@ -35,6 +36,13 @@
     <string name="MercurygramEditHistoryRevision">المراجعة %1$d من %2$d</string>
     <string name="MercurygramDisableUnifiedPush">تعطيل UnifiedPush</string>
     <string name="MercurygramDisableUnifiedPushAbout">عند تعطيله، يتوقف Mercurygram عن تلقي إشعارات الدفع. عندئذ يعتمد التسليم في الخلفية على اتصال Telegram نفسه: فعّل «الاتصال في الخلفية» أو «خدمة Keep-Alive» في الإعدادات ← الإشعارات والأصوات إن كنت لا تزال تريد الرسائل والتطبيق مغلق.</string>
+    <string name="MercurygramReduceTrackingFingerprint">تقليل تتبع الشبكة</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">يحدّث مفتاح الجلسة كل ساعة بدلاً من مرة واحدة يومياً. يجعل الارتباط السلبي لجهازك أصعب. سيزداد نشاط الشبكة في الخلفية قليلاً.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">تقليل تتبع الشبكة؟</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">سيقوم Mercurygram بتدوير مفتاح الجلسة كل ساعة بدلاً من مرة واحدة يومياً. هذا يجعل من الصعب على مراقب سلبي في شبكتك ربط جهازك، ولكنه لا يخفي أنك تستخدم Telegram ولا يهزم تحليل حركة المرور (التوقيت، الحجم، جهات الاتصال). لا يزال مفتاح الجلسة الأول عند تسجيل دخول جديد قابلاً للمراقبة مرة واحدة، وسيزداد نشاط الشبكة في الخلفية قليلاً. متابعة؟</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">تفعيل</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">الحساب %1$s عاد إلى الوضع القياسي — رفض الخادم العمر المخفض لمفتاح الجلسة.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">رفض الخادم العمر المخفض لمفتاح الجلسة لـ: %1$s. تستخدم هذه الحسابات المفتاح القياسي لمدة 24 ساعة. أوقف وأعد التفعيل للمحاولة مرة أخرى.</string>
     <string name="NtfyDefaultServerDisableUP">تعطيل UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">خادم ntfy.sh الافتراضي لديه حدود معدل منخفضة جدًا ويحظر بوابة الدفع الخاصة بـ Mercurygram. لن تعمل إشعارات الدفع بشكل موثوق.</string>
     <string name="NtfyDefaultServerNoAlternative">لا توجد موزّعات بديلة مثبَّتة. سيتم تعطيل UnifiedPush. يمكنك إعادة تفعيله بعد تثبيت موزّع متوافق يستخدم خادمًا ذاتي الاستضافة.</string>
