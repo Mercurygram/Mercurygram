@@ -84,6 +84,127 @@ jobs:
           name: apk-${{ matrix.abi }}
           path: ${{ steps.build.outputs.apk_path }}
 
+  # Tor plugin companion APK — per-ABI Release build of
+  # :TMessagesProj_PluginTor. Same MG_BUILD_TAG (github.ref_name) and same
+  # signing key as main; per-ABI versionCode offsets match the main app via
+  # gradle/mg-version.gradle. Inline (not build-mg) because build-mg hardcodes
+  # the TMessagesProj_App output directory in its rename step.
+  build-plugin:
+    runs-on: ubuntu-24.04
+    needs: prewarm-native
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: afatFdArm32
+            abi: armeabi-v7a
+          - flavor: afatFdArm64
+            abi: arm64-v8a
+          - flavor: afatFdX86
+            abi: x86
+          - flavor: afatFdX86_64
+            abi: x86_64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Install host build tools
+        # autoconf/automake/libtool/pkg-config: jni/build_libevent.sh and
+        # jni/build_tor.sh invoke ./autogen.sh on the libevent/tor submodules
+        # (which ship only configure.ac, not configure).
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            gperf meson libuv1-dev nasm cmake \
+            autoconf automake libtool pkg-config
+
+      - name: Parse NDK and build-tools versions from gradle
+        run: |
+          gradle_file=TMessagesProj/build.gradle
+          ndk=$(grep -oE 'ndkVersion[[:space:]]+"[0-9.]+"' "$gradle_file" | grep -oE '[0-9.]+')
+          bt=$(grep -oE "buildToolsVersion[[:space:]]+'[0-9.]+'" "$gradle_file" | grep -oE '[0-9.]+')
+          [ -n "$ndk" ] && [ -n "$bt" ] || { echo "could not parse versions from $gradle_file" >&2; exit 1; }
+          echo "NDK_VERSION=$ndk"          >> "$GITHUB_ENV"
+          echo "BUILD_TOOLS_VERSION=$bt"   >> "$GITHUB_ENV"
+
+      - name: Ensure NDK and build-tools installed
+        run: |
+          set -euo pipefail
+          ndk_dir="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}"
+          bt_dir="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
+          if [ -f "$ndk_dir/source.properties" ] && [ -d "$bt_dir" ]; then
+            echo "ndk + build-tools already present (runner image)"
+            exit 0
+          fi
+          ok=0
+          for i in 1 2 3; do
+            if "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+                "ndk;${NDK_VERSION}" "build-tools;${BUILD_TOOLS_VERSION}"; then
+              ok=1
+              break
+            fi
+            rm -rf "$ndk_dir" "$bt_dir"
+            sleep $((i * 10))
+          done
+          [ "$ok" = 1 ] || { echo "sdkmanager exhausted retries" >&2; exit 1; }
+
+      - name: Create API_KEYS
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_HASH: ${{ secrets.APP_HASH }}
+        run: printf 'APP_ID = %s\nAPP_HASH = %s\n' "$APP_ID" "$APP_HASH" > API_KEYS
+
+      - name: Setup signing
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE }}
+        run: echo "$KEYSTORE_B64" | base64 -d > TMessagesProj/config/release.keystore
+
+      - name: Build plugin APK
+        env:
+          KS_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KS_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KS_KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          BUILD_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          ./gradlew ":TMessagesProj_PluginTor:assemble${{ matrix.flavor }}Release" \
+              -PRELEASE_STORE_PASSWORD="$KS_PASS" \
+              -PRELEASE_KEY_PASSWORD="$KS_KEY_PASS" \
+              -PRELEASE_KEY_ALIAS="$KS_KEY_ALIAS" \
+              -PMG_BUILD_TAG="$BUILD_TAG" \
+              --no-daemon
+
+      - name: Rename plugin artifact
+        id: rename
+        run: |
+          set -euo pipefail
+          APK_DIR=TMessagesProj_PluginTor/build/outputs/apk/${{ matrix.flavor }}/release
+          DEST="$APK_DIR/Mercurygram-tor-plugin-${{ github.ref_name }}-${{ matrix.abi }}.apk"
+          cp "$APK_DIR/${{ matrix.flavor }}.apk" "$DEST"
+          echo "APK: ${DEST}"
+          echo "Size: $(du -h "$DEST" | cut -f1) ($(stat -c%s "$DEST") bytes)"
+          echo "SHA256: $(sha256sum "$DEST" | cut -d' ' -f1)"
+          echo "apk_path=${DEST}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload plugin APK artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apk-plugin-tor-${{ matrix.abi }}
+          path: ${{ steps.rename.outputs.apk_path }}
+
   changelog:
     runs-on: ubuntu-24.04
     permissions:
@@ -305,7 +426,7 @@ jobs:
 
   release:
     runs-on: ubuntu-24.04
-    needs: [build, changelog, verify-mark]
+    needs: [build, build-plugin, changelog, verify-mark]
     permissions:
       contents: write
 
@@ -334,6 +455,7 @@ jobs:
     needs: release
     env:
       APPID: it.belloworld.mercurygram
+      PLUGIN_APPID: it.belloworld.mercurygram.plugin.tor
       BRANCH: mercurygram-${{ github.ref_name }}
     concurrency:
       group: fdroiddata-sync-${{ github.ref }}
@@ -382,26 +504,44 @@ jobs:
         run: |
           "$HOME/fdroid-venv/bin/python3" \
             ../mercurygram/.github/scripts/fdroid_sync.py \
+            --app=both \
             "$GITHUB_REF_NAME" ../apks . ../mercurygram
 
       - name: Commit and push branch
         working-directory: fdroiddata
         run: |
+          set -euo pipefail
           git add "metadata/$APPID.yml" "metadata/$APPID/signatures/"
-          git commit -m "$APPID: update to ${GITHUB_REF_NAME}"
+          # Plugin recipe may not be in fdroiddata yet (initial MR pending);
+          # fdroid_sync.py already skips it cleanly. Only stage + name it in
+          # the commit if it actually exists in this checkout.
+          msg="$APPID: update to ${GITHUB_REF_NAME}"
+          if [ -f "metadata/$PLUGIN_APPID.yml" ]; then
+            git add "metadata/$PLUGIN_APPID.yml" "metadata/$PLUGIN_APPID/signatures/"
+            msg="$APPID, $PLUGIN_APPID: update to ${GITHUB_REF_NAME}"
+          fi
+          git commit -m "$msg"
           git push --force-with-lease -u origin "$BRANCH"
 
       - name: Open merge request
+        working-directory: fdroiddata
         env:
           GITLAB_TOKEN: ${{ secrets.FDROIDDATA_GITLAB_TOKEN }}
         run: |
+          set -euo pipefail
+          # Title mirrors the commit message: name only the recipes that were
+          # actually synced (plugin omitted until its recipe is upstreamed).
+          title="$APPID: update to ${GITHUB_REF_NAME}"
+          if [ -f "metadata/$PLUGIN_APPID.yml" ]; then
+            title="$APPID, $PLUGIN_APPID: update to ${GITHUB_REF_NAME}"
+          fi
           SRC_PID=$(curl -sf --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             'https://gitlab.com/api/v4/projects/drizzt%2Ffdroiddata' \
             | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
           curl -sf --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             --data-urlencode "source_branch=$BRANCH" \
             --data-urlencode 'target_branch=master' \
-            --data-urlencode "title=$APPID: update to ${GITHUB_REF_NAME}" \
+            --data-urlencode "title=$title" \
             --data-urlencode 'target_project_id=36528' \
             --data-urlencode 'remove_source_branch=true' \
             "https://gitlab.com/api/v4/projects/${SRC_PID}/merge_requests" \
