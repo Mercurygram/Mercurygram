@@ -222,6 +222,74 @@ public class SharedConfig {
         AndroidUtilities.clearTypefaceCache();
     }
 
+    // Privacy-critical pref: commit() (synchronous). A crash between flip and
+    // disk write would silently revert the toggle and let MTProto fall back to
+    // the upstream 24h TTL + CDN-allowed path on next launch, defeating the
+    // mitigation the user just enabled.
+    public static void toggleReduceTrackingFingerprint() {
+        reduceTrackingFingerprint = !reduceTrackingFingerprint;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_reduceTrackingFingerprint", reduceTrackingFingerprint)
+                .commit();
+        applyReduceTrackingFingerprintToNative();
+    }
+
+    // Propagate the reduce-tracking flag to the native MTProto layer for every
+    // account: changes TEMP_AUTH_KEY_EXPIRE_TIME between the upstream 24h
+    // default and the reduced 1h (with a ladder fallback inside native), and
+    // rotates current temp keys immediately so the change takes effect on
+    // both enable AND disable. On enable, rotation swaps in 1h-TTL keys
+    // straight away; on disable, rotation discards the still-live short-TTL
+    // keys so the user sees the upstream behavior immediately rather than
+    // up to 1h later when the existing key would naturally expire.
+    public static void applyReduceTrackingFingerprintToNative() {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            // Per-iteration guard so a failure on account N (e.g. native
+            // init not yet complete, ConnectionsManager singleton race)
+            // doesn't abort the loop and leave accounts N+1..MAX with
+            // stale native state while the SharedConfig flag shows enabled.
+            try {
+                org.telegram.tgnet.ConnectionsManager cm = org.telegram.tgnet.ConnectionsManager.getInstance(a);
+                cm.setReducedTempKeyMode(reduceTrackingFingerprint);
+                if (UserConfig.getInstance(a).isClientActivated()) {
+                    cm.rotateTempAuthKeys();
+                }
+            } catch (Throwable t) {
+                FileLog.e(t);
+            }
+        }
+    }
+
+    // One-shot per BuildVars.BUILD_VERSION_STRING: clear any account's
+    // mgReducedTrackingExhausted=true so a transient server-side issue from a
+    // previous release doesn't permanently lock the user at the upstream 24h
+    // TTL with a permanent exhausted-accounts footer. The native ladder index
+    // is reset to 0 on the next applyReduceTrackingFingerprintToNative() call
+    // anyway, so this is purely UX state. Idempotent across cold starts.
+    // Called from ApplicationLoader.startApplication() after per-account
+    // loadConfig() so the in-memory fields reflect on-disk truth.
+    public static void maybeClearReducedTrackingExhaustedOnUpgrade() {
+        SharedPreferences prefs = ApplicationLoader.applicationContext
+                .getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+        String currentBuild = BuildVars.BUILD_VERSION_STRING;
+        if (currentBuild == null) return;
+        String lastSeen = prefs.getString("mg_lastExhaustedClearedBuild", null);
+        if (currentBuild.equals(lastSeen)) return;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            try {
+                UserConfig uc = UserConfig.getInstance(a);
+                if (uc.mg.mgReducedTrackingExhausted) {
+                    uc.mg.mgReducedTrackingExhausted = false;
+                    uc.saveConfig(false);
+                }
+            } catch (Throwable t) {
+                FileLog.e(t);
+            }
+        }
+        prefs.edit().putString("mg_lastExhaustedClearedBuild", currentBuild).apply();
+    }
+
     public static void setUnifiedPushGateway(String gateway) {
         unifiedPushGateway = gateway;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
@@ -375,6 +443,9 @@ public class SharedConfig {
     // above) apart from a fresh opt-in that has never been on a prerelease.
     public static String mgLastPreReleaseTag = "";
     public static boolean useSystemFont = false;
+
+    // Mercurygram: Privacy
+    public static boolean reduceTrackingFingerprint = false;
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -607,6 +678,7 @@ public class SharedConfig {
         editor.putBoolean("mg_disableAutoUpdate", disableAutoUpdate);
         editor.putBoolean("mg_acceptPreReleaseUpdates", acceptPreReleaseUpdates);
         editor.putString("mg_lastPreReleaseTag", mgLastPreReleaseTag);
+        editor.putBoolean("mg_reduceTrackingFingerprint", reduceTrackingFingerprint);
         editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -640,6 +712,7 @@ public class SharedConfig {
         acceptPreReleaseUpdates = preferences.getBoolean("mg_acceptPreReleaseUpdates", false);
         mgLastPreReleaseTag = preferences.getString("mg_lastPreReleaseTag", "");
         useSystemFont = preferences.getBoolean("mg_useSystemFont", false);
+        reduceTrackingFingerprint = preferences.getBoolean("mg_reduceTrackingFingerprint", false);
         migratePerAccountSettingsV1(preferences);
         String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
         if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
