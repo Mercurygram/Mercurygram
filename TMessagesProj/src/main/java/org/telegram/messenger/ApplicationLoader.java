@@ -258,6 +258,10 @@ public class ApplicationLoader extends Application {
                 SendMessagesHelper.getInstance(a).checkUnsentMessages();
             }
         }
+        // After per-account loadConfig: clear any stale mgReducedTrackingExhausted
+        // flag on app upgrade so a transient server rejection from a prior
+        // release doesn't permanently lock the user at the upstream 24h TTL.
+        SharedConfig.maybeClearReducedTrackingExhaustedOnUpgrade();
 
         ApplicationLoader app = (ApplicationLoader) ApplicationLoader.applicationContext;
         app.initPushServices();
@@ -353,6 +357,8 @@ public class ApplicationLoader extends Application {
         LauncherIconController.tryFixLauncherIconIfNeeded();
         ProxyRotationController.init();
 
+        it.belloworld.mercurygram.MgNetworkChangeWatcher.init(applicationContext);
+        SharedConfig.applyReduceTrackingFingerprintToNative();
         //if (BuildConfig.DEBUG_PRIVATE_VERSION) {
         //    Choreographer60FpsContent.getInstance().addFrameCallback(debugEverySecondChecks, 1);
         //}
