@@ -10790,6 +10790,7 @@
     <string name="MercurygramSettingsMedia">Media</string>
     <string name="MercurygramSettingsUpdates">Updates</string>
     <string name="MercurygramSettingsNotifications">Notifications</string>
+    <string name="MercurygramSettingsPrivacy">Privacy</string>
     <string name="MercurygramMessageDetailsMenu">Show \"Message Details\"</string>
     <string name="MercurygramDisableAutoUpdate">Disable in-app updater</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram will no longer check for updates on GitHub at startup. You can still trigger a manual check from the button below.</string>
@@ -10821,6 +10822,13 @@
     <string name="MercurygramDisableUnifiedPushAbout">When disabled, Mercurygram falls back to polling for new messages. The app will restart to apply the change.</string>
     <string name="MercurygramUnifiedPushRestartConfirm">Mercurygram needs to restart to apply this change. Continue?</string>
     <string name="MercurygramRestart">Restart</string>
+    <string name="MercurygramReduceTrackingFingerprint">Reduce network tracking</string>
+    <string name="MercurygramReduceTrackingFingerprintAbout">Refreshes the session key every hour instead of once a day. Makes passive correlation of your device harder. Background network activity will be slightly higher.</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningTitle">Reduce network tracking?</string>
+    <string name="MercurygramReduceTrackingFingerprintWarningMessage">Mercurygram will rotate the session key every hour instead of once a day. This makes it harder for a passive observer on your network to correlate your device, but does not hide that you use Telegram and does not defeat traffic analysis (timing, volume, contacts). The first session key on a fresh login is still observable once, and background network activity will be slightly higher. Continue?</string>
+    <string name="MercurygramReduceTrackingFingerprintEnable">Enable</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Account %1$s reverted to standard mode — server rejected the reduced session-key lifetime.</string>
+    <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Server rejected the reduced session-key lifetime for: %1$s. Those accounts use the standard 24h key. Turn off and on to retry.</string>
 
     <string name="PollV2ShowWhoVoted">Show Who Voted</string>
     <string name="PollV2ShowWhoVotedInfo">Display voter name on each option</string>
