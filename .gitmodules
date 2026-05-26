@@ -46,3 +46,28 @@
 	url = https://github.com/tdlib/td
 	shallow = true
 	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/libevent"]
+	path = TMessagesProj_PluginTor/jni/libevent
+	url = https://github.com/libevent/libevent.git
+	shallow = true
+	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/tor"]
+	path = TMessagesProj_PluginTor/jni/tor
+	url = https://github.com/guardianproject/tor.git
+	shallow = true
+	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/openssl"]
+	path = TMessagesProj_PluginTor/jni/openssl
+	url = https://github.com/openssl/openssl.git
+	shallow = true
+	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/snowflake"]
+	path = TMessagesProj_PluginTor/jni/snowflake
+	url = https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake.git
+	shallow = true
+	ignore = all
+[submodule "TMessagesProj_PluginTor/jni/lyrebird"]
+	path = TMessagesProj_PluginTor/jni/lyrebird
+	url = https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird.git
+	shallow = true
+	ignore = all
