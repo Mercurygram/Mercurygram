@@ -59,6 +59,12 @@ private:
     int32_t authKeyPendingRequestId = 0;
     int64_t authKeyPendingMessageId = 0;
     bool needResendData = false;
+    // MG: cached at the time req_DH_params is sent so the later
+    // bindTempAuthKey uses the same TTL value, even if the reduced-mode
+    // ladder bumps the global effective TTL between the two reads. Stale
+    // /dirty mismatch causes the server to reject with
+    // ENCRYPTED_MESSAGE_INVALID and loop.
+    int32_t tempKeyExpireInSecs = 0;
 
     void sendRequestData(TLObject *object, bool important);
     void sendAckRequest(int64_t messageId);
