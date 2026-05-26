@@ -77,12 +77,60 @@
 #   scripts/check-reproducibility.sh verify-build arm64-v8a HEAD -o /tmp/fdroid-arm64.apk
 #   scripts/check-reproducibility.sh verify-diff /tmp/gradle.apk /tmp/fdroid-arm64.apk
 #
+# Multi-app: every sub-command accepts `--app=main|plugin.tor` (default main).
+# Position the flag anywhere — it's consumed before positional parsing. Each
+# app has its own fdroiddata recipe (metadata/<appid>.yml) and signature tree;
+# both share the same afatFd* gradle flavors and per-ABI versionCode offsets.
+#   scripts/check-reproducibility.sh --app=plugin.tor determinism HEAD
+#   scripts/check-reproducibility.sh --app=plugin.tor verify-build arm64-v8a HEAD -o /tmp/p.apk
+#
 # Requires: podman, git, network. Heavy: full native build x2 (determinism)
 # or x1 (verify / verify-build). verify-diff is fast (~1 min).
 
 set -euo pipefail
 
-APPID=it.belloworld.mercurygram
+# --app=main|plugin.tor — selects which Mercurygram APK family this run
+# determinism-checks / verifies. Parsed before positional-arg handling so
+# `mode="${1:-determinism}"` still picks up the mode after --app is consumed.
+# Default `main` keeps the pre-plugin-split CLI (`scripts/check-reproducibility.sh
+# determinism HEAD`, etc.) and the existing reproducible.yml workflow working
+# unchanged. Both AppIDs share the same afatFd* flavor offsets — only the
+# AppID, gradle module, and recipe path differ per app.
+MG_APP=main
+_filtered_args=()
+for _arg in "$@"; do
+    case "$_arg" in
+        --app=*)
+            MG_APP="${_arg#--app=}"
+            ;;
+        *)
+            _filtered_args+=("$_arg")
+            ;;
+    esac
+done
+set -- "${_filtered_args[@]+"${_filtered_args[@]}"}"
+unset _filtered_args _arg
+
+case "$MG_APP" in
+    main)
+        APPID=it.belloworld.mercurygram
+        GRADLE_MODULE=':TMessagesProj_App'
+        ;;
+    plugin.tor)
+        APPID=it.belloworld.mercurygram.plugin.tor
+        GRADLE_MODULE=':TMessagesProj_PluginTor'
+        ;;
+    *)
+        echo "error: --app must be one of: main, plugin.tor (got '$MG_APP')" >&2
+        exit 2
+        ;;
+esac
+
+# Output APK filename is identical between modules (afatFd<ABI>.apk — see
+# the applicationVariants block in both build.gradle files). GRADLE_MODULE
+# is informational here: fdroidserver drives the build via the recipe's
+# `gradle:` flavor list + the recipe's gradle command in `build:`, not via
+# a direct gradlew invocation from this script.
 # The image fdroiddata CI builds apps in (.gitlab-ci.yml).
 BUILDSERVER_IMAGE="${BUILDSERVER_IMAGE:-registry.gitlab.com/fdroid/fdroidserver:buildserver-trixie}"
 FDROIDDATA_RAW="${FDROIDDATA_RAW:-https://gitlab.com/fdroid/fdroiddata/-/raw/master}"
@@ -326,12 +374,18 @@ last['commit'] = sha
 last['ndk'] = ndk
 last['versionCode'] = new_vc
 last.pop('disable', None)  # recipe template may carry a disable from a broken release
+# libevent + tor autogen.sh need autotools (aclocal/automake/autoconf/
+# libtoolize) + pkg-config; live recipe sudo: block lacks them.
+AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
+sudo_list = last.setdefault('sudo', [])
+if AUTOTOOLS_LINE not in sudo_list:
+    sudo_list.append(AUTOTOOLS_LINE)
 if build_tag:
     # Append (don't replace): preserve the recipe's existing prebuild
     # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
     # break the in-container gradle build at TMessagesProj/build.gradle.
     last.setdefault('prebuild', []).append(
-        f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> gradle.properties"
+        f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> ../gradle.properties"
     )
 with open(recipe, 'w') as f:
     yaml.safe_dump(m, f, sort_keys=False, default_flow_style=False)
@@ -380,12 +434,18 @@ last['commit'] = sha
 last['ndk'] = ndk
 last['versionCode'] = new_vc
 last.pop('disable', None)
+# libevent + tor autogen.sh need autotools (aclocal/automake/autoconf/
+# libtoolize) + pkg-config; live recipe sudo: block lacks them.
+AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
+sudo_list = last.setdefault('sudo', [])
+if AUTOTOOLS_LINE not in sudo_list:
+    sudo_list.append(AUTOTOOLS_LINE)
 if build_tag:
     # Append (don't replace): preserve the recipe's existing prebuild
     # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
     # break the in-container gradle build at TMessagesProj/build.gradle.
     last.setdefault('prebuild', []).append(
-        f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> gradle.properties"
+        f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> ../gradle.properties"
     )
 with open(recipe, 'w') as f:
     yaml.safe_dump(m, f, sort_keys=False, default_flow_style=False)
@@ -417,12 +477,18 @@ last['commit'] = sha
 last['versionCode'] = vc
 last['ndk'] = ndk
 last.pop('disable', None)
+# libevent + tor autogen.sh need autotools (aclocal/automake/autoconf/
+# libtoolize) + pkg-config; live recipe sudo: block lacks them.
+AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
+sudo_list = last.setdefault('sudo', [])
+if AUTOTOOLS_LINE not in sudo_list:
+    sudo_list.append(AUTOTOOLS_LINE)
 if build_tag:
     # Append (don't replace): preserve the recipe's existing prebuild
     # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
     # break the in-container gradle build at TMessagesProj/build.gradle.
     last.setdefault('prebuild', []).append(
-        f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> gradle.properties"
+        f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> ../gradle.properties"
     )
 with open(recipe, 'w') as f:
     yaml.dump(data, f, sort_keys=False)

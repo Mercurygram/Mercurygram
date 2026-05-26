@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
+import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
@@ -16,9 +17,12 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.ui.ActionBar.AlertDialog;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -45,6 +49,7 @@ public class MgUpdateChecker {
 
     private static Boolean isFdroidBuildCached = null;
     private static final AtomicBoolean isDownloading = new AtomicBoolean(false);
+    private static final AtomicBoolean isDownloadingPlugin = new AtomicBoolean(false);
 
     public interface ProgressCallback {
         void onProgress(long downloaded, long total);
@@ -345,6 +350,102 @@ public class MgUpdateChecker {
         });
     }
 
+    /**
+     * In-app Tor plugin install. Mirrors {@link #downloadUpdate} but:
+     *  - Resolves the asset URL by convention from the current main tag —
+     *    main + plugin share MG_BUILD_TAG release-for-release (see AGENTS.md
+     *    "Tor plugin"). No GitHub API call needed.
+     *  - Reuses {@link #verifyApkSignature}: plugin APK is signed with the
+     *    same keystore as main on the GitHub channel (signing-key invariant),
+     *    so MG_CERT_SHA256 matches.
+     *  - Writes to cache/mg_tor_plugin.apk, not mg_update.apk, so a
+     *    concurrent main updater download can't clobber and so a later
+     *    main installUpdate(...) doesn't accidentally install the plugin.
+     * F-Droid channel callers must gate on {@link #isFdroidBuild()} before
+     * calling — F-Droid plugin is signed with a different cert; this method
+     * also short-circuits as a safety net.
+     */
+    public static void downloadPlugin(ProgressCallback callback) {
+        if (!isDownloadingPlugin.compareAndSet(false, true)) {
+            // Concurrent in-flight download (e.g. Settings-initiated and
+            // cold-start prompt both fire): tell the new caller so its
+            // progress UI dismisses instead of spinning forever.
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Already downloading"));
+            return;
+        }
+        if (isFdroidBuild()) {
+            isDownloadingPlugin.set(false);
+            AndroidUtilities.runOnUIThread(() -> callback.onError("F-Droid channel"));
+            return;
+        }
+        if (Build.SUPPORTED_ABIS.length == 0) {
+            isDownloadingPlugin.set(false);
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Unsupported ABI"));
+            return;
+        }
+        final String tag = currentInstallVersion();
+        if (tag == null || tag.isEmpty()) {
+            isDownloadingPlugin.set(false);
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Unknown current version"));
+            return;
+        }
+        final String abi = Build.SUPPORTED_ABIS[0];
+        final String url = "https://github.com/Mercurygram/Mercurygram/releases/download/"
+                + tag + "/Mercurygram-tor-plugin-" + tag + "-" + abi + ".apk";
+
+        Utilities.globalQueue.postRunnable(() -> {
+            HttpURLConnection conn = null;
+            try {
+                File cacheDir = new File(ApplicationLoader.getFilesDirFixed(), "cache");
+                if (!cacheDir.exists()) cacheDir.mkdirs();
+                File apkFile = new File(cacheDir, "mg_tor_plugin.apk");
+
+                conn = (HttpURLConnection) new URL(url).openConnection();
+                conn.setInstanceFollowRedirects(true);
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(30000);
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode != 200) {
+                    final int rc = responseCode;
+                    AndroidUtilities.runOnUIThread(() -> callback.onError("HTTP " + rc));
+                    return;
+                }
+
+                long total = conn.getContentLength();
+                InputStream is = new BufferedInputStream(conn.getInputStream());
+                FileOutputStream fos = new FileOutputStream(apkFile);
+                byte[] buf = new byte[8192];
+                long downloaded = 0;
+                int len;
+                final long totalFinal = total;
+                while ((len = is.read(buf)) != -1) {
+                    fos.write(buf, 0, len);
+                    downloaded += len;
+                    final long dl = downloaded;
+                    AndroidUtilities.runOnUIThread(() -> callback.onProgress(dl, totalFinal));
+                }
+                fos.close();
+                is.close();
+
+                if (!verifyApkSignature(apkFile)) {
+                    apkFile.delete();
+                    AndroidUtilities.runOnUIThread(() -> callback.onError("Signature verification failed"));
+                    return;
+                }
+
+                final File result = apkFile;
+                AndroidUtilities.runOnUIThread(() -> callback.onComplete(result));
+            } catch (Exception e) {
+                FileLog.e(e);
+                AndroidUtilities.runOnUIThread(() -> callback.onError(e.getMessage()));
+            } finally {
+                isDownloadingPlugin.set(false);
+                if (conn != null) conn.disconnect();
+            }
+        });
+    }
+
     public static void cancelDownload() {
         // The download thread checks isDownloading; setting to false won't interrupt
         // but the next checkForUpdates won't start a new one
@@ -396,6 +497,90 @@ public class MgUpdateChecker {
             if (f.exists()) return f;
         }
         return null;
+    }
+
+    /**
+     * In-app Tor plugin install ceremony shared by all entry points
+     * (Settings → Tor toggle and the cold-start mismatch prompt): shows
+     * a spinner (320ms delayed so a fast 404 doesn't flash), downloads
+     * the per-ABI plugin APK from the GitHub release, verifies its
+     * signature, then hands the APK to {@link #installUpdate} for the
+     * PackageInstaller intent. On error, toasts MercurygramTorPluginDownloadFailed.
+     *
+     * <p>{@code activitySource} is invoked lazily inside each callback
+     * so a long-running download doesn't pin a destroyed Activity into
+     * the lambda's closure; pass {@code fragment::getParentActivity} or
+     * a similar accessor that returns null once the host detaches.
+     */
+    public static void runPluginInstall(java.util.function.Supplier<Activity> activitySource) {
+        Activity initial = activitySource != null ? activitySource.get() : null;
+        if (initial == null) return;
+        final AlertDialog progress = new AlertDialog(initial, AlertDialog.ALERT_TYPE_SPINNER);
+        progress.setMessage(LocaleController.getString(R.string.MercurygramTorPluginDownloading));
+        progress.setCanCancel(false);
+        progress.showDelayed(320);
+        downloadPlugin(new ProgressCallback() {
+            @Override public void onProgress(long downloaded, long total) {}
+            @Override public void onComplete(File apkFile) {
+                try { progress.dismiss(); } catch (Throwable ignored) {}
+                Activity a = activitySource.get();
+                if (a != null && !a.isFinishing() && !a.isDestroyed()) {
+                    installUpdate(a, apkFile);
+                }
+            }
+            @Override public void onError(String error) {
+                try { progress.dismiss(); } catch (Throwable ignored) {}
+                Activity a = activitySource.get();
+                if (a != null && !a.isFinishing() && !a.isDestroyed()) {
+                    Toast.makeText(a,
+                            LocaleController.getString(R.string.MercurygramTorPluginDownloadFailed),
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    // Tag of the plugin APK currently installed under `pluginPkg`, or
+    // null when no such package is installed. Like main, the plugin's
+    // versionName is its build tag verbatim (gradle/mg-version.gradle
+    // applies to both modules).
+    public static String installedPluginVersion(String pluginPkg) {
+        if (pluginPkg == null) return null;
+        try {
+            PackageInfo pi = ApplicationLoader.applicationContext.getPackageManager()
+                    .getPackageInfo(pluginPkg, 0);
+            return pi.versionName;
+        } catch (PackageManager.NameNotFoundException nf) {
+            return null;
+        } catch (Exception e) {
+            FileLog.e(e);
+            return null;
+        }
+    }
+
+    // True iff the plugin is installed and strictly behind main's
+    // current tag. Main and plugin share MG_BUILD_TAG release-for-release
+    // on the GitHub channel — a versionName drift catches a same-
+    // MG_VERSION_CODE bump like 12.7.3.2.7 → 12.7.3.2.8 (4th component
+    // unchanged, only the 5th K moved, so versionCode is identical
+    // between main and a stale plugin). The compare is direction-aware
+    // (vector lex compare via versionUpToDate) so a developer running an
+    // ahead-of-main plugin isn't nagged to roll back. Returns false when
+    // either tag fails toVersionVector — that includes the
+    // currentInstallVersion() fallback to BuildVars.BUILD_VERSION_STRING
+    // (3-dotted upstream form, e.g. "12.7.3") on PM exception, which
+    // would otherwise produce a false-positive against any 4/5-dotted
+    // plugin tag. F-Droid channel returns false: the plugin's catalog
+    // drives its own update cadence and the signing certs differ so the
+    // in-app download path is not authoritative there anyway.
+    public static boolean isPluginOutdated(String pluginPkg) {
+        if (isFdroidBuild()) return false;
+        String installed = installedPluginVersion(pluginPkg);
+        if (installed == null) return false;
+        String main = currentInstallVersion();
+        if (toVersionVector(main) == null) return false;
+        if (toVersionVector(installed) == null) return false;
+        return !versionUpToDate(installed, main);
     }
 
     // Returns the tag of the currently installed APK. versionName is set
