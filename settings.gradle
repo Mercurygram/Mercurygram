@@ -1,6 +1,7 @@
 include ':TMessagesProj'
 include ':TMessagesProj_App'
 include ':TMessagesProj_AppTests'
+include ':TMessagesProj_PluginTor'
 
 // Since 12.10.0 TMessagesProj depends on `project(':jlatexmath')`, which lives
 // in the TMessagesProj/lib/jlatexmath submodule. Upstream never declares the

@@ -1,0 +1,10 @@
+Tor companion plugin for Mercurygram.
+
+It runs the Tor daemon in a background service and exposes a local SOCKS5
+proxy, which Mercurygram uses to carry MTProto traffic over the Tor network
+when the "Use Tor" option is enabled.
+
+The plugin ships separately so that the Tor binaries and the geoip databases,
+about 25 MB per architecture, are only downloaded by the people who actually
+use them. It has no user interface and does nothing on its own: without
+Mercurygram installed, nothing ever asks it to start.
