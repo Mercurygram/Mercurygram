@@ -165,30 +165,63 @@ public class UnifiedPushReceiver extends PushService {
             }
         }
 
-        // Fallback: wake up the app to fetch updates via MTProto
+        // Fallback: wake up the app to fetch updates via MTProto.
+        // MG: when embedded tor is on, the wake-up has to cover a tor cold
+        // bootstrap (10-30s) on top of the MTProto handshake. Take a SECOND
+        // acquire on the ref-counted lock so the two finally branches each
+        // own one release — keeps ref-count symmetry across the tor path
+        // without leaking the lock if a release is skipped. The single
+        // acquire(30_000) timeout still applies to the WakeLock as a whole
+        // (Android resets the timer per acquire, it does NOT sum), so the
+        // wall-clock budget is still ~30s; the doubled ref count is purely
+        // about pairing releases, not about extending the safety window.
+        final boolean torStartingForFallback = SharedConfig.mg_useTor;
+        if (torStartingForFallback) {
+            acquireWakeLock(pm);
+            it.belloworld.mercurygram.tor.MgTorClient.getInstance().requestStartForPushFallback();
+        }
         AndroidUtilities.runOnUIThread(() -> {
-            if (BuildVars.LOGS_ENABLED) {
-                FileLog.d("UP PRE INIT APP");
-            }
-            ApplicationLoader.postInitApplication();
-            if (BuildVars.LOGS_ENABLED) {
-                FileLog.d("UP POST INIT APP");
-            }
-            Utilities.stageQueue.postRunnable(() -> {
-                try {
-                    if (BuildVars.LOGS_ENABLED) {
-                        FileLog.d("UP START PROCESSING (wake-up fallback)");
-                    }
-                    for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                        if (UserConfig.getInstance(a).isClientActivated()) {
-                            ConnectionsManager.onInternalPushReceived(a);
-                            ConnectionsManager.getInstance(a).resumeNetworkMaybe();
+            boolean stageQueueScheduled = false;
+            try {
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.d("UP PRE INIT APP");
+                }
+                ApplicationLoader.postInitApplication();
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.d("UP POST INIT APP");
+                }
+                Utilities.stageQueue.postRunnable(() -> {
+                    try {
+                        if (BuildVars.LOGS_ENABLED) {
+                            FileLog.d("UP START PROCESSING (wake-up fallback)");
+                        }
+                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                            if (UserConfig.getInstance(a).isClientActivated()) {
+                                ConnectionsManager.onInternalPushReceived(a);
+                                ConnectionsManager.getInstance(a).resumeNetworkMaybe();
+                            }
+                        }
+                    } finally {
+                        releaseWakeLock();
+                        if (torStartingForFallback) {
+                            releaseWakeLock();
                         }
                     }
-                } finally {
+                });
+                stageQueueScheduled = true;
+            } finally {
+                // If postInitApplication threw, or stageQueue.postRunnable
+                // never got called, the inner finally never runs and the
+                // wake-lock(s) would sit pinned until the 30s safety
+                // timeout — which only decrements ONE ref count, leaving
+                // any extra acquire stuck for the process lifetime.
+                if (!stageQueueScheduled) {
                     releaseWakeLock();
+                    if (torStartingForFallback) {
+                        releaseWakeLock();
+                    }
                 }
-            });
+            }
         });
     }
 
