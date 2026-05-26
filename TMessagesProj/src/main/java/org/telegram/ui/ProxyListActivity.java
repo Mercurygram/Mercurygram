@@ -31,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
@@ -104,6 +105,10 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
     private int rotationTimeoutInfoRow;
     private int callsDetailRow;
     private int deleteAllRow;
+    // MG: entry point to the Tor screen. Lives here (not only in Settings)
+    // because this screen is reachable from the login screen, and routing the
+    // login itself through Tor is the point.
+    private int torRow;
 
     private ItemTouchHelper itemTouchHelper;
     private NumberTextView selectedCountTextView;
@@ -175,7 +180,16 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         }
 
         public void setProxy(SharedConfig.ProxyInfo proxyInfo) {
-            textView.setText(proxyInfo.address + ":" + proxyInfo.port);
+            if (proxyInfo.mgInternal) {
+                // MG: synthetic entry owned by MgTorController. Suppress the
+                // edit (info) button — there is nothing user-tunable about
+                // the embedded Tor SOCKS port.
+                textView.setText(getString(R.string.MercurygramTorProxyEntry));
+                checkImageView.setVisibility(GONE);
+            } else {
+                textView.setText(proxyInfo.address + ":" + proxyInfo.port);
+                checkImageView.setVisibility(VISIBLE);
+            }
             currentInfo = proxyInfo;
         }
 
@@ -342,7 +356,7 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
 
         final SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-        useProxySettings = preferences.getBoolean("proxy_enabled", false) && !SharedConfig.proxyList.isEmpty();
+        syncUseProxyFromPrefs();
         useProxyForCalls = preferences.getBoolean("proxy_enabled_calls", false);
 
         updateRows(true);
@@ -394,6 +408,15 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         listView.setAdapter(listAdapter);
         listView.setOnItemClickListener((view, position) -> {
             if (position == useProxyRow) {
+                // MG: with Tor on, MgTorClient owns proxy state; flipping
+                // this off would commit proxy_enabled=false + push direct
+                // MTProto while the Tor switch in MG settings still reads ON.
+                if (SharedConfig.mg_useTor) {
+                    Toast.makeText(getParentActivity(),
+                            LocaleController.getString(R.string.MercurygramTorActiveProxyLocked),
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
                 if (SharedConfig.currentProxy == null) {
                     if (!proxyList.isEmpty()) {
                         SharedConfig.currentProxy = proxyList.get(0);
@@ -465,6 +488,26 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                     return;
                 }
                 SharedConfig.ProxyInfo info = proxyList.get(position - proxyStartRow);
+                // MG: synthetic Tor entry is already the current proxy by
+                // construction; tap-to-select would just rewrite the same
+                // values and is misleading (the user might infer they can
+                // switch away by tapping a different row, but that change
+                // wouldn't outlive the next bootstrap).
+                if (info.mgInternal) return;
+                // MG: while Tor mode is on, MgTorController owns the active
+                // proxy (the synthetic mgInternal entry above). Letting the
+                // user tap-select a different proxy here would call
+                // ConnectionsManager.setProxySettings() with the tapped
+                // server and route MTProto through it directly while the
+                // "Use Tor" switch in MG settings still reads ON — silently
+                // violating the privacy invariant the toggle promises. Tell
+                // the user where to turn Tor off and bail.
+                if (SharedConfig.mg_useTor) {
+                    Toast.makeText(getParentActivity(),
+                            LocaleController.getString(R.string.MercurygramTorActiveProxyLocked),
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
                 useProxySettings = true;
                 SharedPreferences.Editor editor = MessagesController.getGlobalMainSettings().edit();
                 editor.putString("proxy_ip", info.address);
@@ -494,6 +537,8 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                     textCheckCell.setChecked(true);
                 }
                 ConnectionsManager.setProxySettings(useProxySettings, SharedConfig.currentProxy.address, SharedConfig.currentProxy.port, SharedConfig.currentProxy.username, SharedConfig.currentProxy.password, SharedConfig.currentProxy.secret);
+            } else if (position == torRow) {
+                presentFragment(new it.belloworld.mercurygram.ui.MgTorSettingsActivity());
             } else if (position == proxyAddRow) {
                 presentFragment(new ProxySettingsActivity());
             } else if (position == deleteAllRow) {
@@ -502,11 +547,24 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 builder.setNegativeButton(getString(R.string.Cancel), null);
                 builder.setTitle(getString(R.string.DeleteProxyTitle));
                 builder.setPositiveButton(getString(R.string.Delete), (dialog, which) -> {
-                    for (SharedConfig.ProxyInfo info : proxyList) {
+                    // MG: snapshot the list first — deleteProxy mutates
+                    // proxyList in place. Skip mgInternal entries so a
+                    // delete-all sweep doesn't yank MgTorController's
+                    // synthetic entry (and call ConnectionsManager.setProxySettings(false)
+                    // which would route MTProto direct while Tor is still on).
+                    for (SharedConfig.ProxyInfo info : new ArrayList<>(proxyList)) {
+                        if (info.mgInternal) continue;
                         SharedConfig.deleteProxy(info);
                     }
-                    useProxyForCalls = false;
-                    useProxySettings = false;
+                    // MG: with Tor on, the synthetic entry survived the sweep
+                    // and is still the active proxy, so the switch must stay
+                    // checked. Clearing it here rendered "Use proxy" OFF while
+                    // Tor kept proxying, and re-tapping it only hit the Tor
+                    // lock below — a switch that looks off and refuses to move.
+                    if (!SharedConfig.mg_useTor) {
+                        useProxyForCalls = false;
+                        useProxySettings = false;
+                    }
                     NotificationCenter.getGlobalInstance().removeObserver(ProxyListActivity.this, NotificationCenter.proxySettingsChanged);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.proxySettingsChanged);
                     NotificationCenter.getGlobalInstance().addObserver(ProxyListActivity.this, NotificationCenter.proxySettingsChanged);
@@ -527,6 +585,9 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         });
         listView.setOnItemLongClickListener((view, position) -> {
             if (position >= proxyStartRow && position < proxyEndRow) {
+                // MG: don't let the synthetic Tor entry enter selection mode
+                // — its actions (share link, delete) don't apply to it.
+                if (proxyList.get(position - proxyStartRow).mgInternal) return false;
                 listAdapter.toggleSelected(position);
                 return true;
             }
@@ -564,9 +625,16 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                         builder.setTitle(getString(R.string.DeleteProxyTitle));
                         builder.setPositiveButton(getString(R.string.Delete), (dialog, which) -> {
                             for (SharedConfig.ProxyInfo info : selectedItems) {
+                                // MG: defense in depth — toggleSelected already
+                                // refuses mgInternal, but skip here too so a
+                                // future code path can't sneak the Tor entry
+                                // into selectedItems and have it deleted.
+                                if (info.mgInternal) continue;
                                 SharedConfig.deleteProxy(info);
                             }
-                            if (SharedConfig.currentProxy == null) {
+                            // MG: mg_useTor keeps the synthetic entry as
+                            // currentProxy; same reason as the delete-all path.
+                            if (SharedConfig.currentProxy == null && !SharedConfig.mg_useTor) {
                                 useProxyForCalls = false;
                                 useProxySettings = false;
                             }
@@ -625,6 +693,11 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         return super.onBackPressed(invoked);
     }
 
+    private void syncUseProxyFromPrefs() {
+        useProxySettings = MessagesController.getGlobalMainSettings().getBoolean("proxy_enabled", false)
+                && !SharedConfig.proxyList.isEmpty();
+    }
+
     private void updateRows(boolean notify) {
         rowCount = 0;
         useProxyRow = rowCount++;
@@ -642,7 +715,13 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
             rotationTimeoutRow = -1;
             rotationTimeoutInfoRow = -1;
         }
-        if (rotationTimeoutInfoRow == -1) {
+        // MG: pre-S F-Droid can't bind the Tor plugin at all, so the row is
+        // hidden there exactly like the one in Mercurygram settings.
+        torRow = it.belloworld.mercurygram.tor.MgTorClient.isFdroidPreS() ? -1 : rowCount++;
+        // MG: torRow sits after the rotation block, so when the rotation-timeout
+        // info row closed the section the Tor row would otherwise be stranded
+        // between that shadow and the "Connections" header with nothing under it.
+        if (rotationTimeoutInfoRow == -1 || torRow != -1) {
             useProxyShadowRow = rowCount++;
         } else {
             useProxyShadowRow = -1;
@@ -749,9 +828,12 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
     @Override
     public void onResume() {
         super.onResume();
-        if (listAdapter != null) {
-            listAdapter.notifyDataSetChanged();
-        }
+        // MG: coming back from the Tor screen, the synthetic Tor entry and
+        // proxy_enabled may both have changed while this fragment was paused.
+        syncUseProxyFromPrefs();
+        // updateRows(true) ends in notifyDataSetChanged(), which is what the
+        // upstream body of onResume did on its own.
+        updateRows(true);
     }
 
     @Override
@@ -768,6 +850,10 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
 
             updateRows(false);
         } else if (id == NotificationCenter.proxySettingsChanged) {
+            // MG: MgTorClient rewrites proxy_enabled from its worker thread
+            // (toggle-on pins the stub, toggle-off restores or clears), so the
+            // switch has to be re-read from disk, not just the rows rebuilt.
+            syncUseProxyFromPrefs();
             updateRows(true);
         } else if (id == NotificationCenter.didUpdateConnectionState) {
             int state = ConnectionsManager.getInstance(account).getConnectionState();
@@ -845,6 +931,10 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 return;
             }
             SharedConfig.ProxyInfo info = proxyList.get(position - proxyStartRow);
+            // MG: synthetic Tor entry must never enter selectedItems —
+            // bulk-delete / share would otherwise act on a proxy the user
+            // can't see in any standard sense.
+            if (info.mgInternal) return;
             if (selectedItems.contains(info)) {
                 selectedItems.remove(info);
             } else {
@@ -889,7 +979,11 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 case VIEW_TYPE_TEXT_SETTING: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                    if (position == proxyAddRow) {
+                    if (position == torRow) {
+                        textCell.setTextAndValue(getString(R.string.MercurygramTor),
+                                getString(SharedConfig.mg_useTor
+                                        ? R.string.NotificationsOn : R.string.NotificationsOff), false);
+                    } else if (position == proxyAddRow) {
                         textCell.setText(getString(R.string.AddProxy), deleteAllRow != -1);
                     } else if (position == deleteAllRow) {
                         textCell.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
@@ -907,7 +1001,7 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 case VIEW_TYPE_TEXT_CHECK: {
                     TextCheckCell checkCell = (TextCheckCell) holder.itemView;
                     if (position == useProxyRow) {
-                        checkCell.setTextAndCheck(getString(R.string.UseProxySettings), useProxySettings, rotationRow != -1);
+                        checkCell.setTextAndCheck(getString(R.string.UseProxySettings), useProxySettings, rotationRow != -1 || torRow != -1);
                     } else if (position == callsRow) {
                         checkCell.setTextAndCheck(getString(R.string.UseProxyForCalls), useProxyForCalls, false);
                     } else if (position == rotationRow) {
@@ -996,7 +1090,7 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == useProxyRow || position == rotationRow || position == callsRow || position == proxyAddRow || position == deleteAllRow || position >= proxyStartRow && position < proxyEndRow;
+            return position == useProxyRow || position == rotationRow || position == callsRow || position == proxyAddRow || position == deleteAllRow || position == torRow || position >= proxyStartRow && position < proxyEndRow;
         }
 
         @Override
@@ -1069,7 +1163,7 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         public int getItemViewType(int position) {
             if (position == useProxyShadowRow || position == proxyShadowRow) {
                 return VIEW_TYPE_SHADOW;
-            } else if (position == proxyAddRow || position == deleteAllRow) {
+            } else if (position == proxyAddRow || position == deleteAllRow || position == torRow) {
                 return VIEW_TYPE_TEXT_SETTING;
             } else if (position == useProxyRow || position == rotationRow || position == callsRow) {
                 return VIEW_TYPE_TEXT_CHECK;
