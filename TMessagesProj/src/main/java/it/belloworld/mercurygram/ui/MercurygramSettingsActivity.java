@@ -60,6 +60,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_REDUCE_TRACKING_FINGERPRINT = 40;
     private static final int ID_USE_TOR = 41;
     private static final int ID_TOR_IDLE_TIMEOUT = 42;
+    private static final int ID_TRANSLATION = 50;
 
     @Override
     protected CharSequence getTitle() {
@@ -147,6 +148,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             }
             items.add(UItem.asShadow(torAbout));
         }
+
+        items.add(UItem.asButton(ID_TRANSLATION,
+                LocaleController.getString(R.string.MercurygramTranslationSettings),
+                translationModeShortLabel()));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranslationRowAbout)));
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
@@ -274,6 +280,24 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_TOR_IDLE_TIMEOUT:
                 handleTorIdleTimeoutClick();
                 break;
+            case ID_TRANSLATION:
+                presentFragment(new MercurygramTranslationSettingsActivity());
+                break;
+        }
+    }
+
+    private static String translationModeShortLabel() {
+        String mode = SharedConfig.mg_translateMode;
+        if (mode == null) mode = SharedConfig.MG_TRANSLATE_MODE_DEFAULT;
+        switch (mode) {
+            case SharedConfig.MG_TRANSLATE_MODE_CLOUD:
+                return LocaleController.getString(R.string.MercurygramTranslationModeCloud);
+            case SharedConfig.MG_TRANSLATE_MODE_ALTERNATIVE:
+                return LocaleController.getString(R.string.MercurygramTranslationModeAlternative);
+            case SharedConfig.MG_TRANSLATE_MODE_OFFLINE:
+                return LocaleController.getString(R.string.MercurygramTranslationModeOffline);
+            default:
+                return LocaleController.getString(R.string.MercurygramTranslationModeDefault);
         }
     }
 

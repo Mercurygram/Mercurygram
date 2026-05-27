@@ -814,6 +814,29 @@ public class TranslateController extends BaseController {
     private ArrayList<Integer> pendingLanguageChecks = new ArrayList<>();
     private void checkLanguage(MessageObject messageObject) {
         if (!LanguageDetector.hasSupport()) {
+            // Mercurygram: MLKit removed (LanguageDetector stub returns false). All four
+            // dispatch engines (Telegram RPC, Alternative HTTP, offline AIDL) auto-detect
+            // the source language internally, so we don't need a per-message language to
+            // decide UI visibility. Mark text messages UNKNOWN_LANGUAGE (the long-press
+            // translate cell treats UNKNOWN as "show"; ChatActivity:31427) and add the
+            // dialog to translatableDialogs so the chat-level translate bar appears
+            // without the upstream threshold gate, which can never trip while nothing
+            // populates the certainlyTranslatable set.
+            if (!isTranslatable(messageObject)
+                    || messageObject.messageOwner == null
+                    || TextUtils.isEmpty(messageObject.messageOwner.message)) {
+                return;
+            }
+            final long dialogId = messageObject.getDialogId();
+            if (messageObject.messageOwner.originalLanguage == null) {
+                messageObject.messageOwner.originalLanguage = UNKNOWN_LANGUAGE;
+                getMessagesStorage().updateMessageCustomParams(dialogId, messageObject.messageOwner);
+            }
+            if (translatableDialogs.add(dialogId)) {
+                AndroidUtilities.runOnUIThread(() ->
+                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogIsTranslatable, dialogId),
+                        450);
+            }
             return;
         }
         if (!isTranslatable(messageObject) || messageObject.messageOwner == null || TextUtils.isEmpty(messageObject.messageOwner.message)) {
@@ -965,6 +988,57 @@ public class TranslateController extends BaseController {
         int reqId = -1;
     }
 
+    /**
+     * Mercurygram: per-message MG dispatch loop for a pending translation batch.
+     * Returns the dispatcher's Outcome — HANDLED means the batch is fully owned
+     * by MG (offline AIDL or Alternative HTTP) and the caller must NOT run any
+     * upstream RPC; FORCE_CLOUD / PUNT_TO_UPSTREAM tell the caller which RPC
+     * path to take.
+     */
+    private it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome
+    dispatchMgPerMessage(PendingTranslation pendingTranslation1, boolean isTranscription, long dialogId) {
+        final String mode = SharedConfig.mg_translateMode;
+        if (SharedConfig.MG_TRANSLATE_MODE_DEFAULT.equals(mode)) {
+            return it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.PUNT_TO_UPSTREAM;
+        }
+        if (SharedConfig.MG_TRANSLATE_MODE_CLOUD.equals(mode)) {
+            return it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.FORCE_CLOUD;
+        }
+        final String mgToLanguage = pendingTranslation1.language;
+        final int messageCount = pendingTranslation1.messageIds.size();
+        for (int i = 0; i < messageCount; ++i) {
+            final int mgId = pendingTranslation1.messageIds.get(i);
+            final Utilities.Callback4<Boolean, Integer, TLRPC.TL_textWithEntities, String> mgCallback = pendingTranslation1.callbacks.get(i);
+            final String mgText = pendingTranslation1.messageTexts.get(i).text;
+            it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(mgText, null, mgToLanguage, (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                if (out != null) {
+                    final TLRPC.TL_textWithEntities res = new TLRPC.TL_textWithEntities();
+                    res.text = out;
+                    mgCallback.run(isTranscription, mgId, res, mgToLanguage);
+                } else if (failure != null && failure.reason == it.belloworld.mercurygram.translate.MgAidlTranslate.Reason.PROVIDER_UNAVAILABLE) {
+                    // System failure — the engine itself is offline. Abort the
+                    // batch: revert the chat-translate bar + show the bulletin.
+                    toggleTranslatingDialog(dialogId, false);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR,
+                            it.belloworld.mercurygram.translate.MgTranslateDispatcher.mapBulletin(failure, rateLimit));
+                    mgCallback.run(isTranscription, mgId, null, mgToLanguage);
+                } else {
+                    // Per-message failure (language not detected, model missing
+                    // for one message's language, transient UNEXPECTED). Mark
+                    // THIS message as untranslated but keep the bar active —
+                    // other messages in the batch may still succeed. A short
+                    // emoji-only message or a message in the user's own language
+                    // would otherwise tear the whole bar down.
+                    mgCallback.run(isTranscription, mgId, null, mgToLanguage);
+                }
+                synchronized (TranslateController.this) {
+                    loadingTranslations.remove(mgId);
+                }
+            }));
+        }
+        return it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED;
+    }
+
     private void pushToTranslate(
         MessageObject message,
         String language,
@@ -1046,7 +1120,24 @@ public class TranslateController extends BaseController {
                     }
                 }
 
-                final String method = getMessagesController().translationsAutoEnabled;
+                // Mercurygram: route through MgTranslateDispatcher when the user
+                // picked a non-default mg_translateMode. Privacy invariant: the
+                // offline path NEVER silently falls back to Telegram cloud — the
+                // dispatcher's fallback chain is offline → Alternative HTTP only.
+                final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome =
+                        dispatchMgPerMessage(pendingTranslation1, isTranscription, dialogId);
+                if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+                    return;
+                }
+                // FORCE_CLOUD skips the upstream "alternative"/"system" branch and goes
+                // straight to messages.translateText. PUNT_TO_UPSTREAM uses the upstream
+                // server-side method string unchanged.
+                final String method;
+                if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.FORCE_CLOUD) {
+                    method = "enabled";
+                } else {
+                    method = getMessagesController().translationsAutoEnabled;
+                }
                 if ("alternative".equals(method) || "system".equals(method)) {
                     final String toLanguage = pendingTranslation1.language;
                     for (int i = 0; i < pendingTranslation1.messageIds.size(); ++i) {
@@ -1737,6 +1828,30 @@ public class TranslateController extends BaseController {
 
         translatingStories.add(key);
 
+        // Mercurygram: route through MgTranslateDispatcher when the user picked a
+        // non-default mg_translateMode. Caption translations stay silent on failure
+        // (translatedText = null + done.run()) to match upstream UX.
+        final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome =
+                it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(
+                        storyItem.caption, null, toLang, (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                    storyItem.translatedLng = toLang;
+                    if (out != null) {
+                        final TLRPC.TL_textWithEntities res = new TLRPC.TL_textWithEntities();
+                        res.text = out;
+                        storyItem.translatedText = res;
+                    } else {
+                        storyItem.translatedText = null;
+                    }
+                    getMessagesController().getStoriesController().getStoriesStorage().putStoryInternal(storyItem.dialogId, storyItem);
+                    translatingStories.remove(key);
+                    if (done != null) {
+                        done.run();
+                    }
+                }));
+        if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+            return;
+        }
+
         final TLRPC.TL_messages_translateText req = new TLRPC.TL_messages_translateText();
         req.flags |= 2;
         final TLRPC.TL_textWithEntities text = new TLRPC.TL_textWithEntities();
@@ -1870,6 +1985,33 @@ public class TranslateController extends BaseController {
         }
 
         translatingPhotos.add(key);
+
+        // Mercurygram: route through MgTranslateDispatcher when the user picked a
+        // non-default mg_translateMode. Caption translations stay silent on failure
+        // (translatedText = null + done.run()) to match upstream UX. The 400ms
+        // minimum wait is preserved so the result lands consistently with the
+        // upstream RPC path.
+        final long mgStart = System.currentTimeMillis();
+        final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome =
+                it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(
+                        messageObject.messageOwner.message, null, toLang, (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                    messageObject.messageOwner.translatedToLanguage = toLang;
+                    if (out != null) {
+                        final TLRPC.TL_textWithEntities res = new TLRPC.TL_textWithEntities();
+                        res.text = out;
+                        messageObject.messageOwner.translatedText = res;
+                    } else {
+                        messageObject.messageOwner.translatedText = null;
+                    }
+                    getMessagesStorage().updateMessageCustomParams(key.dialogId, messageObject.messageOwner);
+                    translatingPhotos.remove(key);
+                    if (done != null) {
+                        AndroidUtilities.runOnUIThread(done, Math.max(0, 400L - (System.currentTimeMillis() - mgStart)));
+                    }
+                }));
+        if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+            return;
+        }
 
         final TLRPC.TL_messages_translateText req = new TLRPC.TL_messages_translateText();
         req.flags |= 2;
