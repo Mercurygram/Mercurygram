@@ -10812,7 +10812,7 @@
     <string name="MercurygramTranslationModeCloud">Telegram cloud</string>
     <string name="MercurygramTranslationModeAlternative">Alternative HTTP</string>
     <string name="MercurygramTranslationModeOffline">Offline (external app)</string>
-    <string name="MercurygramTranslationAbout">Telegram cloud sends the text to Telegram\'s servers (which forward to Google). Alternative HTTP routes the text through a non-MTProto HTTP request that does not attach your Telegram identity. Offline delegates each translation to a separate FOSS app (Offline Translator, dev.davidv.translator) over a background bound service — the message never leaves your device. Bold, italic, and code formatting may be lost on the offline path because the engine returns plain text.</string>
+    <string name="MercurygramTranslationAbout">Telegram cloud sends the text to Telegram\'s servers (which forward to Google). Alternative HTTP routes the text through a public Mozhi privacy proxy that aggregates several engines (DuckDuckGo, LibreTranslate, Google, MyMemory, Reverso) — pick the engine and instance below. Offline delegates each translation to a separate FOSS app (Offline Translator, dev.davidv.translator) over a background bound service — the message never leaves your device. Bold, italic, and code formatting may be lost on the offline path because the engine returns plain text.</string>
     <string name="MercurygramTranslationOfflineSection">Offline translator</string>
     <string name="MercurygramTranslationInstallApp">Install Offline Translator from F-Droid</string>
     <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) is the reference FOSS provider — bundles offline Bergamot models and exposes a background bound service that Mercurygram dispatches each translation to silently. Until it is installed, translations stay on whatever fallback you allow below.</string>
@@ -10824,6 +10824,19 @@
     <string name="MercurygramTranslateOfflineNoLanguage">Offline translation: could not detect the source language.</string>
     <string name="MercurygramTranslateOfflineProviderUnavailable">Offline translation: provider unavailable. Open or reinstall Offline Translator.</string>
     <string name="MercurygramTranslateOfflineFailed">Offline translation failed.</string>
+    <string name="MercurygramTranslationAlternativeSection">Alternative HTTP backend</string>
+    <string name="MercurygramTranslationAlternativeEngine">Engine</string>
+    <string name="MercurygramTranslationAlternativeInstance">Instance</string>
+    <string name="MercurygramTranslationAlternativeInstanceAuto">Auto (rotate across defaults)</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustom">Custom URL…</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustomHint">https://your-mozhi-instance.example</string>
+    <string name="MercurygramTranslationAlternativeInstanceInvalid">Enter a valid https:// URL.</string>
+    <string name="MercurygramTranslationAlternativeOperatorDisclosure">Translations are processed by the selected Mozhi instance. The operator may log them.</string>
+    <string name="MercurygramTranslationAlternativeEngineDuckDuckGo">DuckDuckGo</string>
+    <string name="MercurygramTranslationAlternativeEngineLibre">LibreTranslate</string>
+    <string name="MercurygramTranslationAlternativeEngineGoogle">Google (via Mozhi)</string>
+    <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
+    <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
 
     <string name="PollV2ShowWhoVoted">Show Who Voted</string>
     <string name="PollV2ShowWhoVotedInfo">Display voter name on each option</string>
