@@ -282,22 +282,58 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             reqId = null;
         }
 
-        final String method = MessagesController.getInstance(currentAccount).translationsManualEnabled;
-        if ("alternative".equalsIgnoreCase(method)) {
-            translateAlt();
-            return;
-        }/* else if ("system".equalsIgnoreCase(method)) {
+        // Mercurygram: route through MgTranslateDispatcher when the user picked a
+        // non-default mg_translateMode. Summarize (reqSum) stays on cloud RPC —
+        // Bergamot doesn't summarize; alternative HTTP doesn't either.
+        if (!(reqSum && reqPeer != null)) {
+            final String mgText = reqText == null ? "" : reqText.toString();
+            final String mgFromLng = simplifyLanguage(fromLanguage);
+            final String mgToLng = simplifyLanguage(toLanguage);
+            final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome =
+                    it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(mgText, mgFromLng, mgToLng,
+                            (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                                if (out != null) {
+                                    firstTranslation = false;
+                                    textView.setText(preprocessText(out));
+                                    adapter.updateMainView(textViewContainer);
+                                    return;
+                                }
+                                if (isDismissed()) return;
+                                final CharSequence msg = it.belloworld.mercurygram.translate.MgTranslateDispatcher.mapBulletin(failure, rateLimit);
+                                if (firstTranslation) {
+                                    dismiss();
+                                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR, msg);
+                                } else {
+                                    BulletinFactory.of((FrameLayout) containerView, resourcesProvider).createErrorBulletin(msg).show();
+                                    headerView.toLanguageTextView.setText(languageName(toLanguage = prevToLanguage));
+                                    adapter.updateMainView(textViewContainer);
+                                }
+                            }));
+            if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+                return;
+            }
+            // FORCE_CLOUD: skip the upstream translationsManualEnabled "alternative"
+            // branch and fall straight through to messages.translateText below.
+            if (mgOutcome != it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.FORCE_CLOUD) {
+                final String method = MessagesController.getInstance(currentAccount).translationsManualEnabled;
+                if ("alternative".equalsIgnoreCase(method)) {
+                    translateAlt();
+                    return;
+                }
+            }
+        } else {
+            final String method = MessagesController.getInstance(currentAccount).translationsManualEnabled;
+            if ("alternative".equalsIgnoreCase(method)) {
+                translateAlt();
+                return;
+            }
+        }
+        /* else if ("system".equalsIgnoreCase(method)) {
             translateSystem();
             return;
         }*/
 
-        String lang = toLanguage;
-        if (lang != null) {
-            lang = lang.split("_")[0];
-        }
-        if ("nb".equals(lang)) {
-            lang = "no";
-        }
+        String lang = simplifyLanguage(toLanguage);
 
         TLRPC.TL_textWithEntities textWithEntities = new TLRPC.TL_textWithEntities();
         textWithEntities.text = reqText == null ? "" : reqText.toString();
@@ -388,22 +424,8 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
     };
     private void translateAlt() {
         final String text = reqText == null ? "" : reqText.toString();
-        String _fromLng = fromLanguage;
-        if (_fromLng != null) {
-            _fromLng = _fromLng.split("_")[0];
-        }
-        if ("nb".equals(_fromLng)) {
-            _fromLng = "no";
-        }
-        final String fromLng = _fromLng;
-        String _toLng = toLanguage;
-        if (_toLng != null) {
-            _toLng = _toLng.split("_")[0];
-        }
-        if ("nb".equals(_toLng)) {
-            _toLng = "no";
-        }
-        final String toLng = _toLng;
+        final String fromLng = simplifyLanguage(fromLanguage);
+        final String toLng = simplifyLanguage(toLanguage);
 
         alternativeTranslate(text, fromLng, toLng, (res, rateLimit) -> {
             if (res != null) {
@@ -426,6 +448,15 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
                 }
             }
         });
+    }
+
+    /** Strip locale suffix ("en_US" -> "en") and map nb -> no. Used by the MG
+     *  dispatcher branch in {@link #translate()} and the alternative HTTP path. */
+    private static String simplifyLanguage(String lang) {
+        if (lang == null) return null;
+        String simplified = lang.split("_")[0];
+        if ("nb".equals(simplified)) simplified = "no";
+        return simplified;
     }
 
     private static int lastIndexOfSafe(String text, String target, int start, int end) {
