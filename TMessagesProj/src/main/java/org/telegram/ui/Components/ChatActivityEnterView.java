@@ -5184,6 +5184,13 @@ public class ChatActivityEnterView extends FrameLayout implements
         }
 
         @Override
+        protected boolean isSelectionTranslateSecret() {
+            // Mercurygram: composing in a secret chat — translate the selection
+            // on-device only (fail-closed), never via Telegram cloud / Mozhi.
+            return parentFragment != null && parentFragment.getCurrentEncryptedChat() != null;
+        }
+
+        @Override
         protected void onContextMenuClose() {
             if (delegate != null) {
                 delegate.onContextMenuClose();
