@@ -380,11 +380,36 @@ AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
 sudo_list = last.setdefault('sudo', [])
 if AUTOTOOLS_LINE not in sudo_list:
     sudo_list.append(AUTOTOOLS_LINE)
+# Plugin's openssl submodule + its recursive sub-submodules ship
+# binary blobs that fdroidserver's scanner rejects (fuzz corpora,
+# test fixtures, krb5/pyca/wycheproof test vectors, gost-engine
+# tcl test data, doc images, a stray apps/insta.ca.crt). None are
+# needed by build_openssl.sh (Configure no-tests, libs only).
+rm_list = last.setdefault('rm', [])
+for p in (
+    'TMessagesProj_PluginTor/jni/openssl/fuzz',
+    'TMessagesProj_PluginTor/jni/openssl/test',
+    'TMessagesProj_PluginTor/jni/openssl/doc',
+    'TMessagesProj_PluginTor/jni/openssl/gost-engine',
+    'TMessagesProj_PluginTor/jni/openssl/krb5',
+    'TMessagesProj_PluginTor/jni/openssl/pyca-cryptography',
+    'TMessagesProj_PluginTor/jni/openssl/wycheproof',
+    'TMessagesProj_PluginTor/jni/openssl/apps/insta.ca.crt',
+):
+    if p not in rm_list:
+        rm_list.append(p)
 if build_tag:
-    # Append (don't replace): preserve the recipe's existing prebuild
-    # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
-    # break the in-container gradle build at TMessagesProj/build.gradle.
-    last.setdefault('prebuild', []).append(
+    # Preserve the recipe's other prebuild steps (API_KEYS writer,
+    # QUIET_NATIVE_BUILD) but DROP any pre-existing MG_BUILD_TAG=
+    # line — older fdroid_sync.py versions wrote to subdir
+    # gradle.properties (without `../`), and that file is auto-loaded
+    # into the subproject's property bag at gradle startup, shadowing
+    # the correct root-level value before mg-version.gradle's
+    # rootProject.file() fallback ever fires (broke versionName in
+    # verify-build on 12.7.3.2.7).
+    prebuild = last.setdefault('prebuild', [])
+    prebuild[:] = [p for p in prebuild if 'MG_BUILD_TAG=' not in p]
+    prebuild.append(
         f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> ../gradle.properties"
     )
 with open(recipe, 'w') as f:
@@ -440,11 +465,36 @@ AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
 sudo_list = last.setdefault('sudo', [])
 if AUTOTOOLS_LINE not in sudo_list:
     sudo_list.append(AUTOTOOLS_LINE)
+# Plugin's openssl submodule + its recursive sub-submodules ship
+# binary blobs that fdroidserver's scanner rejects (fuzz corpora,
+# test fixtures, krb5/pyca/wycheproof test vectors, gost-engine
+# tcl test data, doc images, a stray apps/insta.ca.crt). None are
+# needed by build_openssl.sh (Configure no-tests, libs only).
+rm_list = last.setdefault('rm', [])
+for p in (
+    'TMessagesProj_PluginTor/jni/openssl/fuzz',
+    'TMessagesProj_PluginTor/jni/openssl/test',
+    'TMessagesProj_PluginTor/jni/openssl/doc',
+    'TMessagesProj_PluginTor/jni/openssl/gost-engine',
+    'TMessagesProj_PluginTor/jni/openssl/krb5',
+    'TMessagesProj_PluginTor/jni/openssl/pyca-cryptography',
+    'TMessagesProj_PluginTor/jni/openssl/wycheproof',
+    'TMessagesProj_PluginTor/jni/openssl/apps/insta.ca.crt',
+):
+    if p not in rm_list:
+        rm_list.append(p)
 if build_tag:
-    # Append (don't replace): preserve the recipe's existing prebuild
-    # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
-    # break the in-container gradle build at TMessagesProj/build.gradle.
-    last.setdefault('prebuild', []).append(
+    # Preserve the recipe's other prebuild steps (API_KEYS writer,
+    # QUIET_NATIVE_BUILD) but DROP any pre-existing MG_BUILD_TAG=
+    # line — older fdroid_sync.py versions wrote to subdir
+    # gradle.properties (without `../`), and that file is auto-loaded
+    # into the subproject's property bag at gradle startup, shadowing
+    # the correct root-level value before mg-version.gradle's
+    # rootProject.file() fallback ever fires (broke versionName in
+    # verify-build on 12.7.3.2.7).
+    prebuild = last.setdefault('prebuild', [])
+    prebuild[:] = [p for p in prebuild if 'MG_BUILD_TAG=' not in p]
+    prebuild.append(
         f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> ../gradle.properties"
     )
 with open(recipe, 'w') as f:
@@ -483,11 +533,36 @@ AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
 sudo_list = last.setdefault('sudo', [])
 if AUTOTOOLS_LINE not in sudo_list:
     sudo_list.append(AUTOTOOLS_LINE)
+# Plugin's openssl submodule + its recursive sub-submodules ship
+# binary blobs that fdroidserver's scanner rejects (fuzz corpora,
+# test fixtures, krb5/pyca/wycheproof test vectors, gost-engine
+# tcl test data, doc images, a stray apps/insta.ca.crt). None are
+# needed by build_openssl.sh (Configure no-tests, libs only).
+rm_list = last.setdefault('rm', [])
+for p in (
+    'TMessagesProj_PluginTor/jni/openssl/fuzz',
+    'TMessagesProj_PluginTor/jni/openssl/test',
+    'TMessagesProj_PluginTor/jni/openssl/doc',
+    'TMessagesProj_PluginTor/jni/openssl/gost-engine',
+    'TMessagesProj_PluginTor/jni/openssl/krb5',
+    'TMessagesProj_PluginTor/jni/openssl/pyca-cryptography',
+    'TMessagesProj_PluginTor/jni/openssl/wycheproof',
+    'TMessagesProj_PluginTor/jni/openssl/apps/insta.ca.crt',
+):
+    if p not in rm_list:
+        rm_list.append(p)
 if build_tag:
-    # Append (don't replace): preserve the recipe's existing prebuild
-    # steps (API_KEYS writer, QUIET_NATIVE_BUILD) — overwriting would
-    # break the in-container gradle build at TMessagesProj/build.gradle.
-    last.setdefault('prebuild', []).append(
+    # Preserve the recipe's other prebuild steps (API_KEYS writer,
+    # QUIET_NATIVE_BUILD) but DROP any pre-existing MG_BUILD_TAG=
+    # line — older fdroid_sync.py versions wrote to subdir
+    # gradle.properties (without `../`), and that file is auto-loaded
+    # into the subproject's property bag at gradle startup, shadowing
+    # the correct root-level value before mg-version.gradle's
+    # rootProject.file() fallback ever fires (broke versionName in
+    # verify-build on 12.7.3.2.7).
+    prebuild = last.setdefault('prebuild', [])
+    prebuild[:] = [p for p in prebuild if 'MG_BUILD_TAG=' not in p]
+    prebuild.append(
         f"printf '\\nMG_BUILD_TAG={build_tag}\\n' >> ../gradle.properties"
     )
 with open(recipe, 'w') as f:
