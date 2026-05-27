@@ -17,6 +17,11 @@ public class LanguageDetector {
     }
 
     public static void detectLanguage(String text, StringCallback onSuccess, ExceptionCallback onFail, boolean initializeFirst) {
+        // Mercurygram contract: this no-MLKit stub MUST invoke onFail synchronously
+        // and never onSuccess. TranslateController.detectStory/detectPhotoLanguage
+        // dropped their !hasSupport() short-circuit and rely on this onFail to mark
+        // captions UNKNOWN_LANGUAGE (so the Translate affordance surfaces). Do not
+        // make this async or silent without restoring those guards.
         if (onFail != null) {
             onFail.run(new Exception("MLKit language detection not available"));
         }

@@ -1148,4 +1148,24 @@
     <string name="MercurygramTorPluginDownloadFailed">Kan Tor-plug-in niet downloaden. Controleer je verbinding en probeer het opnieuw.</string>
     <string name="MercurygramTorPluginOutdated">Tor-plug-in-update vereist</string>
     <string name="MercurygramTorPluginSignatureMismatch">Tor-plug-in: handtekening komt niet overeen — koppeling geweigerd</string>
+    <string name="MercurygramTranslationSettings">Vertaling</string>
+    <string name="MercurygramTranslationRowAbout">Bepaal hoe Mercurygram ontvangen berichten vertaalt.</string>
+    <string name="MercurygramTranslationEngine">Engine</string>
+    <string name="MercurygramTranslationMode">Vertaalengine</string>
+    <string name="MercurygramTranslationModeDefault">Standaard (Telegram-cloud)</string>
+    <string name="MercurygramTranslationModeCloud">Telegram-cloud</string>
+    <string name="MercurygramTranslationModeAlternative">Alternatieve HTTP</string>
+    <string name="MercurygramTranslationModeOffline">Offline (externe app)</string>
+    <string name="MercurygramTranslationAbout">De Telegram-cloud stuurt de tekst naar de servers van Telegram (die deze doorsturen naar Google). Alternatieve HTTP routeert de tekst via een niet-MTProto HTTP-verzoek dat je Telegram-identiteit niet meestuurt. Offline delegeert elke vertaling aan een aparte FOSS-app (Offline Translator, dev.davidv.translator) via een gebonden achtergronddienst — het bericht verlaat je apparaat nooit. Opmaak voor vet, cursief en code kan op het offlinepad verloren gaan omdat de engine platte tekst teruggeeft.</string>
+    <string name="MercurygramTranslationOfflineSection">Offlinevertaler</string>
+    <string name="MercurygramTranslationInstallApp">Offline Translator installeren via F-Droid</string>
+    <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) is de referentie-FOSS-aanbieder — bevat offline Bergamot-modellen en biedt een gebonden achtergronddienst waaraan Mercurygram elke vertaling stil doorgeeft. Zolang die niet is geïnstalleerd, lopen vertalingen via de fallback die je hieronder toestaat.</string>
+    <string name="MercurygramTranslationOfflineProviderReady">Offline Translator is geïnstalleerd. Open de app één keer om de talenparen te downloaden waaruit en waarnaar je wilt vertalen.</string>
+    <string name="MercurygramTranslationAutoFallback">Automatische terugval bij fout</string>
+    <string name="MercurygramTranslationAutoFallbackAbout">Als de offlinevertaler niets teruggeeft (geen model voor het talenpaar, taal niet herkend, dienst onbereikbaar), valt het terug op het alternatieve HTTP-pad. De cloud wordt nooit als terugval gebruikt wanneer je de offline-engine om privacyredenen hebt gekozen.</string>
+    <string name="MercurygramTranslateOfflineFormatToast">Opmaak voor vet, cursief en code kan verloren gaan bij vertalen met de offline-engine.</string>
+    <string name="MercurygramTranslateOfflineNoModel">Offline vertaling: geen model geïnstalleerd voor %1$s. Open Offline Translator om het te downloaden.</string>
+    <string name="MercurygramTranslateOfflineNoLanguage">Offline vertaling: brontaal kon niet worden gedetecteerd.</string>
+    <string name="MercurygramTranslateOfflineProviderUnavailable">Offline vertaling: provider niet beschikbaar. Open of herinstalleer Offline Translator.</string>
+    <string name="MercurygramTranslateOfflineFailed">Offline vertaling mislukt.</string>
 </resources>
