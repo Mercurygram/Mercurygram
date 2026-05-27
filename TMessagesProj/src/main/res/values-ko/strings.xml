@@ -1200,4 +1200,24 @@
     <string name="MercurygramTorPluginDownloadFailed">Tor 플러그인을 다운로드하지 못했습니다. 연결을 확인한 후 다시 시도하세요.</string>
     <string name="MercurygramTorPluginOutdated">Tor 플러그인 업데이트 필요</string>
     <string name="MercurygramTorPluginSignatureMismatch">Tor 플러그인: 서명 불일치 — 바인딩이 거부되었습니다</string>
+    <string name="MercurygramTranslationSettings">번역</string>
+    <string name="MercurygramTranslationRowAbout">Mercurygram이 수신한 메시지를 번역하는 방식을 선택하세요.</string>
+    <string name="MercurygramTranslationEngine">엔진</string>
+    <string name="MercurygramTranslationMode">번역 엔진</string>
+    <string name="MercurygramTranslationModeDefault">기본값 (Telegram 클라우드)</string>
+    <string name="MercurygramTranslationModeCloud">Telegram 클라우드</string>
+    <string name="MercurygramTranslationModeAlternative">대체 HTTP</string>
+    <string name="MercurygramTranslationModeOffline">오프라인 (외부 앱)</string>
+    <string name="MercurygramTranslationAbout">Telegram 클라우드는 텍스트를 Telegram 서버로 보내며(이후 Google로 전달됩니다). 대체 HTTP는 Telegram 신원 정보를 포함하지 않는 비-MTProto HTTP 요청을 통해 텍스트를 전달합니다. 오프라인은 백그라운드 바인드 서비스를 통해 각 번역을 별도의 FOSS 앱(Offline Translator, dev.davidv.translator)에 위임합니다 — 메시지가 절대로 기기를 벗어나지 않습니다. 오프라인 경로에서는 엔진이 일반 텍스트만 반환하므로 굵게, 기울임, 코드 서식이 손실될 수 있습니다.</string>
+    <string name="MercurygramTranslationOfflineSection">오프라인 번역기</string>
+    <string name="MercurygramTranslationInstallApp">F-Droid에서 Offline Translator 설치</string>
+    <string name="MercurygramTranslationOfflineNoApp">Offline Translator(dev.davidv.translator)가 표준 FOSS 제공자입니다 — 오프라인 Bergamot 모델을 포함하며 Mercurygram이 각 번역을 조용히 위임하는 백그라운드 바인드 서비스를 제공합니다. 설치되기 전까지는 아래에서 허용한 대체 경로로 번역이 진행됩니다.</string>
+    <string name="MercurygramTranslationOfflineProviderReady">Offline Translator가 설치되었습니다. 한 번 열어서 번역의 출발 언어와 목표 언어 쌍을 다운로드하세요.</string>
+    <string name="MercurygramTranslationAutoFallback">실패 시 자동 폴백</string>
+    <string name="MercurygramTranslationAutoFallbackAbout">오프라인 번역기가 아무것도 돌려주지 않으면(언어 쌍에 대한 모델 없음, 언어 감지 실패, 서비스 접근 불가) 대체 HTTP 경로로 폴백합니다. 개인정보 보호를 위해 오프라인 엔진을 선택한 경우, 클라우드는 절대 폴백으로 사용되지 않습니다.</string>
+    <string name="MercurygramTranslateOfflineFormatToast">오프라인 엔진으로 번역할 때 굵게, 기울임, 코드 서식이 손실될 수 있습니다.</string>
+    <string name="MercurygramTranslateOfflineNoModel">오프라인 번역: %1$s 모델이 설치되어 있지 않습니다. Offline Translator를 열어 다운로드하세요.</string>
+    <string name="MercurygramTranslateOfflineNoLanguage">오프라인 번역: 원본 언어를 감지할 수 없습니다.</string>
+    <string name="MercurygramTranslateOfflineProviderUnavailable">오프라인 번역: 제공자를 사용할 수 없습니다. Offline Translator를 열거나 다시 설치하세요.</string>
+    <string name="MercurygramTranslateOfflineFailed">오프라인 번역에 실패했습니다.</string>
 </resources>
