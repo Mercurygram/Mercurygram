@@ -1439,4 +1439,24 @@
     <string name="MercurygramTorPluginDownloadFailed">Tor-Plugin konnte nicht heruntergeladen werden. Verbindung prüfen und erneut versuchen.</string>
     <string name="MercurygramTorPluginOutdated">Tor-Plugin-Update erforderlich</string>
     <string name="MercurygramTorPluginSignatureMismatch">Tor-Plugin: Signatur stimmt nicht überein — Bindung verweigert</string>
+    <string name="MercurygramTranslationSettings">Übersetzung</string>
+    <string name="MercurygramTranslationRowAbout">Lege fest, wie Mercurygram empfangene Nachrichten übersetzt.</string>
+    <string name="MercurygramTranslationEngine">Engine</string>
+    <string name="MercurygramTranslationMode">Übersetzungs-Engine</string>
+    <string name="MercurygramTranslationModeDefault">Standard (Telegram-Cloud)</string>
+    <string name="MercurygramTranslationModeCloud">Telegram-Cloud</string>
+    <string name="MercurygramTranslationModeAlternative">Alternatives HTTP</string>
+    <string name="MercurygramTranslationModeOffline">Offline (externe App)</string>
+    <string name="MercurygramTranslationAbout">Die Telegram-Cloud sendet den Text an die Server von Telegram (die ihn an Google weiterleiten). Alternatives HTTP leitet den Text über eine Nicht-MTProto-HTTP-Anfrage, die deine Telegram-Identität nicht anhängt. Offline übergibt jede Übersetzung über einen gebundenen Hintergrunddienst an eine separate FOSS-App (Offline Translator, dev.davidv.translator) — die Nachricht verlässt dein Gerät nie. Fett-, Kursiv- und Code-Formatierung können auf dem Offline-Weg verloren gehen, da die Engine reinen Text zurückgibt.</string>
+    <string name="MercurygramTranslationOfflineSection">Offline-Übersetzer</string>
+    <string name="MercurygramTranslationInstallApp">Offline Translator aus F-Droid installieren</string>
+    <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) ist der FOSS-Referenzanbieter — bringt offline Bergamot-Modelle mit und stellt einen gebundenen Hintergrunddienst bereit, an den Mercurygram jede Übersetzung still delegiert. Solange er nicht installiert ist, verwenden Übersetzungen den unten erlaubten Fallback.</string>
+    <string name="MercurygramTranslationOfflineProviderReady">Offline Translator ist installiert. Öffne ihn einmal, um das/die Sprachpaar(e) herunterzuladen, aus dem/denen und in das/die du übersetzen möchtest.</string>
+    <string name="MercurygramTranslationAutoFallback">Automatischer Fallback bei Fehler</string>
+    <string name="MercurygramTranslationAutoFallbackAbout">Wenn der Offline-Übersetzer nichts zurückgibt (kein Modell für das Sprachpaar, Sprache nicht erkannt, Dienst nicht erreichbar), wird auf den Alternativ-HTTP-Pfad zurückgegriffen. Die Cloud wird nie als Fallback verwendet, wenn du die Offline-Engine aus Datenschutzgründen gewählt hast.</string>
+    <string name="MercurygramTranslateOfflineFormatToast">Fett-, Kursiv- und Code-Formatierung können beim Übersetzen mit der Offline-Engine verloren gehen.</string>
+    <string name="MercurygramTranslateOfflineNoModel">Offline-Übersetzung: Kein Modell für %1$s installiert. Öffne Offline Translator, um es herunterzuladen.</string>
+    <string name="MercurygramTranslateOfflineNoLanguage">Offline-Übersetzung: Ausgangssprache konnte nicht erkannt werden.</string>
+    <string name="MercurygramTranslateOfflineProviderUnavailable">Offline-Übersetzung: Anbieter nicht verfügbar. Öffne oder installiere Offline Translator neu.</string>
+    <string name="MercurygramTranslateOfflineFailed">Offline-Übersetzung fehlgeschlagen.</string>
 </resources>
