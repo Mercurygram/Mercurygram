@@ -9702,7 +9702,13 @@ public class ChatActivity extends BaseFragment implements
 
             @Override
             protected void onCloseClick() {
+                // Mercurygram: the unlocked translate bar gate (isDialogTranslatableMg)
+                // ignores the upstream dialog_show_translate_count counter, so the
+                // non-premium close button must mark the dialog hidden the same way
+                // the premium "Hide" menu item does — otherwise the bar would
+                // instantly reappear. Keep the counter write for upstream parity.
                 MessagesController.getNotificationsSettings(currentAccount).edit().putInt("dialog_show_translate_count" + getDialogId(), 140).commit();
+                getMessagesController().getTranslateController().setHideTranslateDialog(getDialogId(), true);
                 updateTopPanel(true);
             }
         };
@@ -11120,7 +11126,7 @@ public class ChatActivity extends BaseFragment implements
         if (translateItem == null) {
             return;
         }
-        translateItem.setVisibility(getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()) && getMessagesController().getTranslateController().isDialogTranslatable(getDialogId()) ? View.VISIBLE : View.GONE);
+        translateItem.setVisibility(getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()) && getMessagesController().getTranslateController().isDialogTranslatableMg(getDialogId()) ? View.VISIBLE : View.GONE);
     }
 
     private Animator infoTopViewAnimator;
@@ -27483,9 +27489,11 @@ public class ChatActivity extends BaseFragment implements
         if (chat && encryptedChat == null) {
             menu.add(R.id.menu_groupbolditalic, R.id.menu_date, order++, LocaleController.getString(R.string.FormattedDate));
         }
-//        if (MessagesController.getInstance(UserConfig.selectedAccount).getTranslateController().isContextTranslateEnabled()) {
-//            menu.add(R.id.menu_groupbolditalic, R.id.menu_translate, order++, "Translate");
-//        }
+        // Mercurygram: translate the selected text via the user's chosen engine
+        // (handled in EditTextCaption.translateSelected → TranslateAlert3, which
+        // routes through MgTranslateDispatcher). Always offered — works on any
+        // selection regardless of chat type.
+        menu.add(R.id.menu_groupbolditalic, R.id.menu_translate, order++, LocaleController.getString(R.string.TranslateMessage));
         menu.add(R.id.menu_groupbolditalic, R.id.menu_regular, order++, LocaleController.getString(R.string.Regular));
     }
 
@@ -28932,11 +28940,15 @@ public class ChatActivity extends BaseFragment implements
         }
 
         boolean showRestartTopic = !isInPreviewMode() && forumTopic != null && forumTopic.closed && !forumTopic.hidden && ChatObject.canManageTopic(currentAccount, currentChat, forumTopic);
-        boolean showTranslate = (
-            getUserConfig().isPremium() || currentChat != null && currentChat.autotranslation ?
-                getMessagesController().getTranslateController().isDialogTranslatable(getDialogId()) && !getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()) :
-                !getMessagesController().premiumFeaturesBlocked() && preferences.getInt("dialog_show_translate_count" + did, 5) <= 0
-        ) || DEBUG_TOP_PANELS;
+        // Mercurygram: the chat translate bar is unlocked for every user (premium
+        // is a Telegram monetization gate, not a technical requirement), so the
+        // auto path applies to all non-encrypted dialogs — private, group, channel.
+        // isDialogTranslatableMg additionally surfaces the bar in secret chats, but
+        // only when the offline on-device translator is selected and usable.
+        boolean showTranslate =
+            (getMessagesController().getTranslateController().isDialogTranslatableMg(getDialogId())
+                && !getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()))
+            || DEBUG_TOP_PANELS;
         boolean showAddProfilePicture = UserObject.isBot(currentUser) && currentUser.bot_can_edit && currentUser.photo == null;
         boolean showBizBot = currentEncryptedChat == null && getUserConfig().isPremium() && preferences.getLong("dialog_botid" + did, 0) != 0 || DEBUG_TOP_PANELS;
         boolean showBotAd = currentUser != null && currentUser.bot && messages.size() >= 2 && botSponsoredMessage != null;
@@ -31633,6 +31645,10 @@ public class ChatActivity extends BaseFragment implements
                         processSelectedOption(options.get(i));
                     });
                     if (option == OPTION_TRANSLATE) {
+                        // Mercurygram: in a secret chat the alert must translate on-device
+                        // only (dispatchSecret) — pass the encrypted flag so TranslateAlert2
+                        // never reaches a network translate path.
+                        final boolean encrypted = currentEncryptedChat != null;
                         final boolean translateEnabled = getMessagesController().getTranslateController().isContextTranslateEnabled();
                         String toLangDefault = LocaleController.getInstance().getCurrentLocale().getLanguage();
                         String toLang = TranslateAlert2.getToLanguage();
@@ -31660,7 +31676,7 @@ public class ChatActivity extends BaseFragment implements
 
                                 String toLangValue = fromLang != null && fromLang.equals(toLang) ? toLangDefault : toLang;
                                 ArrayList<TLRPC.MessageEntity> entities = selectedObject != null && selectedObject.messageOwner != null ? selectedObject.messageOwner.entities : null;
-                                TranslateAlert2 alert = TranslateAlert2.showAlert(getParentActivity(), this, currentAccount, inputPeer, messageIdToTranslate[0], selectedObject.summarized, fromLang, toLangValue, finalMessageText, entities, noforwardsOrPaidMedia, onLinkPress, () -> dimBehindView(false));
+                                TranslateAlert2 alert = TranslateAlert2.showAlert(getParentActivity(), this, currentAccount, inputPeer, messageIdToTranslate[0], selectedObject.summarized, fromLang, toLangValue, finalMessageText, entities, noforwardsOrPaidMedia, encrypted, onLinkPress, () -> dimBehindView(false));
                                 alert.setDimBehind(false);
                                 closeMenu(false);
                                 
@@ -31718,7 +31734,7 @@ public class ChatActivity extends BaseFragment implements
                                 }
                                 String toLangValue = fromLang[0] != null && fromLang[0].equals(toLang) ? toLangDefault : toLang;
                                 ArrayList<TLRPC.MessageEntity> entities = selectedObject != null && selectedObject.messageOwner != null ? selectedObject.messageOwner.entities : null;
-                                TranslateAlert2 alert = TranslateAlert2.showAlert(getParentActivity(), this, currentAccount, inputPeer, messageIdToTranslate[0], selectedObject.summarized, fromLang[0], toLangValue, finalMessageText, entities, noforwardsOrPaidMedia, onLinkPress, () -> dimBehindView(false));
+                                TranslateAlert2 alert = TranslateAlert2.showAlert(getParentActivity(), this, currentAccount, inputPeer, messageIdToTranslate[0], selectedObject.summarized, fromLang[0], toLangValue, finalMessageText, entities, noforwardsOrPaidMedia, encrypted, onLinkPress, () -> dimBehindView(false));
                                 alert.setDimBehind(false);
                                 closeMenu(false);
 
@@ -31746,13 +31762,19 @@ public class ChatActivity extends BaseFragment implements
                                     onLangDetectionDone.getAndSet(null).run();
                                 }
                             }, 250);
-                        } else if (translateEnabled) {
+                        } else if (translateEnabled || encrypted) {
+                            // Mercurygram: secret-chat translate has no detected source
+                            // language (MLKit is removed, originalLanguage is null) and must
+                            // not depend on the "Show Translate button" context setting —
+                            // otherwise the secret-chat Translate item silently hits the
+                            // final else below and is set GONE. encrypted forces the
+                            // on-device alert ("und" → provider auto-detects the source).
                             cell.setOnClickListener(e -> {
                                 if (selectedObject == null || i >= options.size() || getParentActivity() == null) {
                                     return;
                                 }
 
-                                TranslateAlert2 alert = TranslateAlert2.showAlert(getParentActivity(), this, currentAccount, inputPeer, messageIdToTranslate[0], selectedObject.summarized, "und", toLang, finalMessageText, null, noforwardsOrPaidMedia, onLinkPress, () -> dimBehindView(false));
+                                TranslateAlert2 alert = TranslateAlert2.showAlert(getParentActivity(), this, currentAccount, inputPeer, messageIdToTranslate[0], selectedObject.summarized, "und", toLang, finalMessageText, null, noforwardsOrPaidMedia, encrypted, onLinkPress, () -> dimBehindView(false));
                                 alert.setDimBehind(false);
                                 closeMenu(false);
 
@@ -45747,6 +45769,18 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(R.string.Copy));
                     options.add(OPTION_COPY);
                     icons.add(R.drawable.msg_copy);
+                }
+                // Mercurygram: single-message translate in secret chats — only when the
+                // on-device offline translator is selected and usable (passesSecretTranslateGate),
+                // so secret text is translated entirely on-device (dispatchSecret) and never
+                // hits the network. The OPTION_TRANSLATE handler passes encrypted=true.
+                if (selectedObject != null && selectedObject.contentType == 0
+                        && !TextUtils.isEmpty(selectedObject.getMessageTextToTranslate(selectedObjectGroup, null))
+                        && !selectedObject.isAnimatedEmoji() && !selectedObject.isDice()
+                        && TranslateController.passesSecretTranslateGate(dialog_id)) {
+                    items.add(LocaleController.getString(R.string.TranslateMessage));
+                    options.add(OPTION_TRANSLATE);
+                    icons.add(R.drawable.msg_translate);
                 }
                 if (!isThreadChat() && chatMode != MODE_SCHEDULED && currentChat != null && primaryMessage != null && (currentChat.has_link || primaryMessage.hasReplies()) && currentChat.megagroup && primaryMessage.canViewThread()) {
                     if (primaryMessage.hasReplies()) {
