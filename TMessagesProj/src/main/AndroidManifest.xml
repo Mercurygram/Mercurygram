@@ -117,6 +117,11 @@
              require explicit declaration for plain getPackageInfo lookups
              that MgTorClient.isPluginInstalled relies on). -->
         <package android:name="it.belloworld.mercurygram.plugin.tor" />
+        <!-- Mercurygram: AIDL translation client (dev.davidv.translator). -->
+        <package android:name="dev.davidv.translator"/>
+        <intent>
+            <action android:name="dev.davidv.translator.ITranslationService"/>
+        </intent>
     </queries>
 
     <application
