@@ -1208,7 +1208,7 @@
     <string name="MercurygramTranslationModeCloud">Telegram 클라우드</string>
     <string name="MercurygramTranslationModeAlternative">대체 HTTP</string>
     <string name="MercurygramTranslationModeOffline">오프라인 (외부 앱)</string>
-    <string name="MercurygramTranslationAbout">Telegram 클라우드는 텍스트를 Telegram 서버로 보내며(이후 Google로 전달됩니다). 대체 HTTP는 Telegram 신원 정보를 포함하지 않는 비-MTProto HTTP 요청을 통해 텍스트를 전달합니다. 오프라인은 백그라운드 바인드 서비스를 통해 각 번역을 별도의 FOSS 앱(Offline Translator, dev.davidv.translator)에 위임합니다 — 메시지가 절대로 기기를 벗어나지 않습니다. 오프라인 경로에서는 엔진이 일반 텍스트만 반환하므로 굵게, 기울임, 코드 서식이 손실될 수 있습니다.</string>
+    <string name="MercurygramTranslationAbout">Telegram 클라우드는 텍스트를 Telegram 서버로 보내며(이후 Google로 전달됩니다). 대체 HTTP는 여러 엔진(DuckDuckGo, LibreTranslate, Google, MyMemory, Reverso)을 묶어주는 공개 Mozhi 프라이버시 프록시를 통해 텍스트를 라우팅합니다 — 아래에서 엔진과 인스턴스를 선택하세요. 오프라인은 백그라운드 바인드 서비스를 통해 각 번역을 별도의 FOSS 앱(Offline Translator, dev.davidv.translator)에 위임합니다 — 메시지가 절대로 기기를 벗어나지 않습니다. 오프라인 경로에서는 엔진이 일반 텍스트만 반환하므로 굵게, 기울임, 코드 서식이 손실될 수 있습니다.</string>
     <string name="MercurygramTranslationOfflineSection">오프라인 번역기</string>
     <string name="MercurygramTranslationInstallApp">F-Droid에서 Offline Translator 설치</string>
     <string name="MercurygramTranslationOfflineNoApp">Offline Translator(dev.davidv.translator)가 표준 FOSS 제공자입니다 — 오프라인 Bergamot 모델을 포함하며 Mercurygram이 각 번역을 조용히 위임하는 백그라운드 바인드 서비스를 제공합니다. 설치되기 전까지는 아래에서 허용한 대체 경로로 번역이 진행됩니다.</string>
@@ -1220,4 +1220,17 @@
     <string name="MercurygramTranslateOfflineNoLanguage">오프라인 번역: 원본 언어를 감지할 수 없습니다.</string>
     <string name="MercurygramTranslateOfflineProviderUnavailable">오프라인 번역: 제공자를 사용할 수 없습니다. Offline Translator를 열거나 다시 설치하세요.</string>
     <string name="MercurygramTranslateOfflineFailed">오프라인 번역에 실패했습니다.</string>
+    <string name="MercurygramTranslationAlternativeSection">대체 HTTP 백엔드</string>
+    <string name="MercurygramTranslationAlternativeEngine">엔진</string>
+    <string name="MercurygramTranslationAlternativeInstance">인스턴스</string>
+    <string name="MercurygramTranslationAlternativeInstanceAuto">자동 (기본 인스턴스 순환)</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustom">사용자 URL…</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustomHint">https://your-mozhi-instance.example</string>
+    <string name="MercurygramTranslationAlternativeInstanceInvalid">유효한 https:// URL을 입력하세요.</string>
+    <string name="MercurygramTranslationAlternativeOperatorDisclosure">번역은 선택한 Mozhi 인스턴스가 처리합니다. 운영자가 기록할 수 있습니다.</string>
+    <string name="MercurygramTranslationAlternativeEngineDuckDuckGo">DuckDuckGo</string>
+    <string name="MercurygramTranslationAlternativeEngineLibre">LibreTranslate</string>
+    <string name="MercurygramTranslationAlternativeEngineGoogle">Google (Mozhi 경유)</string>
+    <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
+    <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
 </resources>
