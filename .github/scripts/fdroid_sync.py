@@ -145,11 +145,35 @@ def sync_app(
         new['versionCode'] = new_vc
         new['commit'] = sha
         new['ndk'] = ndk_ver
+        # Plugin's openssl submodule + its recursive sub-submodules ship
+        # binary blobs that fdroidserver's scanner rejects (fuzz corpora,
+        # test fixtures, krb5/pyca/wycheproof test vectors, gost-engine
+        # tcl test data, doc images, a stray apps/insta.ca.crt). None are
+        # needed by build_openssl.sh (Configure no-tests, libs only).
+        rm_list = new.setdefault('rm', [])
+        for p in (
+            'TMessagesProj_PluginTor/jni/openssl/fuzz',
+            'TMessagesProj_PluginTor/jni/openssl/test',
+            'TMessagesProj_PluginTor/jni/openssl/doc',
+            'TMessagesProj_PluginTor/jni/openssl/gost-engine',
+            'TMessagesProj_PluginTor/jni/openssl/krb5',
+            'TMessagesProj_PluginTor/jni/openssl/pyca-cryptography',
+            'TMessagesProj_PluginTor/jni/openssl/wycheproof',
+            'TMessagesProj_PluginTor/jni/openssl/apps/insta.ca.crt',
+        ):
+            if p not in rm_list:
+                rm_list.append(p)
         # Load-bearing: MG_VERSION_NAME and MG_VERSION_CODE no longer live
         # in gradle.properties — gradle/mg-version.gradle derives both
         # from MG_BUILD_TAG. The container build picks the tag up here.
-        # Append (don't replace) so the template's existing prebuild
-        # steps (API_KEYS writer, QUIET_NATIVE_BUILD) survive.
+        # Preserve the template's other prebuild steps (API_KEYS writer,
+        # QUIET_NATIVE_BUILD) but DROP any pre-existing MG_BUILD_TAG=
+        # line — older versions of this script wrote to subdir
+        # gradle.properties (without `../`), and that file is auto-loaded
+        # into the subproject's property bag at gradle startup, shadowing
+        # the correct root-level value before mg-version.gradle's
+        # rootProject.file() fallback ever fires (broke versionName in
+        # the fdroid build, caught by beta verify-diff on 12.7.3.2.7).
         # Write to ../gradle.properties (= REPO ROOT gradle.properties):
         # prebuild runs from <build>/<subdir>, but with both :TMessagesProj_App
         # and :TMessagesProj_PluginTor in settings.gradle AGP evaluates BOTH
@@ -158,7 +182,9 @@ def sync_app(
         # plugin's apply-from-mg-version.gradle to see it during a main build
         # (and vice versa for plugin builds). Subdir gradle.properties is only
         # visible to the subproject that owns it.
-        new.setdefault('prebuild', []).append(
+        prebuild = new.setdefault('prebuild', [])
+        prebuild[:] = [p for p in prebuild if 'MG_BUILD_TAG=' not in p]
+        prebuild.append(
             f"printf '\\nMG_BUILD_TAG={tag}\\n' >> ../gradle.properties"
         )
         builds.append(new)
