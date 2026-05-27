@@ -304,6 +304,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
 
         new TranslateAlert3(getContext(), lastFragment != null ? lastFragment.getResourceProvider() : null)
             .setText(text)
+            .setSecret(isSelectionTranslateSecret())
             .setOnUse(translatedText -> {
                 getText().replace(start, end, translatedText);
                 setSelection(start, start + translatedText.length());
@@ -311,6 +312,12 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
             .show();
 
         setSelection(start, end);
+    }
+
+    // Mercurygram: subclasses tied to a secret-chat context override this so the
+    // selection translation stays on-device only (TranslateAlert3.setSecret).
+    protected boolean isSelectionTranslateSecret() {
+        return false;
     }
 
     public void makeSelectedUrl() {
@@ -951,6 +958,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_link, LocaleController.getString(R.string.CreateLink)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_regular, LocaleController.getString(R.string.Regular)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_date, LocaleController.getString(R.string.FormattedDate)));
+            infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_translate, LocaleController.getString(R.string.TranslateMessage)));
         }
     }
 
