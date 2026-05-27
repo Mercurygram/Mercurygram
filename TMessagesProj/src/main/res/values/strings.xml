@@ -10805,6 +10805,27 @@
     <string name="MercurygramUpdateTorPlugin">Update Tor plugin</string>
     <string name="MercurygramTorPluginSignatureMismatch">Tor plugin: signature mismatch — refusing to bind</string>
 
+    <string name="MercurygramTranslationSettings">Translation</string>
+    <string name="MercurygramTranslationRowAbout">Pick how Mercurygram translates received messages.</string>
+    <string name="MercurygramTranslationEngine">Engine</string>
+    <string name="MercurygramTranslationMode">Translation engine</string>
+    <string name="MercurygramTranslationModeDefault">Default (Telegram cloud)</string>
+    <string name="MercurygramTranslationModeCloud">Telegram cloud</string>
+    <string name="MercurygramTranslationModeAlternative">Alternative HTTP</string>
+    <string name="MercurygramTranslationModeOffline">Offline (external app)</string>
+    <string name="MercurygramTranslationAbout">Telegram cloud sends the text to Telegram\'s servers (which forward to Google). Alternative HTTP routes the text through a non-MTProto HTTP request that does not attach your Telegram identity. Offline delegates each translation to a separate FOSS app (Offline Translator, dev.davidv.translator) over a background bound service — the message never leaves your device. Bold, italic, and code formatting may be lost on the offline path because the engine returns plain text.</string>
+    <string name="MercurygramTranslationOfflineSection">Offline translator</string>
+    <string name="MercurygramTranslationInstallApp">Install Offline Translator from F-Droid</string>
+    <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) is the reference FOSS provider — bundles offline Bergamot models and exposes a background bound service that Mercurygram dispatches each translation to silently. Until it is installed, translations stay on whatever fallback you allow below.</string>
+    <string name="MercurygramTranslationOfflineProviderReady">Offline Translator is installed. Open it once to download the language pair(s) you want to translate from and to.</string>
+    <string name="MercurygramTranslationAutoFallback">Auto-fallback on failure</string>
+    <string name="MercurygramTranslationAutoFallbackAbout">If the offline translator returns nothing (no model for the language pair, language not detected, service unreachable), fall back to the Alternative HTTP path. Cloud is never used as a fallback when you picked the offline engine for privacy.</string>
+    <string name="MercurygramTranslateOfflineFormatToast">Bold, italic, and code formatting may be lost when translating with the offline engine.</string>
+    <string name="MercurygramTranslateOfflineNoModel">Offline translation: no model installed for %1$s. Open Offline Translator to download it.</string>
+    <string name="MercurygramTranslateOfflineNoLanguage">Offline translation: could not detect the source language.</string>
+    <string name="MercurygramTranslateOfflineProviderUnavailable">Offline translation: provider unavailable. Open or reinstall Offline Translator.</string>
+    <string name="MercurygramTranslateOfflineFailed">Offline translation failed.</string>
+
     <string name="PollV2ShowWhoVoted">Show Who Voted</string>
     <string name="PollV2ShowWhoVotedInfo">Display voter name on each option</string>
     <string name="PollV2AllowMultipleAnswers">Allow Multiple Answers</string>
