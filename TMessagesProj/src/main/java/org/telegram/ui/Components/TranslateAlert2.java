@@ -49,11 +49,10 @@ import com.google.common.base.Charsets;
 //import com.google.mlkit.nl.translate.Translator;
 //import com.google.mlkit.nl.translate.TranslatorOptions;
 
-import org.json.JSONArray;
+import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Emoji;
-import org.telegram.messenger.LanguageDetector;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
@@ -75,7 +74,6 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextSelectionHelper;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
@@ -84,6 +82,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TranslateAlert2 extends BottomSheet implements NotificationCenter.NotificationCenterDelegate {
 
@@ -96,6 +96,10 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
     private TL_iv.RichMessage reqRichMessage;
     private RichMessageLayout.PreviewView richLoadingPreviewView;
     private RichMessageLayout.PreviewView richPreviewView;
+    // Mercurygram: true when this alert translates a secret/encrypted-chat message.
+    // Forces the on-device-only dispatchSecret path in translate(); the alert can
+    // then never reach a network translate path regardless of the caller-side gate.
+    private boolean encrypted;
 
     private String fromLanguage, toLanguage;
     private String prevToLanguage;
@@ -127,7 +131,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         CharSequence text, ArrayList<TLRPC.MessageEntity> entities,
         Theme.ResourcesProvider resourcesProvider
     ) {
-        this(context, fromLanguage, toLanguage, text, entities, null, 0, false, null, resourcesProvider);
+        this(context, fromLanguage, toLanguage, text, entities, null, 0, false, null, false, resourcesProvider);
     }
 
     private TranslateAlert2(
@@ -135,6 +139,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         String fromLanguage, String toLanguage,
         CharSequence text, ArrayList<TLRPC.MessageEntity> entities, TLRPC.InputPeer peer, int messageId, boolean sum,
         TL_iv.RichMessage richMessage,
+        boolean encrypted,
         Theme.ResourcesProvider resourcesProvider
     ) {
         super(context, false, resourcesProvider);
@@ -148,6 +153,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         this.reqMessageId = messageId;
         this.reqSum = sum;
         this.reqRichMessage = richMessage;
+        this.encrypted = encrypted;
 
         this.fromLanguage = fromLanguage;
         this.toLanguage = toLanguage;
@@ -313,22 +319,71 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             reqId = null;
         }
 
-        final String method = MessagesController.getInstance(currentAccount).translationsManualEnabled;
-        if ("alternative".equalsIgnoreCase(method)) {
-            translateAlt();
+        // Mercurygram: route through MgTranslateDispatcher when the user picked a
+        // non-default mg_translateMode. Summarize (reqSum) stays on cloud RPC —
+        // Bergamot doesn't summarize; alternative HTTP doesn't either.
+        final String mgText = reqText == null ? "" : reqText.toString();
+        final String mgFromLng = simplifyLanguage(fromLanguage);
+        final String mgToLng = simplifyLanguage(toLanguage);
+        final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Result mgResult =
+                (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                    if (out != null) {
+                        firstTranslation = false;
+                        textView.setText(preprocessText(out));
+                        adapter.updateMainView(textViewContainer);
+                        return;
+                    }
+                    if (isDismissed()) return;
+                    final CharSequence msg = it.belloworld.mercurygram.translate.MgTranslateDispatcher.mapBulletin(failure, rateLimit);
+                    if (firstTranslation) {
+                        dismiss();
+                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR, msg);
+                    } else {
+                        BulletinFactory.of((FrameLayout) containerView, resourcesProvider).createErrorBulletin(msg).show();
+                        headerView.toLanguageTextView.setText(languageName(toLanguage = prevToLanguage));
+                        adapter.updateMainView(textViewContainer);
+                    }
+                });
+
+        // Mercurygram privacy invariant: a secret/encrypted-chat message is translated
+        // on-device ONLY — never cloud RPC, never Mozhi HTTP, never summarize.
+        // dispatchSecret always returns HANDLED and fails closed (PROVIDER_UNAVAILABLE
+        // bulletin) when the offline provider is unusable, so this short-circuit can
+        // never fall through to a network path regardless of mg_translateMode / the
+        // caller-side menu gate.
+        if (encrypted) {
+            it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatchSecret(mgText, mgFromLng, mgToLng, mgResult);
             return;
-        }/* else if ("system".equalsIgnoreCase(method)) {
+        }
+
+        if (!(reqSum && reqPeer != null)) {
+            final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome =
+                    it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(mgText, mgFromLng, mgToLng, mgResult);
+            if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+                return;
+            }
+            // FORCE_CLOUD: skip the upstream translationsManualEnabled "alternative"
+            // branch and fall straight through to messages.translateText below.
+            if (mgOutcome != it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.FORCE_CLOUD) {
+                final String method = MessagesController.getInstance(currentAccount).translationsManualEnabled;
+                if ("alternative".equalsIgnoreCase(method)) {
+                    translateAlt();
+                    return;
+                }
+            }
+        } else {
+            final String method = MessagesController.getInstance(currentAccount).translationsManualEnabled;
+            if ("alternative".equalsIgnoreCase(method)) {
+                translateAlt();
+                return;
+            }
+        }
+        /* else if ("system".equalsIgnoreCase(method)) {
             translateSystem();
             return;
         }*/
 
-        String lang = toLanguage;
-        if (lang != null) {
-            lang = lang.split("_")[0];
-        }
-        if ("nb".equals(lang)) {
-            lang = "no";
-        }
+        String lang = simplifyLanguage(toLanguage);
 
         if (reqRichMessage != null && reqPeer != null) {
             TLRPC.TL_messages_translateRichMessage req = new TLRPC.TL_messages_translateRichMessage();
@@ -406,10 +461,10 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             req.flags |= 2;
             req.text.add(textWithEntities);
         }
-//        if (fromLanguage != null && !"und".equals(fromLanguage)) {
-//            req.flags |= 4;
-//            req.from_lang = fromLanguage;
-//        }
+    //        if (fromLanguage != null && !"und".equals(fromLanguage)) {
+    //            req.flags |= 4;
+    //            req.from_lang = fromLanguage;
+    //        }
         req.to_lang = normalizeLanguage(lang);
         reqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (res, err) -> {
             AndroidUtilities.runOnUIThread(() -> {
@@ -450,22 +505,8 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
     };
     private void translateAlt() {
         final String text = reqText == null ? "" : reqText.toString();
-        String _fromLng = fromLanguage;
-        if (_fromLng != null) {
-            _fromLng = _fromLng.split("_")[0];
-        }
-        if ("nb".equals(_fromLng)) {
-            _fromLng = "no";
-        }
-        final String fromLng = _fromLng;
-        String _toLng = toLanguage;
-        if (_toLng != null) {
-            _toLng = _toLng.split("_")[0];
-        }
-        if ("nb".equals(_toLng)) {
-            _toLng = "no";
-        }
-        final String toLng = _toLng;
+        final String fromLng = simplifyLanguage(fromLanguage);
+        final String toLng = simplifyLanguage(toLanguage);
 
         alternativeTranslate(text, fromLng, toLng, (res, rateLimit) -> {
             if (res != null) {
@@ -488,6 +529,17 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
                 }
             }
         });
+    }
+
+    /** Strip locale suffix ("en_US" -> "en") and map nb -> no. Used by the MG
+     *  dispatcher branch in {@link #translate()} and the alternative HTTP path. */
+    // Mercurygram: package-visible so TranslateAlert3's MgTranslateDispatcher
+    // routing can reuse the same normalisation.
+    static String simplifyLanguage(String lang) {
+        if (lang == null) return null;
+        String simplified = lang.split("_")[0];
+        if ("nb".equals(simplified)) simplified = "no";
+        return simplified;
     }
 
     private static int lastIndexOfSafe(String text, String target, int start, int end) {
@@ -518,16 +570,19 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         return result;
     }
 
+    // Mercurygram: per-instance ban window for Mozhi backends that 429 /
+    // 5xx / time out. Skipped for INSTANCE_BAN_WINDOW_MS, then retried.
+    // Cleared from SharedConfig setters so a settings change doesn't carry
+    // stale failure state.
+
     public static void alternativeTranslate(String text, String fromLng, String toLng, Utilities.Callback2<String, Boolean> done) {
         if (done == null) return;
-        if (fromLng == null) {
-            LanguageDetector.detectLanguage(text, lng -> {
-                alternativeTranslate(text, lng, toLng, done);
-            }, e -> {
-                alternativeTranslate(text, "en", toLng, done);
-            });
-            return;
-        }
+        // Mozhi accepts from=auto for source-language autodetect. The
+        // LanguageDetector path was a relic of the MLKit code that no longer
+        // ships in this build (returns hasSupport()==false), so always-recursing
+        // through it would have defaulted to "en" — worse than letting the
+        // backend autodetect. The worker substitutes "auto" when fromLng is
+        // null/empty.
         final String etext = Uri.encode(text);
         if (etext.length() > 5000) {
             ArrayList<String> parts = cut(etext, 5000);
@@ -539,7 +594,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             final boolean[] fullyDone = new boolean[1];
             for (int i = 0; i < parts.size(); ++i) {
                 final int index = i;
-                alternativeTranslateInternal(parts.get(i), fromLng, toLng, (res, rateLimit) -> {
+                it.belloworld.mercurygram.translate.MgMozhiClient.translate(parts.get(i), fromLng, toLng, (res, rateLimit) -> {
                     if (fullyDone[0]) return;
                     if (res != null) {
                         results.set(index, res);
@@ -561,82 +616,18 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
                 });
             }
         } else {
-            alternativeTranslateInternal(etext, fromLng, toLng, done);
+            it.belloworld.mercurygram.translate.MgMozhiClient.translate(etext, fromLng, toLng, done);
         }
     }
-    private static void alternativeTranslateInternal(String text, String fromLng, String toLng, Utilities.Callback2<String, Boolean> done) {
-        if (done == null) return;
-        new Thread() {
-            @Override
-            public void run() {
-                String uri;
-                HttpURLConnection connection = null;
-                try {
-                    uri = "https://translate.goo";
-                    uri += "gleapis.com/transl";
-                    uri += "ate_a";
-                    uri += "/singl";
-                    uri += "e?client=gtx&sl=" + Uri.encode(fromLng) + "&tl=" + Uri.encode(toLng) + "&dt=t" + "&ie=UTF-8&oe=UTF-8&otf=1&ssel=0&tsel=0&kc=7&dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&q=";
-                    uri += text;
-                    connection = (HttpURLConnection) new URI(uri).toURL().openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.setRequestProperty("User-Agent", userAgents[(int) Math.round(Math.random() * (userAgents.length - 1))]);
-                    connection.setRequestProperty("Content-Type", "application/json");
+    /**
+     * Mercurygram: route the request through a Mozhi instance
+     * (https://codeberg.org/aryak/mozhi) — multi-engine privacy proxy —
+     * instead of contacting translate.googleapis.com directly. Walks the
+     * configured instance list on 429 / 5xx / timeout / parse failure with
+     * a 60s in-memory ban per instance, and propagates {@code rateLimit=true}
+     * only when EVERY tried instance returned 429.
+     */
 
-                    StringBuilder textBuilder = new StringBuilder();
-                    try (Reader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8))) {
-                        int c = 0;
-                        while ((c = reader.read()) != -1) {
-                            textBuilder.append((char) c);
-                        }
-                    }
-                    String jsonString = textBuilder.toString();
-
-                    JSONTokener tokener = new JSONTokener(jsonString);
-                    JSONArray array = new JSONArray(tokener);
-                    JSONArray array1 = array.getJSONArray(0);
-                    String sourceLanguage = null;
-                    try {
-                        sourceLanguage = array.getString(2);
-                    } catch (Exception e2) {}
-                    if (sourceLanguage != null && sourceLanguage.contains("-")) {
-                        sourceLanguage = sourceLanguage.substring(0, sourceLanguage.indexOf("-"));
-                    }
-                    String result = "";
-                    for (int i = 0; i < array1.length(); ++i) {
-                        String blockText = array1.getJSONArray(i).getString(0);
-                        if (blockText != null && !blockText.equals("null"))
-                            result += /*(i > 0 ? "\n" : "") +*/ blockText;
-                    }
-                    if (text.length() > 0 && text.charAt(0) == '\n')
-                        result = "\n" + result;
-                    final String finalResult = result;
-                    AndroidUtilities.runOnUIThread(() -> {
-                        if (done != null)
-                            done.run(finalResult, false);
-                    });
-                } catch (Exception e) {
-                    try {
-                        Log.e("translate", "failed to translate a text " + (connection != null ? connection.getResponseCode() : null) + " " + (connection != null ? connection.getResponseMessage() : null));
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
-                    e.printStackTrace();
-
-                    try {
-                        final boolean rateLimit = connection != null && connection.getResponseCode() == 429;
-                        AndroidUtilities.runOnUIThread(() -> {
-                            done.run(null, rateLimit);
-                        });
-                    } catch (Exception e2) {
-                        AndroidUtilities.runOnUIThread(() -> {
-                            done.run(null, false);
-                        });
-                    }
-                }
-            }
-        }.start();
-    }
 
 //    private ArrayList<Runnable> cancelTrackingDownloads = new ArrayList<>();
 //    private ArrayList<String> downloadingModels;
@@ -1772,7 +1763,13 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
     }
 
     public static TranslateAlert2 showAlert(Context context, BaseFragment fragment, int currentAccount, TLRPC.InputPeer peer, int msgId, boolean sum, String fromLanguage, String toLanguage, CharSequence text, ArrayList<TLRPC.MessageEntity> entities, boolean noforwards, Utilities.CallbackReturn<URLSpan, Boolean> onLinkPress, Runnable onDismiss) {
-        TranslateAlert2 alert = new TranslateAlert2(context, fromLanguage, toLanguage, text, entities, peer, msgId, sum, null, null) {
+        return showAlert(context, fragment, currentAccount, peer, msgId, sum, fromLanguage, toLanguage, text, entities, noforwards, false, onLinkPress, onDismiss);
+    }
+
+    // Mercurygram: overload carrying the secret/encrypted-chat flag. When true the alert
+    // translates entirely on-device (dispatchSecret) and never touches the network.
+    public static TranslateAlert2 showAlert(Context context, BaseFragment fragment, int currentAccount, TLRPC.InputPeer peer, int msgId, boolean sum, String fromLanguage, String toLanguage, CharSequence text, ArrayList<TLRPC.MessageEntity> entities, boolean noforwards, boolean encrypted, Utilities.CallbackReturn<URLSpan, Boolean> onLinkPress, Runnable onDismiss) {
+        TranslateAlert2 alert = new TranslateAlert2(context, fromLanguage, toLanguage, text, entities, peer, msgId, sum, null, encrypted, null) {
             @Override
             public void dismiss() {
                 super.dismiss();
@@ -1798,7 +1795,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         if (context == null) {
             return null;
         }
-        TranslateAlert2 alert = new TranslateAlert2(context, fromLanguage, toLanguage, null, null, peer, msgId, false, richMessage, null) {
+        TranslateAlert2 alert = new TranslateAlert2(context, fromLanguage, toLanguage, null, null, peer, msgId, false, richMessage, false, null) {
             @Override
             public void dismiss() {
                 super.dismiss();
