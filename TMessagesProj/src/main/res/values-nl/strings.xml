@@ -1164,7 +1164,7 @@
     <string name="MercurygramTranslationModeCloud">Telegram-cloud</string>
     <string name="MercurygramTranslationModeAlternative">Alternatieve HTTP</string>
     <string name="MercurygramTranslationModeOffline">Offline (externe app)</string>
-    <string name="MercurygramTranslationAbout">De Telegram-cloud stuurt de tekst naar de servers van Telegram (die deze doorsturen naar Google). Alternatieve HTTP routeert de tekst via een niet-MTProto HTTP-verzoek dat je Telegram-identiteit niet meestuurt. Offline delegeert elke vertaling aan een aparte FOSS-app (Offline Translator, dev.davidv.translator) via een gebonden achtergronddienst — het bericht verlaat je apparaat nooit. Opmaak voor vet, cursief en code kan op het offlinepad verloren gaan omdat de engine platte tekst teruggeeft.</string>
+    <string name="MercurygramTranslationAbout">De Telegram-cloud stuurt de tekst naar de servers van Telegram (die deze doorsturen naar Google). Alternatieve HTTP routeert de tekst via een openbare Mozhi-privacyproxy die meerdere engines bundelt (DuckDuckGo, LibreTranslate, Google, MyMemory, Reverso) — kies hieronder engine en instantie. Offline delegeert elke vertaling aan een aparte FOSS-app (Offline Translator, dev.davidv.translator) via een gebonden achtergronddienst — het bericht verlaat je apparaat nooit. Opmaak voor vet, cursief en code kan op het offlinepad verloren gaan omdat de engine platte tekst teruggeeft.</string>
     <string name="MercurygramTranslationOfflineSection">Offlinevertaler</string>
     <string name="MercurygramTranslationInstallApp">Offline Translator installeren via F-Droid</string>
     <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) is de referentie-FOSS-aanbieder — bevat offline Bergamot-modellen en biedt een gebonden achtergronddienst waaraan Mercurygram elke vertaling stil doorgeeft. Zolang die niet is geïnstalleerd, lopen vertalingen via de fallback die je hieronder toestaat.</string>
@@ -1176,4 +1176,17 @@
     <string name="MercurygramTranslateOfflineNoLanguage">Offline vertaling: brontaal kon niet worden gedetecteerd.</string>
     <string name="MercurygramTranslateOfflineProviderUnavailable">Offline vertaling: provider niet beschikbaar. Open of herinstalleer Offline Translator.</string>
     <string name="MercurygramTranslateOfflineFailed">Offline vertaling mislukt.</string>
+    <string name="MercurygramTranslationAlternativeSection">Alternatieve HTTP-backend</string>
+    <string name="MercurygramTranslationAlternativeEngine">Engine</string>
+    <string name="MercurygramTranslationAlternativeInstance">Instantie</string>
+    <string name="MercurygramTranslationAlternativeInstanceAuto">Automatisch (rotatie tussen standaard)</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustom">Aangepaste URL…</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustomHint">https://your-mozhi-instance.example</string>
+    <string name="MercurygramTranslationAlternativeInstanceInvalid">Voer een geldige https://-URL in.</string>
+    <string name="MercurygramTranslationAlternativeOperatorDisclosure">Vertalingen worden verwerkt door de geselecteerde Mozhi-instantie. De beheerder kan ze loggen.</string>
+    <string name="MercurygramTranslationAlternativeEngineDuckDuckGo">DuckDuckGo</string>
+    <string name="MercurygramTranslationAlternativeEngineLibre">LibreTranslate</string>
+    <string name="MercurygramTranslationAlternativeEngineGoogle">Google (via Mozhi)</string>
+    <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
+    <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
 </resources>
