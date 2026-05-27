@@ -336,7 +336,7 @@
     <string name="MercurygramTranslationModeCloud">Облако Telegram</string>
     <string name="MercurygramTranslationModeAlternative">Альтернативный HTTP</string>
     <string name="MercurygramTranslationModeOffline">Офлайн (внешнее приложение)</string>
-    <string name="MercurygramTranslationAbout">Облако Telegram отправляет текст на серверы Telegram (которые пересылают его в Google). Альтернативный HTTP передаёт текст через не-MTProto HTTP-запрос, не привязанный к вашему Telegram-аккаунту. Офлайн делегирует каждый перевод отдельному FOSS-приложению (Offline Translator, dev.davidv.translator) через привязанную фоновую службу — сообщение никогда не покидает ваше устройство. Форматирование жирным, курсивом и кодом может теряться на офлайн-пути, потому что движок возвращает обычный текст.</string>
+    <string name="MercurygramTranslationAbout">Облако Telegram отправляет текст на серверы Telegram (которые пересылают его в Google). Альтернативный HTTP маршрутизирует текст через публичный Mozhi-прокси, уважающий приватность и объединяющий несколько движков (DuckDuckGo, LibreTranslate, Google, MyMemory, Reverso) — выберите движок и экземпляр ниже. Офлайн делегирует каждый перевод отдельному FOSS-приложению (Offline Translator, dev.davidv.translator) через привязанную фоновую службу — сообщение никогда не покидает ваше устройство. Форматирование жирным, курсивом и кодом может теряться на офлайн-пути, потому что движок возвращает обычный текст.</string>
     <string name="MercurygramTranslationOfflineSection">Офлайн-переводчик</string>
     <string name="MercurygramTranslationInstallApp">Установить Offline Translator из F-Droid</string>
     <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) — эталонный FOSS-провайдер: содержит офлайн-модели Bergamot и предоставляет привязанную фоновую службу, которой Mercurygram беззвучно передаёт каждый перевод. Пока он не установлен, переводы выполняются по тому запасному варианту, который вы разрешите ниже.</string>
@@ -348,4 +348,17 @@
     <string name="MercurygramTranslateOfflineNoLanguage">Перевод офлайн: не удалось определить исходный язык.</string>
     <string name="MercurygramTranslateOfflineProviderUnavailable">Перевод офлайн: провайдер недоступен. Откройте или переустановите Offline Translator.</string>
     <string name="MercurygramTranslateOfflineFailed">Перевод офлайн не удался.</string>
+    <string name="MercurygramTranslationAlternativeSection">Альтернативный HTTP-бэкенд</string>
+    <string name="MercurygramTranslationAlternativeEngine">Движок</string>
+    <string name="MercurygramTranslationAlternativeInstance">Экземпляр</string>
+    <string name="MercurygramTranslationAlternativeInstanceAuto">Авто (ротация по стандартным)</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustom">Свой URL…</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustomHint">https://your-mozhi-instance.example</string>
+    <string name="MercurygramTranslationAlternativeInstanceInvalid">Введите корректный URL c https://.</string>
+    <string name="MercurygramTranslationAlternativeOperatorDisclosure">Переводы обрабатываются выбранным экземпляром Mozhi. Оператор может их журналировать.</string>
+    <string name="MercurygramTranslationAlternativeEngineDuckDuckGo">DuckDuckGo</string>
+    <string name="MercurygramTranslationAlternativeEngineLibre">LibreTranslate</string>
+    <string name="MercurygramTranslationAlternativeEngineGoogle">Google (через Mozhi)</string>
+    <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
+    <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
 </resources>
