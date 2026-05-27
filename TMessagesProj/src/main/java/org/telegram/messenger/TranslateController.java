@@ -183,14 +183,46 @@ public class TranslateController extends BaseController {
         );
     }
 
-    public boolean isDialogTranslatable(long dialogId) {
+    // Mercurygram: dialog-kind-agnostic translatability (everything except the
+    // encrypted-dialog rule). isChatDialog restriction stays commented out so
+    // private/user dialogs qualify.
+    private boolean isDialogTranslatableBase(long dialogId) {
         return (
             translatableDialogs.contains(dialogId) &&
             isFeatureAvailable(dialogId) &&
-            !DialogObject.isEncryptedDialog(dialogId) &&
             getUserConfig().getClientUserId() != dialogId
             /* DialogObject.isChatDialog(dialogId) &&*/
         );
+    }
+
+    public boolean isDialogTranslatable(long dialogId) {
+        return isDialogTranslatableBase(dialogId) && !DialogObject.isEncryptedDialog(dialogId);
+    }
+
+    // Mercurygram: the offline AIDL engine is selected AND installed/bindable.
+    // The only translation path that keeps secret message text on-device.
+    public static boolean isSecretOfflineTranslateAllowed() {
+        return it.belloworld.mercurygram.translate.MgTranslateDispatcher.isOfflineUsable();
+    }
+
+    // Mercurygram: single source of truth for the secret-chat translate rule —
+    // a dialog passes unless it is encrypted without the on-device offline
+    // engine usable (the only path that keeps secret text off the network).
+    // Used by every translate affordance that can surface for an encrypted
+    // dialog (chat bar, photo captions) so the privacy gate can't drift.
+    public static boolean passesSecretTranslateGate(long dialogId) {
+        return !DialogObject.isEncryptedDialog(dialogId) || isSecretOfflineTranslateAllowed();
+    }
+
+    // Mercurygram: translatability gate used by the chat translate bar. Same as
+    // isDialogTranslatable for non-encrypted dialogs; additionally permits a
+    // secret/encrypted dialog ONLY when the offline translator is active, so
+    // secret text never leaves the device. isDialogTranslatable itself stays
+    // encrypted-blocking — its other callers (isChatAutoTranslated,
+    // updateDialogFull) read getChatFull(-id)/autotranslation, meaningless for
+    // encrypted ids.
+    public boolean isDialogTranslatableMg(long dialogId) {
+        return isDialogTranslatableBase(dialogId) && passesSecretTranslateGate(dialogId);
     }
 
     public boolean isTranslateDialogHidden(long dialogId) {
@@ -338,20 +370,26 @@ public class TranslateController extends BaseController {
     }
 
     public void setHideTranslateDialog(long dialogId, boolean hide, boolean doNotNotify) {
-        TLRPC.TL_messages_togglePeerTranslations req = new TLRPC.TL_messages_togglePeerTranslations();
-        req.peer = getMessagesController().getInputPeer(dialogId);
-        req.disabled = hide;
-        getConnectionsManager().sendRequest(req, null);
+        // Mercurygram: secret/encrypted dialogs have no server peer and no
+        // ChatFull/UserFull — the server togglePeerTranslations RPC would be
+        // malformed. The bar still appears for them (offline-only), so honor the
+        // hide purely in-memory; skip the server round-trip and persistence.
+        if (!DialogObject.isEncryptedDialog(dialogId)) {
+            TLRPC.TL_messages_togglePeerTranslations req = new TLRPC.TL_messages_togglePeerTranslations();
+            req.peer = getMessagesController().getInputPeer(dialogId);
+            req.disabled = hide;
+            getConnectionsManager().sendRequest(req, null);
 
-        TLRPC.ChatFull chatFull = getMessagesController().getChatFull(-dialogId);
-        if (chatFull != null) {
-            chatFull.translations_disabled = hide;
-            getMessagesStorage().updateChatInfo(chatFull, true);
-        }
-        TLRPC.UserFull userFull = getMessagesController().getUserFull(dialogId);
-        if (userFull != null) {
-            userFull.translations_disabled = hide;
-            getMessagesStorage().updateUserInfo(userFull, true);
+            TLRPC.ChatFull chatFull = getMessagesController().getChatFull(-dialogId);
+            if (chatFull != null) {
+                chatFull.translations_disabled = hide;
+                getMessagesStorage().updateChatInfo(chatFull, true);
+            }
+            TLRPC.UserFull userFull = getMessagesController().getUserFull(dialogId);
+            if (userFull != null) {
+                userFull.translations_disabled = hide;
+                getMessagesStorage().updateUserInfo(userFull, true);
+            }
         }
 
         synchronized (this) {
@@ -814,6 +852,29 @@ public class TranslateController extends BaseController {
     private ArrayList<Integer> pendingLanguageChecks = new ArrayList<>();
     private void checkLanguage(MessageObject messageObject) {
         if (!LanguageDetector.hasSupport()) {
+            // Mercurygram: MLKit removed (LanguageDetector stub returns false). All four
+            // dispatch engines (Telegram RPC, Alternative HTTP, offline AIDL) auto-detect
+            // the source language internally, so we don't need a per-message language to
+            // decide UI visibility. Mark text messages UNKNOWN_LANGUAGE (the long-press
+            // translate cell treats UNKNOWN as "show"; ChatActivity:31427) and add the
+            // dialog to translatableDialogs so the chat-level translate bar appears
+            // without the upstream threshold gate, which can never trip while nothing
+            // populates the certainlyTranslatable set.
+            if (!isTranslatable(messageObject)
+                    || messageObject.messageOwner == null
+                    || TextUtils.isEmpty(messageObject.messageOwner.message)) {
+                return;
+            }
+            final long dialogId = messageObject.getDialogId();
+            if (messageObject.messageOwner.originalLanguage == null) {
+                messageObject.messageOwner.originalLanguage = UNKNOWN_LANGUAGE;
+                getMessagesStorage().updateMessageCustomParams(dialogId, messageObject.messageOwner);
+            }
+            if (translatableDialogs.add(dialogId)) {
+                AndroidUtilities.runOnUIThread(() ->
+                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogIsTranslatable, dialogId),
+                        450);
+            }
             return;
         }
         if (!isTranslatable(messageObject) || messageObject.messageOwner == null || TextUtils.isEmpty(messageObject.messageOwner.message)) {
@@ -918,6 +979,11 @@ public class TranslateController extends BaseController {
         @Nullable String language,
         Utilities.Callback<TLRPC.TL_textWithEntities> callback
     ) {
+        // Mercurygram: never summarize secret-chat text via the cloud RPC. Mirrors
+        // the chat-bar privacy invariant (dispatchSecret); secret messages have no
+        // summary path. Unreachable today (summarize needs a server-set
+        // summary_from_language secret messages lack) but guards future regressions.
+        if (message == null || DialogObject.isEncryptedDialog(message.getDialogId())) return;
         final int id = Objects.hash(message.getDialogId(), message.getId(), language != null ? 1 : 0);
         if (loadingSummarizations.contains(id)) return;
 
@@ -965,12 +1031,82 @@ public class TranslateController extends BaseController {
         int reqId = -1;
     }
 
+    /**
+     * Mercurygram: per-message MG dispatch loop for a pending translation batch.
+     * Returns the dispatcher's Outcome — HANDLED means the batch is fully owned
+     * by MG (offline AIDL or Alternative HTTP) and the caller must NOT run any
+     * upstream RPC; FORCE_CLOUD / PUNT_TO_UPSTREAM tell the caller which RPC
+     * path to take.
+     */
+    private it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome
+    dispatchMgPerMessage(PendingTranslation pendingTranslation1, boolean isTranscription, long dialogId) {
+        // Mercurygram: secret/encrypted dialogs are the privacy chokepoint —
+        // route to the fail-closed offline-only dispatcher BEFORE the mode
+        // checks below, so secret text can never reach the network regardless of
+        // mg_translateMode (a cloud/default mode on an encrypted dialog still
+        // fails closed inside dispatchSecret). Co-locating this with the
+        // dispatcher selection keeps the invariant in one place.
+        final boolean mgSecret = DialogObject.isEncryptedDialog(dialogId);
+        if (!mgSecret) {
+            final String mode = SharedConfig.mg_translateMode;
+            if (SharedConfig.MG_TRANSLATE_MODE_DEFAULT.equals(mode)) {
+                return it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.PUNT_TO_UPSTREAM;
+            }
+            if (SharedConfig.MG_TRANSLATE_MODE_CLOUD.equals(mode)) {
+                return it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.FORCE_CLOUD;
+            }
+        }
+        final String mgToLanguage = pendingTranslation1.language;
+        final int messageCount = pendingTranslation1.messageIds.size();
+        for (int i = 0; i < messageCount; ++i) {
+            final int mgId = pendingTranslation1.messageIds.get(i);
+            final Utilities.Callback4<Boolean, Integer, TLRPC.TL_textWithEntities, String> mgCallback = pendingTranslation1.callbacks.get(i);
+            final String mgText = pendingTranslation1.messageTexts.get(i).text;
+            final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Result mgResult = (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                if (out != null) {
+                    final TLRPC.TL_textWithEntities res = new TLRPC.TL_textWithEntities();
+                    res.text = out;
+                    mgCallback.run(isTranscription, mgId, res, mgToLanguage);
+                } else if (failure != null && failure.reason == it.belloworld.mercurygram.translate.MgAidlTranslate.Reason.PROVIDER_UNAVAILABLE) {
+                    // System failure — the engine itself is offline. Abort the
+                    // batch: revert the chat-translate bar + show the bulletin.
+                    toggleTranslatingDialog(dialogId, false);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR,
+                            it.belloworld.mercurygram.translate.MgTranslateDispatcher.mapBulletin(failure, rateLimit));
+                    mgCallback.run(isTranscription, mgId, null, mgToLanguage);
+                } else {
+                    // Per-message failure (language not detected, model missing
+                    // for one message's language, transient UNEXPECTED). Mark
+                    // THIS message as untranslated but keep the bar active —
+                    // other messages in the batch may still succeed. A short
+                    // emoji-only message or a message in the user's own language
+                    // would otherwise tear the whole bar down.
+                    mgCallback.run(isTranscription, mgId, null, mgToLanguage);
+                }
+                synchronized (TranslateController.this) {
+                    loadingTranslations.remove(mgId);
+                }
+            });
+            if (mgSecret) {
+                it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatchSecret(mgText, null, mgToLanguage, mgResult);
+            } else {
+                it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(mgText, null, mgToLanguage, mgResult);
+            }
+        }
+        return it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED;
+    }
+
     private void pushToTranslate(
         MessageObject message,
         String language,
         Utilities.Callback4<Boolean, Integer, TLRPC.TL_textWithEntities, String> callback
     ) {
-        if (message == null || message.messageOwner == null || message.getId() < 0 || callback == null) {
+        // Mercurygram: secret-chat messages have negative ids. The id<0 guard
+        // protects the upstream messages.translateText RPC (needs a server
+        // msg_id); the offline path only needs the text string, so allow
+        // negative ids when the secret offline route will handle it.
+        if (message == null || message.messageOwner == null || callback == null ||
+            (message.getId() < 0 && !(DialogObject.isEncryptedDialog(message.getDialogId()) && isSecretOfflineTranslateAllowed()))) {
             return;
         }
 
@@ -1046,7 +1182,31 @@ public class TranslateController extends BaseController {
                     }
                 }
 
-                final String method = getMessagesController().translationsAutoEnabled;
+                // Mercurygram: route through MgTranslateDispatcher when the user
+                // picked a non-default mg_translateMode. Privacy invariant: the
+                // offline path NEVER silently falls back to Telegram cloud — the
+                // dispatcher's fallback chain is offline → Alternative HTTP only.
+                final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome =
+                        dispatchMgPerMessage(pendingTranslation1, isTranscription, dialogId);
+                if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+                    return;
+                }
+                // Mercurygram: defence-in-depth. A secret/encrypted dialog must
+                // never reach any network translate path (cloud RPC or Mozhi).
+                // dispatchMgPerMessage already returns HANDLED for encrypted ids,
+                // so this is belt-and-suspenders against a future regression.
+                if (DialogObject.isEncryptedDialog(dialogId)) {
+                    return;
+                }
+                // FORCE_CLOUD skips the upstream "alternative"/"system" branch and goes
+                // straight to messages.translateText. PUNT_TO_UPSTREAM uses the upstream
+                // server-side method string unchanged.
+                final String method;
+                if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.FORCE_CLOUD) {
+                    method = "enabled";
+                } else {
+                    method = getMessagesController().translationsAutoEnabled;
+                }
                 if ("alternative".equals(method) || "system".equals(method)) {
                     final String toLanguage = pendingTranslation1.language;
                     for (int i = 0; i < pendingTranslation1.messageIds.size(); ++i) {
@@ -1277,6 +1437,14 @@ public class TranslateController extends BaseController {
         }
 
         long dialogId = message.getDialogId();
+
+        // Mercurygram: never translate a secret-chat poll via the cloud RPC.
+        // Mirrors the chat-bar privacy invariant; secret chats can't carry polls
+        // today, but this keeps the on-device guarantee uniform across every
+        // cloud-RPC translate path (text/poll/summary).
+        if (DialogObject.isEncryptedDialog(dialogId)) {
+            return;
+        }
 
         PendingPollTranslation pendingTranslation;
         synchronized (this) {
@@ -1611,15 +1779,25 @@ public class TranslateController extends BaseController {
             }
             if ("null".equals(from)) from = null;
             if ("null".equals(to)) to = null;
+            // Mercurygram: with MLKit removed, detectedDialogLanguage is never
+            // populated (checkLanguage's no-detector branch marks messages
+            // UNKNOWN_LANGUAGE and skips checkDialogTranslatable), so a persisted
+            // entry carries from="null". Restore the translating state anyway —
+            // gating it on from != null is why the per-chat "Translate" toggle
+            // never survived a restart. The language-restricted guard still
+            // applies whenever a real source language was detected.
             if (from != null) {
                 detectedDialogLanguage.put(did, from);
-                if (!isLanguageRestricted(from)) {
-                    translatingDialogs.put(did, !disabled);
-                    translatableDialogs.add(did);
-                }
-                if (to != null) {
-                    translateDialogLanguage.put(did, to);
-                }
+            }
+            if (from == null || !isLanguageRestricted(from)) {
+                translatingDialogs.put(did, !disabled);
+                translatableDialogs.add(did);
+            }
+            // Restore the persisted target language independently of the
+            // restricted check — hoisted out so a restricted real `from` (legacy
+            // MLKit-era persisted entry) doesn't silently drop the stored target.
+            if (to != null) {
+                translateDialogLanguage.put(did, to);
             }
         }
 
@@ -1685,7 +1863,8 @@ public class TranslateController extends BaseController {
 
     // ensure dialogId in storyItem is valid
     public void detectStoryLanguage(TL_stories.StoryItem storyItem) {
-        if (storyItem == null || storyItem.detectedLng != null || storyItem.caption == null || storyItem.caption.length() == 0 || !LanguageDetector.hasSupport()) {
+        // Mercurygram: no !hasSupport() bail — the detector stub's onFail marks the caption UNKNOWN_LANGUAGE so canTranslateStory shows the item (engines auto-detect the source).
+        if (storyItem == null || storyItem.detectedLng != null || storyItem.caption == null || storyItem.caption.length() == 0) {
             return;
         }
 
@@ -1736,6 +1915,30 @@ public class TranslateController extends BaseController {
         }
 
         translatingStories.add(key);
+
+        // Mercurygram: route through MgTranslateDispatcher when the user picked a
+        // non-default mg_translateMode. Caption translations stay silent on failure
+        // (translatedText = null + done.run()) to match upstream UX.
+        final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome =
+                it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(
+                        storyItem.caption, null, toLang, (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                    storyItem.translatedLng = toLang;
+                    if (out != null) {
+                        final TLRPC.TL_textWithEntities res = new TLRPC.TL_textWithEntities();
+                        res.text = out;
+                        storyItem.translatedText = res;
+                    } else {
+                        storyItem.translatedText = null;
+                    }
+                    getMessagesController().getStoriesController().getStoriesStorage().putStoryInternal(storyItem.dialogId, storyItem);
+                    translatingStories.remove(key);
+                    if (done != null) {
+                        done.run();
+                    }
+                }));
+        if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+            return;
+        }
 
         final TLRPC.TL_messages_translateText req = new TLRPC.TL_messages_translateText();
         req.flags |= 2;
@@ -1804,7 +2007,8 @@ public class TranslateController extends BaseController {
     private final HashSet<MessageKey> translatingPhotos = new HashSet<>();
 
     public void detectPhotoLanguage(MessageObject messageObject, Utilities.Callback<String> done) {
-        if (messageObject == null || messageObject.messageOwner == null || !LanguageDetector.hasSupport() || TextUtils.isEmpty(messageObject.messageOwner.message)) {
+        // Mercurygram: no !hasSupport() bail — the detector stub's onFail marks originalLanguage UNKNOWN_LANGUAGE + fires done so canTranslatePhoto shows the item (engines auto-detect the source).
+        if (messageObject == null || messageObject.messageOwner == null || TextUtils.isEmpty(messageObject.messageOwner.message)) {
             return;
         }
         if (!TextUtils.isEmpty(messageObject.messageOwner.originalLanguage)) {
@@ -1838,6 +2042,13 @@ public class TranslateController extends BaseController {
     }
 
     public boolean canTranslatePhoto(MessageObject messageObject, String detectedLanguage) {
+        // Mercurygram: secret-chat photo captions are offered ONLY when the
+        // on-device offline engine is usable — translatePhoto routes them through
+        // the fail-closed dispatchSecret, so the caption text never hits the
+        // network. Without the engine the affordance stays hidden (fail-closed).
+        if (messageObject != null && !passesSecretTranslateGate(messageObject.getDialogId())) {
+            return false;
+        }
         if (messageObject != null && messageObject.messageOwner != null && messageObject.messageOwner.originalLanguage != null) {
             detectedLanguage = messageObject.messageOwner.originalLanguage;
         }
@@ -1870,6 +2081,49 @@ public class TranslateController extends BaseController {
         }
 
         translatingPhotos.add(key);
+
+        // Mercurygram: route through MgTranslateDispatcher when the user picked a
+        // non-default mg_translateMode. Caption translations stay silent on failure
+        // (translatedText = null + done.run()) to match upstream UX. The 400ms
+        // minimum wait is preserved so the result lands consistently with the
+        // upstream RPC path. Secret-chat captions go through the fail-closed
+        // dispatchSecret (on-device only); canTranslatePhoto already gated the
+        // affordance on the offline engine being usable.
+        final boolean mgSecret = DialogObject.isEncryptedDialog(key.dialogId);
+        final long mgStart = System.currentTimeMillis();
+        final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Result mgResult =
+                (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                    messageObject.messageOwner.translatedToLanguage = toLang;
+                    if (out != null) {
+                        final TLRPC.TL_textWithEntities res = new TLRPC.TL_textWithEntities();
+                        res.text = out;
+                        messageObject.messageOwner.translatedText = res;
+                    } else {
+                        messageObject.messageOwner.translatedText = null;
+                    }
+                    getMessagesStorage().updateMessageCustomParams(key.dialogId, messageObject.messageOwner);
+                    translatingPhotos.remove(key);
+                    if (done != null) {
+                        AndroidUtilities.runOnUIThread(done, Math.max(0, 400L - (System.currentTimeMillis() - mgStart)));
+                    }
+                });
+        final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome mgOutcome = mgSecret
+                ? it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatchSecret(
+                        messageObject.messageOwner.message, null, toLang, mgResult)
+                : it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(
+                        messageObject.messageOwner.message, null, toLang, mgResult);
+        if (mgOutcome == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED) {
+            return;
+        }
+        // Encrypted dialogs must NEVER reach the messages.translateText cloud RPC.
+        // dispatchSecret always returns HANDLED, so this is belt-and-suspenders.
+        if (mgSecret) {
+            translatingPhotos.remove(key);
+            if (done != null) {
+                done.run();
+            }
+            return;
+        }
 
         final TLRPC.TL_messages_translateText req = new TLRPC.TL_messages_translateText();
         req.flags |= 2;
