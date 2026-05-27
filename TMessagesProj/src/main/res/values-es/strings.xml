@@ -1388,7 +1388,7 @@
     <string name="MercurygramTranslationModeCloud">Nube de Telegram</string>
     <string name="MercurygramTranslationModeAlternative">HTTP alternativo</string>
     <string name="MercurygramTranslationModeOffline">Sin conexión (aplicación externa)</string>
-    <string name="MercurygramTranslationAbout">La nube de Telegram envía el texto a los servidores de Telegram (que lo reenvían a Google). HTTP alternativo enruta el texto a través de una solicitud HTTP no-MTProto que no adjunta tu identidad de Telegram. Sin conexión delega cada traducción a una aplicación FOSS independiente (Offline Translator, dev.davidv.translator) mediante un servicio enlazado en segundo plano — el mensaje nunca sale de tu dispositivo. El formato negrita, cursiva y código puede perderse en la ruta sin conexión porque el motor devuelve texto plano.</string>
+    <string name="MercurygramTranslationAbout">La nube de Telegram envía el texto a los servidores de Telegram (que lo reenvían a Google). HTTP alternativo enruta el texto a través de un proxy público Mozhi que respeta la privacidad y agrupa varios motores (DuckDuckGo, LibreTranslate, Google, MyMemory, Reverso) — elige motor e instancia abajo. Sin conexión delega cada traducción a una aplicación FOSS independiente (Offline Translator, dev.davidv.translator) mediante un servicio enlazado en segundo plano — el mensaje nunca sale de tu dispositivo. El formato negrita, cursiva y código puede perderse en la ruta sin conexión porque el motor devuelve texto plano.</string>
     <string name="MercurygramTranslationOfflineSection">Traductor sin conexión</string>
     <string name="MercurygramTranslationInstallApp">Instalar Offline Translator desde F-Droid</string>
     <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) es el proveedor FOSS de referencia — incluye modelos Bergamot sin conexión y expone un servicio enlazado en segundo plano al que Mercurygram envía cada traducción de forma silenciosa. Hasta que esté instalado, las traducciones usarán la alternativa que permitas a continuación.</string>
@@ -1400,4 +1400,17 @@
     <string name="MercurygramTranslateOfflineNoLanguage">Traducción sin conexión: no se pudo detectar el idioma de origen.</string>
     <string name="MercurygramTranslateOfflineProviderUnavailable">Traducción sin conexión: proveedor no disponible. Abre o reinstala Offline Translator.</string>
     <string name="MercurygramTranslateOfflineFailed">Traducción sin conexión fallida.</string>
+    <string name="MercurygramTranslationAlternativeSection">Backend HTTP alternativo</string>
+    <string name="MercurygramTranslationAlternativeEngine">Motor</string>
+    <string name="MercurygramTranslationAlternativeInstance">Instancia</string>
+    <string name="MercurygramTranslationAlternativeInstanceAuto">Automática (rotación entre predeterminadas)</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustom">URL personalizada…</string>
+    <string name="MercurygramTranslationAlternativeInstanceCustomHint">https://your-mozhi-instance.example</string>
+    <string name="MercurygramTranslationAlternativeInstanceInvalid">Introduce una URL https:// válida.</string>
+    <string name="MercurygramTranslationAlternativeOperatorDisclosure">Las traducciones las procesa la instancia Mozhi seleccionada. El operador puede registrarlas.</string>
+    <string name="MercurygramTranslationAlternativeEngineDuckDuckGo">DuckDuckGo</string>
+    <string name="MercurygramTranslationAlternativeEngineLibre">LibreTranslate</string>
+    <string name="MercurygramTranslationAlternativeEngineGoogle">Google (vía Mozhi)</string>
+    <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
+    <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
 </resources>
