@@ -218,6 +218,41 @@ public class SharedConfig {
                 .commit();
     }
 
+    public static void setMgTranslateMode(String mode) {
+        mode = sanitizeMgTranslateMode(mode);
+        mg_translateMode = mode;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putString("mg_translateMode", mode)
+                .apply();
+    }
+
+    private static String sanitizeMgTranslateMode(String mode) {
+        if (MG_TRANSLATE_MODE_DEFAULT.equals(mode)
+                || MG_TRANSLATE_MODE_CLOUD.equals(mode)
+                || MG_TRANSLATE_MODE_ALTERNATIVE.equals(mode)
+                || MG_TRANSLATE_MODE_OFFLINE.equals(mode)) {
+            return mode;
+        }
+        return MG_TRANSLATE_MODE_DEFAULT;
+    }
+
+    public static void toggleMgTranslateAutoFallback() {
+        mg_translateAutoFallback = !mg_translateAutoFallback;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_translateAutoFallback", mg_translateAutoFallback)
+                .apply();
+    }
+
+    public static void setMgTranslateOfflineFormatToastShown() {
+        mg_translateOfflineFormatToastShown = true;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_translateOfflineFormatToastShown", true)
+                .apply();
+    }
+
     public static void setMgTorIdleStopMinutes(int minutes) {
         if (minutes < 0) minutes = 0;
         int previous = mg_torIdleStopMinutes;
@@ -521,6 +556,20 @@ public class SharedConfig {
     // MG_TOR_TRANSPORT_OBFS4. Empty for direct/snowflake. Pushed verbatim to the
     // plugin, which parses/validates each line (MgTorController.parseObfs4Bridges).
     public static String mg_torBridgeLines = "";
+
+    // Mercurygram: Translation engine selection. "default" defers to
+    // upstream MessagesController.translationsAutoEnabled; "cloud" forces
+    // the Telegram MTProto messages.translateText RPC; "alternative" forces
+    // the existing non-MTProto HTTP path (TranslateAlert2.alternativeTranslate);
+    // "offline" delegates each translation to dev.davidv.translator's
+    // background AIDL ITranslationService (see MgAidlTranslate).
+    public static final String MG_TRANSLATE_MODE_DEFAULT = "default";
+    public static final String MG_TRANSLATE_MODE_CLOUD = "cloud";
+    public static final String MG_TRANSLATE_MODE_ALTERNATIVE = "alternative";
+    public static final String MG_TRANSLATE_MODE_OFFLINE = "offline";
+    public static String mg_translateMode = MG_TRANSLATE_MODE_DEFAULT;
+    public static boolean mg_translateAutoFallback = true;
+    public static boolean mg_translateOfflineFormatToastShown = false;
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -835,6 +884,9 @@ public class SharedConfig {
                 editor.putInt("mg_torIdleStopMinutes", mg_torIdleStopMinutes);
                 editor.putInt("mg_torTransportMode", mg_torTransportMode);
                 editor.putString("mg_torBridgeLines", mg_torBridgeLines);
+                editor.putString("mg_translateMode", mg_translateMode);
+                editor.putBoolean("mg_translateAutoFallback", mg_translateAutoFallback);
+                editor.putBoolean("mg_translateOfflineFormatToastShown", mg_translateOfflineFormatToastShown);
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -1065,6 +1117,9 @@ public class SharedConfig {
             mg_torTransportMode = sanitizeMgTorTransportMode(
                     preferences.getInt("mg_torTransportMode", MG_TOR_TRANSPORT_DIRECT));
             mg_torBridgeLines = preferences.getString("mg_torBridgeLines", "");
+            mg_translateMode = sanitizeMgTranslateMode(preferences.getString("mg_translateMode", MG_TRANSLATE_MODE_DEFAULT));
+            mg_translateAutoFallback = preferences.getBoolean("mg_translateAutoFallback", true);
+            mg_translateOfflineFormatToastShown = preferences.getBoolean("mg_translateOfflineFormatToastShown", false);
             migratePerAccountSettingsV1(preferences);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
