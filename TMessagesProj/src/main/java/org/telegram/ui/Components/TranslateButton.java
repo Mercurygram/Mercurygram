@@ -38,7 +38,6 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.TranslateController;
-import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.TLRPC;
@@ -113,12 +112,10 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
         menuView.setScaleType(ImageView.ScaleType.CENTER);
         menuView.setImageResource(R.drawable.msg_mini_customize);
         menuView.setOnClickListener(e -> {
-            final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-            if (UserConfig.getInstance(currentAccount).isPremium() || chat != null && chat.autotranslation) {
-                onMenuClick();
-            } else {
-                onCloseClick();
-            }
+            // Mercurygram: Premium is a Telegram monetization gate, not a technical
+            // requirement — the chat translate bar's customize menu is unlocked for
+            // every user (target-language picker, "don't translate this language").
+            onMenuClick();
         });
         addView(menuView, LayoutHelper.createFrame(30, 30, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 7, 0));
 
@@ -297,7 +294,9 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
             popupLayout.getSwipeBack().openForeground(swipeBackIndex);
         });
 
-        if (UserConfig.getInstance(currentAccount).isPremium() && detectedLanguageNameAccusative != null) {
+        // Mercurygram: Premium is a Telegram monetization gate, not a technical
+        // requirement — the "don't translate this language" item is unlocked for all.
+        if (detectedLanguageNameAccusative != null) {
             final ActionBarMenuSubItem dontTranslateButton = new ActionBarMenuSubItem(getContext(), false, false, resourcesProvider);
             String text;
             if (accusative[0]) {
@@ -389,7 +388,6 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
 
     public void updateText() {
         final TranslateController translateController = MessagesController.getInstance(currentAccount).getTranslateController();
-        final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
         if (translateController.isTranslatingDialog(dialogId)) {
             String detectedLanguage = translateController.getDialogDetectedLanguage(dialogId);
             detectedLanguage = TranslateAlert2.languageName(detectedLanguage);
@@ -412,7 +410,8 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
             }
             textView.setText(TextUtils.concat(translateIcon, " ", text));
         }
-        menuView.setImageResource(UserConfig.getInstance(currentAccount).isPremium() || chat != null && chat.autotranslation ? R.drawable.msg_mini_customize : R.drawable.msg_close);
+        // Mercurygram: customize menu unlocked for every user (see onClick above).
+        menuView.setImageResource(R.drawable.msg_mini_customize);
     }
 
     public static void showCocoonAlert(Context context, Theme.ResourcesProvider resourcesProvider) {
