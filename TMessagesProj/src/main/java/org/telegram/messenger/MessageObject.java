@@ -3670,6 +3670,11 @@ public class MessageObject {
 
     public boolean translated = false;
     public boolean summarized = false;
+    // Mercurygram: language of the text currently applied to this object.
+    // Without it the early return below keeps the previously applied text when
+    // only the target language changed, which leaves messages outside the
+    // visible window in the old language after a target-language switch.
+    private String translatedAppliedLanguage;
     public boolean updateTranslation(boolean force) {
         boolean replyUpdated = replyMessageObject != null && replyMessageObject != this && replyMessageObject.updateTranslation(force);
         TranslateController translateController = MessagesController.getInstance(currentAccount).getTranslateController();
@@ -3716,11 +3721,12 @@ public class MessageObject {
             (translatedText != null || messageOwner.translatedPoll != null || messageOwner.translatedRichMessage != null) &&
             TextUtils.equals(translateController.getDialogTranslateTo(getDialogId()), messageOwner.translatedToLanguage)
         ) {
-            if (translated && !summarized) {
+            if (translated && !summarized && TextUtils.equals(translatedAppliedLanguage, messageOwner.translatedToLanguage)) {
                 return replyUpdated || false;
             }
             translated = true;
             summarized = false;
+            translatedAppliedLanguage = messageOwner.translatedToLanguage;
             if (type == TYPE_ARTICLE) {
                 generateLayout(null);
             } else if (translatedText != null) {
@@ -3731,6 +3737,7 @@ public class MessageObject {
         } else if (messageOwner != null && (force || translated || summarized)) {
             translated = false;
             summarized = false;
+            translatedAppliedLanguage = null;
             if (type == TYPE_ARTICLE) {
                 generateLayout(null);
             } else {
