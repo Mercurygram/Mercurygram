@@ -327,4 +327,24 @@
     <string name="MercurygramTorPluginDownloadFailed">Не удалось загрузить плагин Tor. Проверьте подключение и повторите попытку.</string>
     <string name="MercurygramTorPluginOutdated">Требуется обновление плагина Tor</string>
     <string name="MercurygramTorPluginSignatureMismatch">Плагин Tor: несоответствие подписи — подключение отклонено</string>
+    <string name="MercurygramTranslationSettings">Перевод</string>
+    <string name="MercurygramTranslationRowAbout">Выберите, как Mercurygram переводит полученные сообщения.</string>
+    <string name="MercurygramTranslationEngine">Движок</string>
+    <string name="MercurygramTranslationMode">Движок перевода</string>
+    <string name="MercurygramTranslationModeDefault">По умолчанию (облако Telegram)</string>
+    <string name="MercurygramTranslationModeCloud">Облако Telegram</string>
+    <string name="MercurygramTranslationModeAlternative">Альтернативный HTTP</string>
+    <string name="MercurygramTranslationModeOffline">Офлайн (внешнее приложение)</string>
+    <string name="MercurygramTranslationAbout">Облако Telegram отправляет текст на серверы Telegram (которые пересылают его в Google). Альтернативный HTTP передаёт текст через не-MTProto HTTP-запрос, не привязанный к вашему Telegram-аккаунту. Офлайн делегирует каждый перевод отдельному FOSS-приложению (Offline Translator, dev.davidv.translator) через привязанную фоновую службу — сообщение никогда не покидает ваше устройство. Форматирование жирным, курсивом и кодом может теряться на офлайн-пути, потому что движок возвращает обычный текст.</string>
+    <string name="MercurygramTranslationOfflineSection">Офлайн-переводчик</string>
+    <string name="MercurygramTranslationInstallApp">Установить Offline Translator из F-Droid</string>
+    <string name="MercurygramTranslationOfflineNoApp">Offline Translator (dev.davidv.translator) — эталонный FOSS-провайдер: содержит офлайн-модели Bergamot и предоставляет привязанную фоновую службу, которой Mercurygram беззвучно передаёт каждый перевод. Пока он не установлен, переводы выполняются по тому запасному варианту, который вы разрешите ниже.</string>
+    <string name="MercurygramTranslationOfflineProviderReady">Offline Translator установлен. Откройте его один раз, чтобы скачать языковую пару (или пары), с которой и на которую вы хотите переводить.</string>
+    <string name="MercurygramTranslationAutoFallback">Авто-фолбэк при ошибке</string>
+    <string name="MercurygramTranslationAutoFallbackAbout">Если офлайн-переводчик ничего не возвращает (нет модели для языковой пары, язык не определён, служба недоступна), происходит откат на путь Альтернативный HTTP. Облако никогда не используется как запасной вариант, если вы выбрали офлайн-движок ради приватности.</string>
+    <string name="MercurygramTranslateOfflineFormatToast">Форматирование жирным, курсивом и кодом может теряться при переводе офлайн-движком.</string>
+    <string name="MercurygramTranslateOfflineNoModel">Перевод офлайн: нет модели для %1$s. Откройте Offline Translator, чтобы загрузить её.</string>
+    <string name="MercurygramTranslateOfflineNoLanguage">Перевод офлайн: не удалось определить исходный язык.</string>
+    <string name="MercurygramTranslateOfflineProviderUnavailable">Перевод офлайн: провайдер недоступен. Откройте или переустановите Offline Translator.</string>
+    <string name="MercurygramTranslateOfflineFailed">Перевод офлайн не удался.</string>
 </resources>
