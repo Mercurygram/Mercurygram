@@ -253,6 +253,85 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void setMgTranslateAltEngine(String engine) {
+        engine = sanitizeMgTranslateAltEngine(engine);
+        mg_translateAltEngine = engine;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putString("mg_translateAltEngine", engine)
+                .apply();
+        org.telegram.ui.Components.TranslateAlert2.clearMgAltInstanceBans();
+    }
+
+    public static void setMgTranslateAltInstanceMode(String mode) {
+        mode = sanitizeMgTranslateAltInstanceMode(mode);
+        mg_translateAltInstanceMode = mode;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putString("mg_translateAltInstanceMode", mode)
+                .apply();
+        org.telegram.ui.Components.TranslateAlert2.clearMgAltInstanceBans();
+    }
+
+    public static void setMgTranslateAltPinnedInstance(String url) {
+        mg_translateAltPinnedInstance = url == null ? "" : url;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putString("mg_translateAltPinnedInstance", mg_translateAltPinnedInstance)
+                .apply();
+        org.telegram.ui.Components.TranslateAlert2.clearMgAltInstanceBans();
+    }
+
+    public static void setMgTranslateAltCustomInstance(String url) {
+        mg_translateAltCustomInstance = url == null ? "" : url;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putString("mg_translateAltCustomInstance", mg_translateAltCustomInstance)
+                .apply();
+        org.telegram.ui.Components.TranslateAlert2.clearMgAltInstanceBans();
+    }
+
+    private static String sanitizeMgTranslateAltEngine(String engine) {
+        if (MG_TRANSLATE_ALT_ENGINE_DUCKDUCKGO.equals(engine)
+                || MG_TRANSLATE_ALT_ENGINE_LIBRE.equals(engine)
+                || MG_TRANSLATE_ALT_ENGINE_GOOGLE.equals(engine)
+                || MG_TRANSLATE_ALT_ENGINE_MYMEMORY.equals(engine)
+                || MG_TRANSLATE_ALT_ENGINE_REVERSO.equals(engine)) {
+            return engine;
+        }
+        return MG_TRANSLATE_ALT_ENGINE_DUCKDUCKGO;
+    }
+
+    private static String sanitizeMgTranslateAltInstanceMode(String mode) {
+        if (MG_TRANSLATE_ALT_INSTANCE_MODE_AUTO.equals(mode)
+                || MG_TRANSLATE_ALT_INSTANCE_MODE_PINNED.equals(mode)
+                || MG_TRANSLATE_ALT_INSTANCE_MODE_CUSTOM.equals(mode)) {
+            return mode;
+        }
+        return MG_TRANSLATE_ALT_INSTANCE_MODE_AUTO;
+    }
+
+    /**
+     * Returns the ordered list of Mozhi instances to attempt for the current
+     * {@link #mg_translateAltInstanceMode}: the full default pool for "auto"
+     * (rotation), a single configured URL for "pinned" / "custom". Falls back
+     * to the default pool when a pinned/custom mode is selected but no URL is
+     * configured.
+     */
+    public static java.util.List<String> getMgTranslateAltActiveInstances() {
+        if (MG_TRANSLATE_ALT_INSTANCE_MODE_PINNED.equals(mg_translateAltInstanceMode)
+                && mg_translateAltPinnedInstance != null
+                && !mg_translateAltPinnedInstance.isEmpty()) {
+            return java.util.Collections.singletonList(mg_translateAltPinnedInstance);
+        }
+        if (MG_TRANSLATE_ALT_INSTANCE_MODE_CUSTOM.equals(mg_translateAltInstanceMode)
+                && mg_translateAltCustomInstance != null
+                && !mg_translateAltCustomInstance.isEmpty()) {
+            return java.util.Collections.singletonList(mg_translateAltCustomInstance);
+        }
+        return MG_TRANSLATE_ALT_DEFAULT_INSTANCES;
+    }
+
     public static void setMgTorIdleStopMinutes(int minutes) {
         if (minutes < 0) minutes = 0;
         int previous = mg_torIdleStopMinutes;
@@ -495,7 +574,7 @@ public class SharedConfig {
     // Mercurygram: Translation engine selection. "default" defers to
     // upstream MessagesController.translationsAutoEnabled; "cloud" forces
     // the Telegram MTProto messages.translateText RPC; "alternative" forces
-    // the existing non-MTProto HTTP path (TranslateAlert2.alternativeTranslate);
+    // the non-MTProto HTTP path (TranslateAlert2.alternativeTranslate);
     // "offline" delegates each translation to dev.davidv.translator's
     // background AIDL ITranslationService (see MgAidlTranslate).
     public static final String MG_TRANSLATE_MODE_DEFAULT = "default";
@@ -505,6 +584,37 @@ public class SharedConfig {
     public static String mg_translateMode = MG_TRANSLATE_MODE_DEFAULT;
     public static boolean mg_translateAutoFallback = true;
     public static boolean mg_translateOfflineFormatToastShown = false;
+
+    // Mercurygram: Alternative HTTP translation routes through a user-picked
+    // Mozhi instance (https://codeberg.org/aryak/mozhi) — a multi-engine
+    // privacy proxy — instead of contacting translate.googleapis.com directly.
+    // The picker keeps the privacy framing of "alternative" honest: text never
+    // reaches Google directly from the device, and the user can swap the
+    // backend engine (DuckDuckGo / LibreTranslate / Google-via-Mozhi /
+    // MyMemory / Reverso) or pin a self-hosted instance.
+    public static final String MG_TRANSLATE_ALT_ENGINE_DUCKDUCKGO = "duckduckgo";
+    public static final String MG_TRANSLATE_ALT_ENGINE_LIBRE      = "libre";
+    public static final String MG_TRANSLATE_ALT_ENGINE_GOOGLE     = "google";
+    public static final String MG_TRANSLATE_ALT_ENGINE_MYMEMORY   = "mymemory";
+    public static final String MG_TRANSLATE_ALT_ENGINE_REVERSO    = "reverso";
+
+    public static final String MG_TRANSLATE_ALT_INSTANCE_MODE_AUTO   = "auto";
+    public static final String MG_TRANSLATE_ALT_INSTANCE_MODE_PINNED = "pinned";
+    public static final String MG_TRANSLATE_ALT_INSTANCE_MODE_CUSTOM = "custom";
+
+    public static final java.util.List<String> MG_TRANSLATE_ALT_DEFAULT_INSTANCES =
+            java.util.Collections.unmodifiableList(java.util.Arrays.asList(
+                    "https://mozhi.aryak.me",
+                    "https://mozhi.pussthecat.org",
+                    "https://mozhi.catsarch.com",
+                    "https://translate.projectsegfau.lt",
+                    "https://mozhi.ducks.party"
+            ));
+
+    public static String mg_translateAltEngine         = MG_TRANSLATE_ALT_ENGINE_DUCKDUCKGO;
+    public static String mg_translateAltInstanceMode   = MG_TRANSLATE_ALT_INSTANCE_MODE_AUTO;
+    public static String mg_translateAltPinnedInstance = "";
+    public static String mg_translateAltCustomInstance = "";
 
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
@@ -820,6 +930,10 @@ public class SharedConfig {
                 editor.putString("mg_translateMode", mg_translateMode);
                 editor.putBoolean("mg_translateAutoFallback", mg_translateAutoFallback);
                 editor.putBoolean("mg_translateOfflineFormatToastShown", mg_translateOfflineFormatToastShown);
+                editor.putString("mg_translateAltEngine", mg_translateAltEngine);
+                editor.putString("mg_translateAltInstanceMode", mg_translateAltInstanceMode);
+                editor.putString("mg_translateAltPinnedInstance", mg_translateAltPinnedInstance);
+                editor.putString("mg_translateAltCustomInstance", mg_translateAltCustomInstance);
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -1050,6 +1164,10 @@ public class SharedConfig {
             mg_translateMode = sanitizeMgTranslateMode(preferences.getString("mg_translateMode", MG_TRANSLATE_MODE_DEFAULT));
             mg_translateAutoFallback = preferences.getBoolean("mg_translateAutoFallback", true);
             mg_translateOfflineFormatToastShown = preferences.getBoolean("mg_translateOfflineFormatToastShown", false);
+            mg_translateAltEngine = sanitizeMgTranslateAltEngine(preferences.getString("mg_translateAltEngine", MG_TRANSLATE_ALT_ENGINE_DUCKDUCKGO));
+            mg_translateAltInstanceMode = sanitizeMgTranslateAltInstanceMode(preferences.getString("mg_translateAltInstanceMode", MG_TRANSLATE_ALT_INSTANCE_MODE_AUTO));
+            mg_translateAltPinnedInstance = preferences.getString("mg_translateAltPinnedInstance", "");
+            mg_translateAltCustomInstance = preferences.getString("mg_translateAltCustomInstance", "");
             migratePerAccountSettingsV1(preferences);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
