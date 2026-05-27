@@ -9594,7 +9594,13 @@ public class ChatActivity extends BaseFragment implements
 
             @Override
             protected void onCloseClick() {
+                // Mercurygram: the unlocked translate bar gate (isDialogTranslatableMg)
+                // ignores the upstream dialog_show_translate_count counter, so the
+                // non-premium close button must mark the dialog hidden the same way
+                // the premium "Hide" menu item does — otherwise the bar would
+                // instantly reappear. Keep the counter write for upstream parity.
                 MessagesController.getNotificationsSettings(currentAccount).edit().putInt("dialog_show_translate_count" + getDialogId(), 140).commit();
+                getMessagesController().getTranslateController().setHideTranslateDialog(getDialogId(), true);
                 updateTopPanel(true);
             }
         };
@@ -10969,7 +10975,7 @@ public class ChatActivity extends BaseFragment implements
         if (translateItem == null) {
             return;
         }
-        translateItem.setVisibility(getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()) && getMessagesController().getTranslateController().isDialogTranslatable(getDialogId()) ? View.VISIBLE : View.GONE);
+        translateItem.setVisibility(getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()) && getMessagesController().getTranslateController().isDialogTranslatableMg(getDialogId()) ? View.VISIBLE : View.GONE);
     }
 
     private Animator infoTopViewAnimator;
@@ -28705,11 +28711,15 @@ public class ChatActivity extends BaseFragment implements
         }
 
         boolean showRestartTopic = !isInPreviewMode() && forumTopic != null && forumTopic.closed && !forumTopic.hidden && ChatObject.canManageTopic(currentAccount, currentChat, forumTopic);
-        boolean showTranslate = (
-            getUserConfig().isPremium() || currentChat != null && currentChat.autotranslation ?
-                getMessagesController().getTranslateController().isDialogTranslatable(getDialogId()) && !getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()) :
-                !getMessagesController().premiumFeaturesBlocked() && preferences.getInt("dialog_show_translate_count" + did, 5) <= 0
-        ) || DEBUG_TOP_PANELS;
+        // Mercurygram: the chat translate bar is unlocked for every user (premium
+        // is a Telegram monetization gate, not a technical requirement), so the
+        // auto path applies to all non-encrypted dialogs — private, group, channel.
+        // isDialogTranslatableMg additionally surfaces the bar in secret chats, but
+        // only when the offline on-device translator is selected and usable.
+        boolean showTranslate =
+            (getMessagesController().getTranslateController().isDialogTranslatableMg(getDialogId())
+                && !getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()))
+            || DEBUG_TOP_PANELS;
         boolean showAddProfilePicture = UserObject.isBot(currentUser) && currentUser.bot_can_edit && currentUser.photo == null;
         boolean showBizBot = currentEncryptedChat == null && getUserConfig().isPremium() && preferences.getLong("dialog_botid" + did, 0) != 0 || DEBUG_TOP_PANELS;
         boolean showBotAd = currentUser != null && currentUser.bot && messages.size() >= 2 && botSponsoredMessage != null;
