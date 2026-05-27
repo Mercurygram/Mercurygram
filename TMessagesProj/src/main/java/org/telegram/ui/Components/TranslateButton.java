@@ -38,7 +38,6 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.TranslateController;
-import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.TLRPC;
@@ -52,6 +51,8 @@ import org.telegram.ui.ChatActivity;
 import org.telegram.ui.RestrictedLanguagesSelectActivity;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import org.telegram.ui.Stories.recorder.HintView2;
+
+import it.belloworld.mercurygram.translate.MgTranslateDispatcher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,12 +114,10 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
         menuView.setScaleType(ImageView.ScaleType.CENTER);
         menuView.setImageResource(R.drawable.msg_mini_customize);
         menuView.setOnClickListener(e -> {
-            final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-            if (UserConfig.getInstance(currentAccount).isPremium() || chat != null && chat.autotranslation) {
-                onMenuClick();
-            } else {
-                onCloseClick();
-            }
+            // Mercurygram: Premium is a Telegram monetization gate, not a technical
+            // requirement — the chat translate bar's customize menu is unlocked for
+            // every user (target-language picker, "don't translate this language").
+            onMenuClick();
         });
         addView(menuView, LayoutHelper.createFrame(30, 30, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 7, 0));
 
@@ -297,7 +296,9 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
             popupLayout.getSwipeBack().openForeground(swipeBackIndex);
         });
 
-        if (UserConfig.getInstance(currentAccount).isPremium() && detectedLanguageNameAccusative != null) {
+        // Mercurygram: Premium is a Telegram monetization gate, not a technical
+        // requirement — the "don't translate this language" item is unlocked for all.
+        if (detectedLanguageNameAccusative != null) {
             final ActionBarMenuSubItem dontTranslateButton = new ActionBarMenuSubItem(getContext(), false, false, resourcesProvider);
             String text;
             if (accusative[0]) {
@@ -350,31 +351,46 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
         });
         popupLayout.addView(hideButton);
 
-        popupLayout.addView(new ActionBarPopupWindow.GapView(getContext(), resourcesProvider), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
+        // The Cocoon credit only tells the truth while translation actually goes
+        // through Telegram's messages.translateText RPC. When another engine is
+        // selected, credit the backend that really gets the text instead.
+        final String poweredBy = MgTranslateDispatcher.poweredByLabel();
+        if (poweredBy != null) {
+            popupLayout.addView(new ActionBarPopupWindow.GapView(getContext(), resourcesProvider), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
 
-        final LinkSpanDrawable.LinksTextView cocoonButton = new LinkSpanDrawable.LinksTextView(getContext());
-        cocoonButton.setPadding(dp(13), dp(8.33f), dp(13), dp(8.33f));
-        cocoonButton.setDisablePaddingsOffsetY(true);
-        cocoonButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
-        cocoonButton.setLinkTextColor(Theme.getColor(Theme.key_chat_messageLinkIn, resourcesProvider));
-        cocoonButton.setEmojiColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
-        CharSequence cocoonText = TextUtils.concat(AndroidUtilities.replaceTags(getString(R.string.CocoonPoweredBy)), " ", AndroidUtilities.premiumText(getString(R.string.CocoonPoweredByLink), () -> {
-            popupWindow.dismiss();
-            showCocoonAlert(getContext(), resourcesProvider);
-        }));
-        SpannableStringBuilder egg = new SpannableStringBuilder("🥚");
-        egg.setSpan(new AnimatedEmojiSpan(5197252827247841976L, cocoonButton.getPaint().getFontMetricsInt()), 0, egg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        SpannableStringBuilder eggSpaced = new SpannableStringBuilder(egg);
-        eggSpaced.append(" ");
-        cocoonText = AndroidUtilities.replaceCharSequence("🥚 ", cocoonText, eggSpaced);
-        cocoonText = AndroidUtilities.replaceCharSequence("🥚", cocoonText, egg);
-        cocoonButton.setText(HintView2.cutInFancyHalfText(cocoonText, cocoonButton.getPaint()));
-        cocoonButton.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_listSelector, resourcesProvider), 0, 12));
-        cocoonButton.setOnClickListener(v -> {
-            popupWindow.dismiss();
-            showCocoonAlert(getContext(), resourcesProvider);
-        });
-        popupLayout.addView(cocoonButton);
+            final TextView poweredByView = new TextView(getContext());
+            poweredByView.setPadding(dp(13), dp(8.33f), dp(13), dp(8.33f));
+            poweredByView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            poweredByView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            poweredByView.setText(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.MercurygramTranslationPoweredBy, poweredBy)));
+            popupLayout.addView(poweredByView);
+        } else {
+            popupLayout.addView(new ActionBarPopupWindow.GapView(getContext(), resourcesProvider), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
+
+            final LinkSpanDrawable.LinksTextView cocoonButton = new LinkSpanDrawable.LinksTextView(getContext());
+            cocoonButton.setPadding(dp(13), dp(8.33f), dp(13), dp(8.33f));
+            cocoonButton.setDisablePaddingsOffsetY(true);
+            cocoonButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            cocoonButton.setLinkTextColor(Theme.getColor(Theme.key_chat_messageLinkIn, resourcesProvider));
+            cocoonButton.setEmojiColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            CharSequence cocoonText = TextUtils.concat(AndroidUtilities.replaceTags(getString(R.string.CocoonPoweredBy)), " ", AndroidUtilities.premiumText(getString(R.string.CocoonPoweredByLink), () -> {
+                popupWindow.dismiss();
+                showCocoonAlert(getContext(), resourcesProvider);
+            }));
+            SpannableStringBuilder egg = new SpannableStringBuilder("🥚");
+            egg.setSpan(new AnimatedEmojiSpan(5197252827247841976L, cocoonButton.getPaint().getFontMetricsInt()), 0, egg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            SpannableStringBuilder eggSpaced = new SpannableStringBuilder(egg);
+            eggSpaced.append(" ");
+            cocoonText = AndroidUtilities.replaceCharSequence("🥚 ", cocoonText, eggSpaced);
+            cocoonText = AndroidUtilities.replaceCharSequence("🥚", cocoonText, egg);
+            cocoonButton.setText(HintView2.cutInFancyHalfText(cocoonText, cocoonButton.getPaint()));
+            cocoonButton.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_listSelector, resourcesProvider), 0, 12));
+            cocoonButton.setOnClickListener(v -> {
+                popupWindow.dismiss();
+                showCocoonAlert(getContext(), resourcesProvider);
+            });
+            popupLayout.addView(cocoonButton);
+        }
 
         popupWindow.setPauseNotifications(true);
         popupWindow.setDismissAnimationDuration(220);
@@ -389,7 +405,6 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
 
     public void updateText() {
         final TranslateController translateController = MessagesController.getInstance(currentAccount).getTranslateController();
-        final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
         if (translateController.isTranslatingDialog(dialogId)) {
             String detectedLanguage = translateController.getDialogDetectedLanguage(dialogId);
             detectedLanguage = TranslateAlert2.languageName(detectedLanguage);
@@ -412,7 +427,8 @@ public class TranslateButton extends FrameLayout implements Theme.Colorable {
             }
             textView.setText(TextUtils.concat(translateIcon, " ", text));
         }
-        menuView.setImageResource(UserConfig.getInstance(currentAccount).isPremium() || chat != null && chat.autotranslation ? R.drawable.msg_mini_customize : R.drawable.msg_close);
+        // Mercurygram: customize menu unlocked for every user (see onClick above).
+        menuView.setImageResource(R.drawable.msg_mini_customize);
     }
 
     public static void showCocoonAlert(Context context, Theme.ResourcesProvider resourcesProvider) {
