@@ -42,7 +42,6 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.TranslateController;
-import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.tgnet.ConnectionsManager;
@@ -50,13 +49,9 @@ import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBarMenuSubItem;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
-import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
 import org.telegram.ui.Components.spoilers.SpoilersTextView;
 import org.telegram.ui.GradientClip;
-import org.telegram.ui.LaunchActivity;
-import org.telegram.ui.PremiumPreviewFragment;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import java.util.ArrayList;
 
@@ -114,13 +109,9 @@ public class TranslateAlert3 extends BottomSheetWithRecyclerListView {
                     AndroidUtilities.addToClipboard(translated);
                 }
             } else if (item.id == 2) {
-                if (!UserConfig.getInstance(currentAccount).isPremium()) {
-                    final BaseFragment fragment = LaunchActivity.getSafeLastFragment();
-                    if (fragment == null) return;
-                    new PremiumFeatureBottomSheet(getContext(), PremiumPreviewFragment.PREMIUM_FEATURE_TRANSLATIONS, true, resourcesProvider)
-                        .show();
-                    return;
-                }
+                // Mercurygram: Premium is a Telegram monetization gate, not a
+                // technical requirement — translating the whole dialog is unlocked
+                // for every user.
                 MessagesController.getInstance(currentAccount).getTranslateController().toggleTranslatingDialog(dialogId);
                 dismiss();
             }
@@ -167,6 +158,7 @@ public class TranslateAlert3 extends BottomSheetWithRecyclerListView {
     private int tone = 1;
     private boolean summarized;
     private boolean noforwards;
+    private boolean secret;
     private Utilities.CallbackReturn<URLSpan, Boolean> onLinkPress;
 
     private String[] tones = new String[] { "formal", "neutral", "casual" };
@@ -210,6 +202,12 @@ public class TranslateAlert3 extends BottomSheetWithRecyclerListView {
     }
     public TranslateAlert3 setNoforwards(boolean noforwards) {
         this.noforwards = noforwards;
+        return this;
+    }
+    // Mercurygram: when set, the raw-text translation in requestTranslate() is
+    // forced on-device only (dispatchSecret, fail-closed) — never cloud / Mozhi.
+    public TranslateAlert3 setSecret(boolean secret) {
+        this.secret = secret;
         return this;
     }
     public TranslateAlert3 setOnLinkPress(Utilities.CallbackReturn<URLSpan, Boolean> onLinkPress) {
@@ -382,6 +380,54 @@ public class TranslateAlert3 extends BottomSheetWithRecyclerListView {
         loadingText.setSpan(new LoadingSpan(null, dp(120), 0), 0, loadingText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         translated = loadingText;
         translatedLoading = true;
+
+        // Mercurygram: route the raw-text path (selection translate from the input
+        // bar — no message id, no summarize) through the user's chosen engine
+        // (mg_translateMode) instead of always hitting Telegram cloud. Mirrors
+        // TranslateAlert2.translate(). Secret chats are forced on-device, fail-closed.
+        // The message-id and summarize paths below keep cloud RPC unchanged.
+        if (!summarized && dialogId == 0 && messageId == 0) {
+            final String mgText = fromText.text;
+            final String mgFromLng = TranslateAlert2.simplifyLanguage(from_lang);
+            final String mgToLng = TranslateAlert2.simplifyLanguage(to_lang);
+            final it.belloworld.mercurygram.translate.MgTranslateDispatcher.Result mgResult =
+                (out, rateLimit, failure) -> AndroidUtilities.runOnUIThread(() -> {
+                    if (isDismissed()) {
+                        return;
+                    }
+                    button.setLoading(false);
+                    if (out != null && !out.isEmpty()) {
+                        translated = out;
+                        translatedLoading = false;
+                        adapter.update(true);
+                        return;
+                    }
+                    // out == null: real failure → show the error bulletin. out empty:
+                    // nothing to show (mirrors the cloud empty-result path below). Either
+                    // way leave the sheet on a dismiss-only button rather than letting
+                    // "Use This Translation" replace the selection with blank text.
+                    if (out == null) {
+                        final CharSequence msg = it.belloworld.mercurygram.translate.MgTranslateDispatcher.mapBulletin(failure, rateLimit);
+                        BulletinFactory.of(topBulletinContainer, resourcesProvider).createErrorBulletin(msg).show();
+                    }
+                    button.setText(getString(R.string.OK));
+                    button.setOnClickListener(v -> dismiss());
+                });
+            final boolean mgHandled;
+            if (secret) {
+                // dispatchSecret always handles it on-device (fail-closed).
+                it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatchSecret(mgText, mgFromLng, mgToLng, mgResult);
+                mgHandled = true;
+            } else {
+                mgHandled = it.belloworld.mercurygram.translate.MgTranslateDispatcher.dispatch(mgText, mgFromLng, mgToLng, mgResult)
+                        == it.belloworld.mercurygram.translate.MgTranslateDispatcher.Outcome.HANDLED;
+            }
+            if (mgHandled) {
+                adapter.update(true);
+                return;
+            }
+            // FORCE_CLOUD / PUNT_TO_UPSTREAM: fall through to messages.translateText below.
+        }
 
         if (summarized && dialogId != 0 && messageId != 0) {
             final TLRPC.TL_messages_summarizeText req = new TLRPC.TL_messages_summarizeText();
