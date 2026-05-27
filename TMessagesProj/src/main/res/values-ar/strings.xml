@@ -1308,4 +1308,24 @@
     <string name="MercurygramTorPluginOutdated">يلزم تحديث إضافة Tor</string>
     <string name="MercurygramUpdateTorPlugin">تحديث إضافة Tor</string>
     <string name="MercurygramTorPluginSignatureMismatch">إضافة Tor: عدم تطابق التوقيع — تم رفض الربط</string>
+    <string name="MercurygramTranslationSettings">الترجمة</string>
+    <string name="MercurygramTranslationRowAbout">اختر كيف يترجم Mercurygram الرسائل المستلمة.</string>
+    <string name="MercurygramTranslationEngine">المحرك</string>
+    <string name="MercurygramTranslationMode">محرك الترجمة</string>
+    <string name="MercurygramTranslationModeDefault">الافتراضي (سحابة Telegram)</string>
+    <string name="MercurygramTranslationModeCloud">سحابة Telegram</string>
+    <string name="MercurygramTranslationModeAlternative">HTTP بديل</string>
+    <string name="MercurygramTranslationModeOffline">دون اتصال (تطبيق خارجي)</string>
+    <string name="MercurygramTranslationAbout">ترسل سحابة Telegram النص إلى خوادم Telegram (التي تعيد توجيهه إلى Google). يقوم HTTP البديل بتوجيه النص عبر طلب HTTP خارج MTProto لا يُرفق هويتك على Telegram. يفوّض الوضع دون اتصال كل ترجمة إلى تطبيق FOSS مستقل (Offline Translator، dev.davidv.translator) عبر خدمة مرتبطة في الخلفية — لا تغادر الرسالة جهازك أبدًا. قد تُفقد تنسيقات الخط الغامق والمائل والشيفرة على المسار دون اتصال لأن المحرك يُرجع نصًا عاديًا.</string>
+    <string name="MercurygramTranslationOfflineSection">المترجم دون اتصال</string>
+    <string name="MercurygramTranslationInstallApp">تثبيت Offline Translator من F-Droid</string>
+    <string name="MercurygramTranslationOfflineNoApp">‏Offline Translator‏ (dev.davidv.translator) هو مزوّد FOSS المرجعي — يتضمن نماذج Bergamot للعمل دون اتصال ويعرض خدمة مرتبطة في الخلفية يُرسل إليها Mercurygram كل ترجمة بصمت. حتى يتم تثبيته، تبقى الترجمات على أي مسار احتياطي تسمح به أدناه.</string>
+    <string name="MercurygramTranslationOfflineProviderReady">‏Offline Translator مثبَّت. افتحه مرة واحدة لتنزيل زوج (أزواج) اللغات التي تريد الترجمة منها وإليها.</string>
+    <string name="MercurygramTranslationAutoFallback">احتياطي تلقائي عند الفشل</string>
+    <string name="MercurygramTranslationAutoFallbackAbout">إذا لم يُرجع المترجم دون اتصال شيئًا (لا يوجد نموذج لزوج اللغات، أو تعذّر اكتشاف اللغة، أو الخدمة غير متاحة)، يجري الرجوع إلى مسار HTTP البديل. لا تُستخدم السحابة أبدًا كاحتياطي عندما تختار محرّك العمل دون اتصال من أجل الخصوصية.</string>
+    <string name="MercurygramTranslateOfflineFormatToast">قد تُفقد تنسيقات الخط الغامق والمائل والشيفرة عند الترجمة بمحرّك العمل دون اتصال.</string>
+    <string name="MercurygramTranslateOfflineNoModel">الترجمة دون اتصال: لا يوجد نموذج مثبت لـ %1$s. افتح Offline Translator لتنزيله.</string>
+    <string name="MercurygramTranslateOfflineNoLanguage">الترجمة دون اتصال: تعذّر اكتشاف اللغة المصدر.</string>
+    <string name="MercurygramTranslateOfflineProviderUnavailable">الترجمة دون اتصال: المزود غير متوفر. افتح أو أعد تثبيت Offline Translator.</string>
+    <string name="MercurygramTranslateOfflineFailed">فشلت الترجمة دون اتصال.</string>
 </resources>

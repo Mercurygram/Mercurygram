@@ -1314,4 +1314,24 @@
     <string name="MercurygramTorPluginOutdated">Atualização do plug-in do Tor necessária</string>
     <string name="MercurygramUpdateTorPlugin">Atualizar o plug-in do Tor</string>
     <string name="MercurygramTorPluginSignatureMismatch">Plug-in do Tor: assinatura não corresponde — vinculação recusada</string>
+    <string name="MercurygramTranslationSettings">Tradução</string>
+    <string name="MercurygramTranslationRowAbout">Escolha como o Mercurygram traduz as mensagens recebidas.</string>
+    <string name="MercurygramTranslationEngine">Motor</string>
+    <string name="MercurygramTranslationMode">Motor de tradução</string>
+    <string name="MercurygramTranslationModeDefault">Padrão (nuvem do Telegram)</string>
+    <string name="MercurygramTranslationModeCloud">Nuvem do Telegram</string>
+    <string name="MercurygramTranslationModeAlternative">HTTP alternativo</string>
+    <string name="MercurygramTranslationModeOffline">Offline (aplicativo externo)</string>
+    <string name="MercurygramTranslationAbout">A nuvem do Telegram envia o texto para os servidores do Telegram (que o encaminham para o Google). O HTTP alternativo roteia o texto por uma requisição HTTP não-MTProto que não anexa sua identidade do Telegram. Offline delega cada tradução a um aplicativo FOSS separado (Offline Translator, dev.davidv.translator) por meio de um serviço vinculado em segundo plano — a mensagem nunca sai do seu dispositivo. A formatação negrito, itálico e código pode ser perdida no caminho offline porque o motor devolve apenas texto simples.</string>
+    <string name="MercurygramTranslationOfflineSection">Tradutor offline</string>
+    <string name="MercurygramTranslationInstallApp">Instalar o Offline Translator pela F-Droid</string>
+    <string name="MercurygramTranslationOfflineNoApp">O Offline Translator (dev.davidv.translator) é o provedor FOSS de referência — inclui modelos Bergamot offline e expõe um serviço vinculado em segundo plano para o qual o Mercurygram envia cada tradução silenciosamente. Até que ele esteja instalado, as traduções seguem o recurso alternativo que você permitir abaixo.</string>
+    <string name="MercurygramTranslationOfflineProviderReady">O Offline Translator está instalado. Abra-o uma vez para baixar o(s) par(es) de idiomas a partir do(s) qual(is) e para o(s) qual(is) você deseja traduzir.</string>
+    <string name="MercurygramTranslationAutoFallback">Recurso automático em caso de falha</string>
+    <string name="MercurygramTranslationAutoFallbackAbout">Se o tradutor offline não devolver nada (sem modelo para o par de idiomas, idioma não detectado, serviço inacessível), recorre ao caminho HTTP alternativo. A nuvem nunca é usada como recurso quando você escolheu o motor offline por privacidade.</string>
+    <string name="MercurygramTranslateOfflineFormatToast">A formatação negrito, itálico e código pode ser perdida ao traduzir com o motor offline.</string>
+    <string name="MercurygramTranslateOfflineNoModel">Tradução offline: nenhum modelo instalado para %1$s. Abra o Offline Translator para baixá-lo.</string>
+    <string name="MercurygramTranslateOfflineNoLanguage">Tradução offline: não foi possível detectar o idioma de origem.</string>
+    <string name="MercurygramTranslateOfflineProviderUnavailable">Tradução offline: provedor indisponível. Abra ou reinstale o Offline Translator.</string>
+    <string name="MercurygramTranslateOfflineFailed">Tradução offline falhou.</string>
 </resources>
