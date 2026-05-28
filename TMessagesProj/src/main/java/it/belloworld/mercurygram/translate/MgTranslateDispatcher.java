@@ -54,6 +54,16 @@ public final class MgTranslateDispatcher {
     }
 
     /**
+     * Single source of truth: the offline AIDL engine is selected AND the
+     * provider is installed/bindable. Drives every offline-path decision here
+     * and {@code TranslateController.isSecretOfflineTranslateAllowed()}.
+     */
+    public static boolean isOfflineUsable() {
+        return SharedConfig.MG_TRANSLATE_MODE_OFFLINE.equals(SharedConfig.mg_translateMode)
+                && MgAidlTranslate.isUsable(ApplicationLoader.applicationContext);
+    }
+
+    /**
      * Pick the dispatch path for the current {@link SharedConfig#mg_translateMode}.
      * Read the {@link Outcome} return value to decide whether to also run the
      * caller's upstream RPC.
@@ -66,8 +76,7 @@ public final class MgTranslateDispatcher {
         if (SharedConfig.MG_TRANSLATE_MODE_CLOUD.equals(mode)) {
             return Outcome.FORCE_CLOUD;
         }
-        if (SharedConfig.MG_TRANSLATE_MODE_OFFLINE.equals(mode)
-                && MgAidlTranslate.isUsable(ApplicationLoader.applicationContext)) {
+        if (isOfflineUsable()) {
             MgAidlTranslate.translate(text, toLng, (aidlText, aidlRate, aidlFailure) -> {
                 if (aidlText != null) {
                     maybeShowFormatToast();
@@ -88,6 +97,42 @@ public final class MgTranslateDispatcher {
         // The provider-missing downgrade preserves the privacy invariant:
         // offline-mode failure routes through Alternative HTTP, never Telegram cloud.
         runAlternative(text, fromLng, toLng, done);
+        return Outcome.HANDLED;
+    }
+
+    /**
+     * Fail-closed dispatch for secret/encrypted chats. The defining privacy
+     * invariant: secret message text NEVER leaves the device — offline AIDL
+     * only, no Telegram cloud, no Mozhi HTTP, no upstream punt. Unlike
+     * {@link #dispatch}, this method:
+     * <ul>
+     *   <li>ignores {@link SharedConfig#mg_translateMode} other than to require
+     *       it be {@code "offline"};</li>
+     *   <li>ignores {@link SharedConfig#mg_translateAutoFallback} — there is no
+     *       Alternative-HTTP fallback;</li>
+     *   <li>never returns {@code FORCE_CLOUD}/{@code PUNT_TO_UPSTREAM} — always
+     *       {@link Outcome#HANDLED} so no caller can fall through to a network
+     *       RPC.</li>
+     * </ul>
+     * When the offline provider is not selected or not usable the call fails
+     * immediately with {@link MgAidlTranslate.Reason#PROVIDER_UNAVAILABLE}.
+     */
+    public static Outcome dispatchSecret(String text, @Nullable String fromLng, String toLng, Result done) {
+        if (!isOfflineUsable()) {
+            done.done(null, false, MgAidlTranslate.Failure.of(MgAidlTranslate.Reason.PROVIDER_UNAVAILABLE));
+            return Outcome.HANDLED;
+        }
+        MgAidlTranslate.translate(text, toLng, (aidlText, aidlRate, aidlFailure) -> {
+            if (aidlText != null) {
+                maybeShowFormatToast();
+                done.done(aidlText, false, null);
+            } else {
+                done.done(null, false, aidlFailure != null
+                        ? aidlFailure
+                        : MgAidlTranslate.Failure.of(MgAidlTranslate.Reason.UNEXPECTED));
+            }
+            // No runAlternative, no cloud — fail closed even if mg_translateAutoFallback is on.
+        });
         return Outcome.HANDLED;
     }
 
