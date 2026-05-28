@@ -380,6 +380,12 @@ AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
 sudo_list = last.setdefault('sudo', [])
 if AUTOTOOLS_LINE not in sudo_list:
     sudo_list.append(AUTOTOOLS_LINE)
+# Transient: see .github/scripts/fdroid_sync.py for context — until the
+# next fdroid release lands a Builds entry carrying the $$VERSION$$
+# prebuild line natively, write it ourselves.
+last.setdefault('prebuild', []).append(
+    "printf '\\nMG_BUILD_TAG=$$VERSION$$\\n' >> ../gradle.properties"
+)
 with open(recipe, 'w') as f:
     yaml.safe_dump(m, f, sort_keys=False, default_flow_style=False)
 print(new_vc)
@@ -434,6 +440,12 @@ AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
 sudo_list = last.setdefault('sudo', [])
 if AUTOTOOLS_LINE not in sudo_list:
     sudo_list.append(AUTOTOOLS_LINE)
+# Transient: see .github/scripts/fdroid_sync.py for context — until the
+# next fdroid release lands a Builds entry carrying the $$VERSION$$
+# prebuild line natively, write it ourselves.
+last.setdefault('prebuild', []).append(
+    "printf '\\nMG_BUILD_TAG=$$VERSION$$\\n' >> ../gradle.properties"
+)
 with open(recipe, 'w') as f:
     yaml.safe_dump(m, f, sort_keys=False, default_flow_style=False)
 print(new_vc)
@@ -471,6 +483,12 @@ AUTOTOOLS_LINE = 'apt-get install -y automake autoconf libtool pkg-config'
 sudo_list = last.setdefault('sudo', [])
 if AUTOTOOLS_LINE not in sudo_list:
     sudo_list.append(AUTOTOOLS_LINE)
+# Transient: see .github/scripts/fdroid_sync.py for context — until the
+# next fdroid release lands a Builds entry carrying the $$VERSION$$
+# prebuild line natively, write it ourselves.
+last.setdefault('prebuild', []).append(
+    "printf '\\nMG_BUILD_TAG=$$VERSION$$\\n' >> ../gradle.properties"
+)
 with open(recipe, 'w') as f:
     yaml.dump(data, f, sort_keys=False)
 print(vc)

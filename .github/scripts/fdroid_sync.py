@@ -145,6 +145,17 @@ def sync_app(
         new['versionCode'] = new_vc
         new['commit'] = sha
         new['ndk'] = ndk_ver
+        # Transient: until the next fdroid release lands a Builds entry
+        # carrying `printf 'MG_BUILD_TAG=$$VERSION$$' >> ../gradle.properties`
+        # natively, write it ourselves. fdroidserver substitutes $$VERSION$$
+        # with the recipe's versionName at build time, so the printf'd line
+        # ends up the same regardless of who appends it. The template is a
+        # deepcopy of the previous entry, so guard against re-appending a line
+        # it already carries: unguarded, every release added one more copy.
+        prebuild = new.setdefault('prebuild', [])
+        tag_line = "printf '\\nMG_BUILD_TAG=$$VERSION$$\\n' >> ../gradle.properties"
+        if tag_line not in prebuild:
+            prebuild.append(tag_line)
         builds.append(new)
         print(f'[{app_key}] appended {flavor} vc={new_vc}', file=sys.stderr)
 
