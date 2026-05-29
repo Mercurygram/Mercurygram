@@ -273,7 +273,8 @@ task patchNativeSources {
                 'TMessagesProj/jni/third_party/xiph/opusfile',
                 'TMessagesProj/jni/tlottie',
                 'TMessagesProj/jni/boringssl',
-                'TMessagesProj/jni/td'
+                'TMessagesProj/jni/td',
+                'TMessagesProj/jni/whisper'
         }
         // ffbuild/version.sh bakes FFMPEG_VERSION into libavutil, preferring a
         // VERSION file in the source root over `git describe`. Left to git the
