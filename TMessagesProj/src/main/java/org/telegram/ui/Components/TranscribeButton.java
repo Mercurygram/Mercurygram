@@ -38,6 +38,10 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
+import android.widget.Toast;
+
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.TranslateController;
 import org.telegram.messenger.UserConfig;
@@ -116,7 +120,9 @@ public class TranscribeButton {
 
         this.isOpen = false;
         this.shouldBeOpen = false;
-        premium = parent.getMessageObject() != null && UserConfig.getInstance(parent.getMessageObject().currentAccount).isPremium();
+        // [MG] Treat on-device transcription as premium-equivalent so the button
+        // unlocks for non-premium accounts; actual routing happens in transcribePressed().
+        premium = parent.getMessageObject() != null && (UserConfig.getInstance(parent.getMessageObject().currentAccount).isPremium() || it.belloworld.mercurygram.transcribe.MgWhisperTranscriber.isUsable());
 
         loadingFloat = new AnimatedFloat(parent, 250, CubicBezierInterpolator.EASE_OUT_QUINT);
         animatedDrawLock = new AnimatedFloat(parent, 250, CubicBezierInterpolator.EASE_OUT_QUINT);
@@ -209,6 +215,12 @@ public class TranscribeButton {
         if (parent == null) {
             return;
         }
+        // [MG] `premium` is cached once in the ctor, but it now folds in the
+        // runtime-mutable MgWhisperTranscriber.isUsable() (offline toggle + model
+        // presence). Refresh it here so a mid-session enable/disable or model
+        // download is honored on the next tap instead of misrouting to a premium
+        // bulletin against a stale snapshot.
+        premium = parent.getMessageObject() != null && (UserConfig.getInstance(parent.getMessageObject().currentAccount).isPremium() || it.belloworld.mercurygram.transcribe.MgWhisperTranscriber.isUsable());
         clickedToOpen = false;
         boolean processClick, toOpen = !shouldBeOpen;
         if (!shouldBeOpen) {
@@ -675,6 +687,12 @@ public class TranscribeButton {
                     NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject, null, null, (Boolean) true, (Boolean) true);
                 });
             } else {
+                // [MG] Route through on-device whisper.cpp when enabled + model installed.
+                // Keeps audio on-device (privacy) and works for non-premium accounts.
+                if (it.belloworld.mercurygram.transcribe.MgWhisperTranscriber.isUsable()) {
+                    mgTranscribeOffline(messageObject, dialogId, messageId, start, minDuration, delegate);
+                    return;
+                }
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("sending Transcription request, msg_id=" + messageId + " dialog_id=" + dialogId);
                 }
@@ -763,6 +781,81 @@ public class TranscribeButton {
                 NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject, null, null, (Boolean) false, null);
             });
         }
+    }
+
+    // [MG] On-device transcription via whisper.cpp. Mirrors the RPC success/failure
+    // plumbing of transcribePressed() so the cell UI + storage paths are unchanged.
+    private static void mgTranscribeOffline(MessageObject messageObject, long dialogId, int messageId, long start, long minDuration, ChatMessageCell.ChatMessageCellDelegate delegate) {
+        if (transcribeOperationsByDialogPosition == null) {
+            transcribeOperationsByDialogPosition = new HashMap<>();
+        }
+        transcribeOperationsByDialogPosition.put((Integer) reqInfoHash(messageObject), messageObject);
+        final int account = messageObject.currentAccount;
+        it.belloworld.mercurygram.transcribe.MgWhisperTranscriber.transcribe(messageObject, new it.belloworld.mercurygram.transcribe.MgWhisperTranscriber.Result() {
+            @Override
+            public void onPartial(String partial) {
+                // [MG] Live: show whisper's growing transcript while the op is
+                // still tracked in transcribeOperationsByDialogPosition
+                // (isTranscribing → true), so MessageObject.isVoiceTranscriptionOpen()
+                // renders the partial even though voiceTranscriptionFinal is false.
+                // Storage is intentionally NOT written here — only the final text
+                // (in done()) is persisted, so a clip killed mid-decode leaves no
+                // truncated transcription in the DB. args[1]=0L is non-null so the
+                // ChatActivity handler reads the text in args[2].
+                TranscribeButton.openVideoTranscription(messageObject);
+                messageObject.messageOwner.voiceTranscriptionOpen = true;
+                // forceUpdate is required: the notification rebinds the SAME
+                // MessageObject in place, so ChatMessageCell.setMessageObject sees
+                // currentMessageObject == messageObject and (without this) computes
+                // messageChanged=false → skips the layout-regen block → the new
+                // partial text is never laid out. forceUpdate flips messageChanged
+                // true (ChatMessageCell:6636) and self-resets after regen (:6879).
+                messageObject.forceUpdate = true;
+                NotificationCenter.getInstance(account).postNotificationName(
+                        NotificationCenter.voiceTranscriptionUpdate, messageObject,
+                        (Long) 0L, (String) partial, (Boolean) true, (Boolean) false);
+            }
+
+            @Override
+            public void done(String text, boolean success, it.belloworld.mercurygram.transcribe.MgWhisperTranscriber.Failure failure) {
+                if (success && text != null) {
+                    final long duration = SystemClock.elapsedRealtime() - start;
+                    TranscribeButton.openVideoTranscription(messageObject);
+                    messageObject.messageOwner.voiceTranscriptionOpen = true;
+                    messageObject.messageOwner.voiceTranscriptionFinal = true;
+                    MessagesStorage.getInstance(account).updateMessageVoiceTranscription(dialogId, messageId, text, messageObject.messageOwner);
+                    AndroidUtilities.runOnUIThread(() -> finishTranscription(messageObject, 0, text), Math.max(0, minDuration - duration));
+                } else {
+                    if (transcribeOperationsByDialogPosition != null) {
+                        transcribeOperationsByDialogPosition.remove((Integer) reqInfoHash(messageObject));
+                    }
+                    Toast.makeText(ApplicationLoader.applicationContext, mgTranscribeFailureText(failure), Toast.LENGTH_SHORT).show();
+                    NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject);
+                    NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.updateTranscriptionLock);
+                }
+            }
+        });
+    }
+
+    private static String mgTranscribeFailureText(it.belloworld.mercurygram.transcribe.MgWhisperTranscriber.Failure failure) {
+        int res = R.string.MercurygramTranscribeOfflineFailed;
+        if (failure != null && failure.reason != null) {
+            switch (failure.reason) {
+                case MODEL_NOT_INSTALLED:
+                    res = R.string.MercurygramTranscribeOfflineNoModel;
+                    break;
+                case FILE_UNAVAILABLE:
+                    res = R.string.MercurygramTranscribeOfflineFileUnavailable;
+                    break;
+                case DECODE_FAILED:
+                    res = R.string.MercurygramTranscribeOfflineDecodeFailed;
+                    break;
+                default:
+                    res = R.string.MercurygramTranscribeOfflineFailed;
+                    break;
+            }
+        }
+        return LocaleController.getString(res);
     }
 
     public static boolean finishTranscription(MessageObject messageObject, long transcription_id, String text) {
