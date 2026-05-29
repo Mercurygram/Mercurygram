@@ -243,7 +243,8 @@ task patchNativeSources {
                 'TMessagesProj/jni/ffmpeg',
                 'TMessagesProj/jni/dav1d',
                 'TMessagesProj/jni/boringssl',
-                'TMessagesProj/jni/td'
+                'TMessagesProj/jni/td',
+                'TMessagesProj/jni/whisper'
         }
         def ndkDir = android.ndkDirectory.toString()
         def ninjaPath = System.getenv('NINJA_PATH') ?: 'ninja'
