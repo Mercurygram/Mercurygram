@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-builtin-macro-redefined -D__FILE__=
 # "=" form with ":" separator to keep the whole list as one linker argument.
 # libvoipandroid.a is deliberately excluded from this list because it exports
 # Java_org_telegram_messenger_voip_* JNI entry points that must stay visible.
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--build-id=none -Wl,--hash-style=gnu -Wl,-Bsymbolic -Wl,--gc-sections -Wl,--exclude-libs=libtgvoip.a:libtgcalls.a:libtgcalls_tp.a:libtgnet.a:libflac.a:librlottie.a:libsqlite.a:libbreakpad.a:libopenh264.a:librnnoise.a:libcpufeatures.a:libswscale.a:libavformat.a:libavcodec.a:libavresample.a:libavutil.a:libswresample.a:libvpx.a:libdav1d.a:libssl.a:libcrypto.a:libtde2e.a:libtdutils.a")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--build-id=none -Wl,--hash-style=gnu -Wl,-Bsymbolic -Wl,--gc-sections -Wl,--exclude-libs=libtgvoip.a:libtgcalls.a:libtgcalls_tp.a:libtgnet.a:libflac.a:librlottie.a:libsqlite.a:libbreakpad.a:libopenh264.a:librnnoise.a:libcpufeatures.a:libswscale.a:libavformat.a:libavcodec.a:libavresample.a:libavutil.a:libswresample.a:libvpx.a:libdav1d.a:libssl.a:libcrypto.a:libtde2e.a:libtdutils.a:libwhisper.a:libggml.a:libggml-base.a:libggml-cpu.a")
 
 if (${ANDROID_ABI} STREQUAL "armeabi-v7a" OR ${ANDROID_ABI} STREQUAL "arm64-v8a")
     enable_language(ASM)
@@ -360,6 +360,31 @@ unset(_cxx_flags_before_voip)
 
 option(QUIET_BUILD "Suppress compiler warnings for CI log reduction" OFF)
 
+# [MG] whisper.cpp — on-device voice transcription engine.
+# Vendored as the jni/whisper submodule and built as a static lib that links
+# into libtmessages. add_subdirectory() makes it inherit this file's
+# reproducible-build flags (-D__FILE__=__FILE_NAME__, --build-id=none, ...).
+# Disable everything we don't ship; CPU-only inference.
+set(WHISPER_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(WHISPER_BUILD_SERVER   OFF CACHE BOOL "" FORCE)
+set(WHISPER_SDL2           OFF CACHE BOOL "" FORCE)
+set(GGML_OPENMP            OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)
+# On Android we cross-compile, so ggml sets GGML_NATIVE=OFF and emits no
+# -march flag → the NDK baseline (armv8-a) is used, which lacks the int8
+# dot-product instruction. whisper's q8_0 GEMM then falls back to a slow
+# widening-NEON path (~5-10x slower than `sdot`). Pin an arch that enables
+# dotprod + fp16 on arm64. This compiles ARMv8.2 instructions that SIGILL on
+# older cores (pre-Cortex-A55/A75), so MgWhisperTranscriber.isUsable() gates
+# the feature on a runtime /proc/cpuinfo "asimddp" check — devices without it
+# never reach this code and fall back to Telegram's server transcription.
+# Deterministic fixed string → no reproducibility impact.
+if (${ANDROID_ABI} STREQUAL "arm64-v8a")
+    set(GGML_CPU_ARM_ARCH "armv8.2-a+dotprod+fp16" CACHE STRING "" FORCE)
+endif()
+add_subdirectory(whisper)
+
 set(NATIVE_LIB "tmessages.49")
 
 #tmessages
@@ -384,6 +409,7 @@ add_library(${NATIVE_LIB} SHARED
         genann.c
         secureid_ocr.cpp
         tde2e/bridge.cpp
+        whisper_jni.cpp
 )
 
 target_compile_options(${NATIVE_LIB} PUBLIC
@@ -637,6 +663,8 @@ target_include_directories(${NATIVE_LIB} PUBLIC
         tgcalls/
         webrtc/
         tde2e/include
+        whisper/include
+        whisper/ggml/include
 )
 
 target_link_options(${NATIVE_LIB} PRIVATE "-Wl,-z,max-page-size=16384")
@@ -660,6 +688,7 @@ target_link_libraries(${NATIVE_LIB}
         libdav1d
         tde2e
         tdutils
+        whisper
         avutil
         ssl
         crypto
