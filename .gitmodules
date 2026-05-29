@@ -66,6 +66,11 @@
 	path = TMessagesProj/jni/third_party/wamr
 	url = https://github.com/wasm-micro-runtime/wasm-micro-runtime.git
 
+[submodule "TMessagesProj/jni/whisper"]
+	path = TMessagesProj/jni/whisper
+	url = https://github.com/ggml-org/whisper.cpp
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj_PluginTor/jni/libevent"]
 	path = TMessagesProj_PluginTor/jni/libevent
 	url = https://github.com/libevent/libevent.git
