@@ -144,6 +144,42 @@ unset(_cxx_flags_before_voip)
 
 option(QUIET_BUILD "Suppress compiler warnings for CI log reduction" OFF)
 
+# [MG] whisper.cpp — on-device voice transcription engine.
+# Vendored as the jni/whisper submodule and built as a static lib that links
+# into libtmessages. add_subdirectory() makes it inherit this file's
+# reproducible-build flags (-D__FILE__=__FILE_NAME__, --build-id=none, ...).
+# Disable everything we don't ship; CPU-only inference.
+# Reproducibility: ggml/CMakeLists.txt runs `git rev-parse --short HEAD` in the
+# submodule and compiles the result into libggml as GGML_COMMIT (read back by
+# ggml.c:519). Git auto-scales the abbreviation with the clone's object count,
+# so a shallow submodule checkout yields 7 chars and a full one 8, and a dirty
+# tree appends "-dirty". Either changes one string, which reorders the merged
+# SHF_STRINGS pool and makes libtmessages.49.so differ between builds of
+# byte-identical sources. ggml offers no override for the value, so point its
+# git probe at a non-git binary: the command fails under ERROR_QUIET and ggml
+# falls back to its own "unknown" constant. find_program skips the search
+# because the cache entry is already set to a non-NOTFOUND path.
+set(GIT_EXE "${CMAKE_COMMAND}" CACHE FILEPATH "" FORCE)
+set(WHISPER_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(WHISPER_BUILD_SERVER   OFF CACHE BOOL "" FORCE)
+set(WHISPER_SDL2           OFF CACHE BOOL "" FORCE)
+set(GGML_OPENMP            OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)
+# On Android we cross-compile, so ggml sets GGML_NATIVE=OFF and emits no
+# -march flag → the NDK baseline (armv8-a) is used, which lacks the int8
+# dot-product instruction. whisper's q8_0 GEMM then falls back to a slow
+# widening-NEON path (~5-10x slower than `sdot`). Pin an arch that enables
+# dotprod + fp16 on arm64. This compiles ARMv8.2 instructions that SIGILL on
+# older cores (pre-Cortex-A55/A75), so MgWhisperTranscriber.isUsable() gates
+# the feature on a runtime /proc/cpuinfo "asimddp" check — devices without it
+# never reach this code and fall back to Telegram's server transcription.
+# Deterministic fixed string → no reproducibility impact.
+if (${ANDROID_ABI} STREQUAL "arm64-v8a")
+    set(GGML_CPU_ARM_ARCH "armv8.2-a+dotprod+fp16" CACHE STRING "" FORCE)
+endif()
+add_subdirectory(whisper)
+
 set(NATIVE_LIB "tmessages.49")
 
 #tmessages
@@ -163,6 +199,7 @@ add_library(${NATIVE_LIB} SHARED
         genann.c
         secureid_ocr.cpp
         tde2e/bridge.cpp
+        whisper_jni.cpp
 )
 
 target_compile_options(${NATIVE_LIB} PUBLIC
@@ -266,6 +303,8 @@ target_include_directories(${NATIVE_LIB} PUBLIC
         tgcalls/
         webrtc/
         tde2e/include
+        whisper/include
+        whisper/ggml/include
 )
 
 target_link_options(${NATIVE_LIB} PRIVATE "-Wl,-z,max-page-size=16384")
@@ -288,6 +327,7 @@ target_link_libraries(${NATIVE_LIB}
         libopus
         tde2e
         tdutils
+        whisper
         avutil
         ssl
         crypto
