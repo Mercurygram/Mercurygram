@@ -278,7 +278,8 @@ task patchNativeSources {
                 'TMessagesProj/jni/third_party/boost-regex',
                 'TMessagesProj/jni/third_party/boringssl',
                 'TMessagesProj/jni/tlottie',
-                'TMessagesProj/jni/td'
+                'TMessagesProj/jni/td',
+                'TMessagesProj/jni/whisper'
         }
         for (script in ['patch_dav1d.sh', 'patch_td.sh']) {
             exec {
