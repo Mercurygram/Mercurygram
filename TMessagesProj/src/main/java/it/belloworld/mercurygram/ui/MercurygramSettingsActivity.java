@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import it.belloworld.mercurygram.HiddenAccountHelper;
 import it.belloworld.mercurygram.MgMessageHistory;
 import it.belloworld.mercurygram.MgUpdateChecker;
+import it.belloworld.mercurygram.transcribe.MgWhisperModel;
 
 public class MercurygramSettingsActivity extends UniversalFragment {
 
@@ -64,6 +65,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_UPDATE_TOR_PLUGIN = 43;
     private static final int ID_TOR_TRANSPORT = 48;
     private static final int ID_TRANSLATION = 50;
+    private static final int ID_TRANSCRIPTION = 51;
 
     @Override
     protected CharSequence getTitle() {
@@ -185,6 +187,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 LocaleController.getString(R.string.MercurygramTranslationSettings),
                 translationModeShortLabel()));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranslationRowAbout)));
+
+        items.add(UItem.asButton(ID_TRANSCRIPTION,
+                LocaleController.getString(R.string.MercurygramTranscriptionTitle),
+                transcriptionShortLabel()));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranscriptionEnableInfo)));
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
@@ -330,9 +337,30 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                     }
                 }
                 break;
+            case ID_TRANSCRIPTION:
+                presentFragment(new MercurygramTranscriptionSettingsActivity());
+                break;
             case ID_TRANSLATION:
                 presentFragment(new MercurygramTranslationSettingsActivity());
                 break;
+        }
+    }
+
+    // Subtitle for the Voice-transcription row, mirroring translationModeShortLabel():
+    // "Off" when disabled, otherwise the selected model tier so the active choice
+    // is visible without opening the sub-screen.
+    private static String transcriptionShortLabel() {
+        if (!SharedConfig.mg_transcribeOffline) {
+            return LocaleController.getString(R.string.MercurygramTranscriptionRowDisabled);
+        }
+        switch (MgWhisperModel.selected()) {
+            case BASE:
+                return LocaleController.getString(R.string.MercurygramTranscriptionModelBase);
+            case SMALL:
+                return LocaleController.getString(R.string.MercurygramTranscriptionModelSmall);
+            case TINY:
+            default:
+                return LocaleController.getString(R.string.MercurygramTranscriptionModelTiny);
         }
     }
 
