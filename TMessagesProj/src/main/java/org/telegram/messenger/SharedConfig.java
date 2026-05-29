@@ -253,6 +253,30 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleMgTranscribeOffline() {
+        mg_transcribeOffline = !mg_transcribeOffline;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_transcribeOffline", mg_transcribeOffline)
+                .apply();
+    }
+
+    public static void setMgTranscribeModel(String model) {
+        mg_transcribeModel = model;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putString("mg_transcribeModel", model)
+                .apply();
+    }
+
+    public static void toggleMgTranscribeVad() {
+        mg_transcribeVad = !mg_transcribeVad;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_transcribeVad", mg_transcribeVad)
+                .apply();
+    }
+
     public static void setMgTranslateAltEngine(String engine) {
         engine = sanitizeMgTranslateAltEngine(engine);
         mg_translateAltEngine = engine;
@@ -681,6 +705,27 @@ public class SharedConfig {
     public static String mg_translateAltPinnedInstance = "";
     public static String mg_translateAltCustomInstance = "";
 
+    // Mercurygram: On-device voice-message transcription via whisper.cpp
+    // (it.belloworld.mercurygram.transcribe.MgWhisperTranscriber). When enabled
+    // and a model is installed, voice/round-video transcription runs locally
+    // instead of via the premium-gated Telegram messages.transcribeAudio RPC —
+    // private (audio never leaves the device) and available to non-premium
+    // accounts. The model is downloaded / imported separately, not bundled.
+    public static boolean mg_transcribeOffline = false;
+    public static String mg_transcribeModel = "tiny-q8_0";
+    // Transcription language: "auto" = whisper auto-detect; "device" = device
+    // locale (default — the tiny/base models mis-detect short clips); otherwise an
+    // ISO-639-1 code. Applies uniformly to every model. Stored per-account in
+    // UserConfig.transcribeLang (a user may transcribe one account in English,
+    // another in Italian); these sentinels stay here as shared constants.
+    public static final String MG_TRANSCRIBE_LANG_AUTO = "auto";
+    public static final String MG_TRANSCRIBE_LANG_DEVICE = "device";
+    // Silero VAD: strip silence/non-speech before decoding so the tiny model
+    // can't hallucinate on silent/short clips. On by default; non-fatal — used
+    // only when the (downloaded) VAD model is present, else transcription runs
+    // without it. See MgWhisperModel.VAD_FILE / MgWhisperTranscriber.
+    public static boolean mg_transcribeVad = true;
+
     public static long pushStringGetTimeStart;
     public static long pushStringGetTimeEnd;
     public static boolean pushStatSent;
@@ -1001,6 +1046,9 @@ public class SharedConfig {
                 editor.putString("mg_translateAltInstanceMode", mg_translateAltInstanceMode);
                 editor.putString("mg_translateAltPinnedInstance", mg_translateAltPinnedInstance);
                 editor.putString("mg_translateAltCustomInstance", mg_translateAltCustomInstance);
+                editor.putBoolean("mg_transcribeOffline", mg_transcribeOffline);
+                editor.putString("mg_transcribeModel", mg_transcribeModel);
+                editor.putBoolean("mg_transcribeVad", mg_transcribeVad);
                 editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
                 editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -1238,7 +1286,11 @@ public class SharedConfig {
             mg_translateAltInstanceMode = sanitizeMgTranslateAltInstanceMode(preferences.getString("mg_translateAltInstanceMode", MG_TRANSLATE_ALT_INSTANCE_MODE_AUTO));
             mg_translateAltPinnedInstance = preferences.getString("mg_translateAltPinnedInstance", "");
             mg_translateAltCustomInstance = preferences.getString("mg_translateAltCustomInstance", "");
+            mg_transcribeOffline = preferences.getBoolean("mg_transcribeOffline", false);
+            mg_transcribeModel = preferences.getString("mg_transcribeModel", "tiny-q8_0");
+            mg_transcribeVad = preferences.getBoolean("mg_transcribeVad", true);
             migratePerAccountSettingsV1(preferences);
+            migrateTranscribeLangToPerAccount(preferences);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
             String wpPub = preferences.getString("mg_webPushPublicKey", "");
@@ -1308,6 +1360,28 @@ public class SharedConfig {
                 .remove("mg_disableLivePhotosByDefault")
                 .remove("hide_chat_keyboard")
                 .putBoolean("mg_perAccountMigrationV1Done", true)
+                .apply();
+    }
+
+    // transcribeLang was shipped as a global mg_ key, then reclassified
+    // per-account (a user may transcribe one account in English, another in
+    // Italian). Copy the formerly-global value into every account's userconfig,
+    // then drop the old key. Mirrors migratePerAccountSettingsV1.
+    private static void migrateTranscribeLangToPerAccount(SharedPreferences mainconfig) {
+        if (mainconfig.getBoolean("mg_transcribeLangPerAccountMigrated", false)) {
+            return;
+        }
+        String transcribeLang = mainconfig.getString("mg_transcribeLang", MG_TRANSCRIBE_LANG_DEVICE);
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            String name = a == 0 ? "userconfing" : "userconfig" + a;
+            ApplicationLoader.applicationContext.getSharedPreferences(name, Activity.MODE_PRIVATE)
+                    .edit()
+                    .putString("transcribeLang", transcribeLang)
+                    .apply();
+        }
+        mainconfig.edit()
+                .remove("mg_transcribeLang")
+                .putBoolean("mg_transcribeLangPerAccountMigrated", true)
                 .apply();
     }
 
