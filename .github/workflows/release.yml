@@ -7,6 +7,12 @@ on:
       # Beta tags are 5-part (X.Y.Z.W.N); stable are 4-part. Exclude betas
       # since '[0-9]*' is a glob (not regex) — '*' matches '.' too.
       - '!*.*.*.*.*'
+  workflow_dispatch:
+    inputs:
+      create_mr:
+        description: 'Open F-Droid merge request after syncing the branch'
+        type: boolean
+        default: true
 
 # Serialize per-tag runs without canceling them. If a maintainer deletes and
 # re-pushes the same tag (legitimate during the pre-stable → stable cleanup
@@ -450,12 +456,14 @@ jobs:
           body_path: artifacts/changelog.md
           files: artifacts/*.apk
 
-  # Per-app matrix: one parallel leg per AppID, one branch + one MR each.
-  # The Python script (fdroid_sync.py) supports independent --app=main /
-  # --app=plugin.tor invocations and silently skips a recipe missing from
-  # the fdroiddata checkout — covers the window between a recipe's initial
-  # MR being open and merged. fail-fast:false so one app's failure does
-  # not cancel the other.
+  # Per-app matrix: one parallel leg per AppID, one branch each (and, by
+  # default, one MR each). The Python script (fdroid_sync.py) supports
+  # independent --app=main / --app=plugin.tor invocations and silently skips a
+  # recipe missing from the fdroiddata checkout — covers the window between a
+  # recipe's initial MR being open and merged. fail-fast:false so one app's
+  # failure does not cancel the other. Branch sync/push is unconditional; the
+  # upstream MR is gated (workflow_dispatch input `create_mr`, repo variable
+  # `FDROID_AUTO_MR`) — see "Decide whether to open MR" below.
   fdroiddata-sync:
     runs-on: ubuntu-24.04
     needs: release
@@ -524,6 +532,20 @@ jobs:
             echo "Recipe metadata/${{ matrix.appid }}.yml not in fdroiddata master yet — skipping ${{ matrix.app }} sync."
           fi
 
+      - name: Decide whether to open MR
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # manual run: honor the input verbatim
+            open="${{ inputs.create_mr }}"
+          elif [ "${{ vars.FDROID_AUTO_MR }}" = "false" ]; then
+            # tag push: default ON, opt out via repo variable
+            open=false
+          else
+            open=true
+          fi
+          echo "open=$open" >> "$GITHUB_OUTPUT"
+
       - name: Sync metadata and extract per-vercode signature blocks
         if: steps.recipe.outputs.present == 'true'
         working-directory: fdroiddata
@@ -550,7 +572,7 @@ jobs:
           git push --force-with-lease -u origin "$BRANCH"
 
       - name: Open merge request
-        if: steps.recipe.outputs.present == 'true'
+        if: steps.recipe.outputs.present == 'true' && steps.gate.outputs.open == 'true'
         working-directory: fdroiddata
         env:
           GITLAB_TOKEN: ${{ secrets.FDROIDDATA_GITLAB_TOKEN }}
@@ -574,3 +596,10 @@ jobs:
             --data-urlencode 'remove_source_branch=true' \
             "https://gitlab.com/api/v4/projects/${SRC_PID}/merge_requests" \
             | python3 -c 'import json,sys; d=json.load(sys.stdin); print("MR:", d.get("web_url") or d)'
+
+      - name: Print manual MR link (MR creation skipped)
+        if: steps.recipe.outputs.present == 'true' && steps.gate.outputs.open != 'true'
+        run: |
+          echo "MR creation disabled — branch '$BRANCH' pushed to drizzt/fdroiddata."
+          echo "Open it manually:"
+          echo "https://gitlab.com/drizzt/fdroiddata/-/merge_requests/new?merge_request%5Bsource_branch%5D=$BRANCH&merge_request%5Btarget_project_id%5D=36528&merge_request%5Btarget_branch%5D=master"
