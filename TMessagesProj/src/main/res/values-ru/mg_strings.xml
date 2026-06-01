@@ -23,6 +23,8 @@
     <string name="MercurygramDisableLivePhotos">Отключить Live Photos по умолчанию</string>
     <string name="MercurygramDisableLivePhotosAbout">Отправлять только статичное фото при выборе Google Motion Photo. Live Photo для отдельного выбора можно включить, нажав значок движения на панели вложений.</string>
     <string name="MercurygramHideStories">Скрыть истории</string>
+    <string name="MercurygramDisableGlobalSearch">Отключить глобальный поиск</string>
+    <string name="MercurygramDisableGlobalSearchAbout">Глобальный поиск находит публичные имена пользователей, каналы и сообщения по всему Telegram. Когда он отключён, поиск охватывает только ваши чаты и контакты.</string>
     <string name="MercurygramUseSystemFont">Использовать системный шрифт</string>
     <string name="MercurygramUseSystemFontAbout">Заменяет встроенные шрифты Roboto на системные шрифты устройства. Уже открытые экраны может потребоваться открыть заново, чтобы изменение применилось полностью.</string>
     <string name="MercurygramSavedMessagesHistory">Сохранять удалённые и изменённые сообщения</string>
