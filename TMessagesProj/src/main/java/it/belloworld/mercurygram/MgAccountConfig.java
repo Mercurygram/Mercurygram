@@ -20,6 +20,7 @@ public class MgAccountConfig {
     public boolean savedMessagesHistory = false;
     public String transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
     public boolean hideStories = false;
+    public boolean disableGlobalSearch = false;
     // MG: the reduced temp-key TTL ladder (1h→6h→24h) exhausted on this
     // account — server kept rejecting bindTempAuthKey, so native reduced
     // mode was force-disabled here while the global SharedConfig toggle
@@ -38,6 +39,7 @@ public class MgAccountConfig {
         editor.putBoolean("savedMessagesHistory", savedMessagesHistory);
         editor.putString("transcribeLang", transcribeLang);
         editor.putBoolean("hideStories", hideStories);
+        editor.putBoolean("disableGlobalSearch", disableGlobalSearch);
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -50,6 +52,7 @@ public class MgAccountConfig {
         savedMessagesHistory = preferences.getBoolean("savedMessagesHistory", false);
         transcribeLang = preferences.getString("transcribeLang", SharedConfig.MG_TRANSCRIBE_LANG_DEVICE);
         hideStories = preferences.getBoolean("hideStories", false);
+        disableGlobalSearch = preferences.getBoolean("disableGlobalSearch", false);
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -62,6 +65,7 @@ public class MgAccountConfig {
         savedMessagesHistory = false;
         transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
         hideStories = false;
+        disableGlobalSearch = false;
         mgReducedTrackingExhausted = false;
     }
 }
