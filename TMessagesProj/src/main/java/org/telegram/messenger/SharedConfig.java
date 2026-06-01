@@ -226,6 +226,14 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleMgDisableGlobalSearch() {
+        mg_disableGlobalSearch = !mg_disableGlobalSearch;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_disableGlobalSearch", mg_disableGlobalSearch)
+                .apply();
+    }
+
     public static void setMgTranslateMode(String mode) {
         mode = sanitizeMgTranslateMode(mode);
         mg_translateMode = mode;
@@ -615,6 +623,7 @@ public class SharedConfig {
     // display/transport choice (no server interaction beyond *not* issuing one
     // optional RPC); see the api/terms review in AGENTS.md.
     public static boolean mg_hideStories = false;            // suppress the stories bar in the dialog list
+    public static boolean mg_disableGlobalSearch = false;    // skip the messages.searchGlobal RPC (search stays local)
     // Mercurygram: Translation engine selection. "default" defers to
     // upstream MessagesController.translationsAutoEnabled; "cloud" forces
     // the Telegram MTProto messages.translateText RPC; "alternative" forces
@@ -1234,6 +1243,7 @@ public class SharedConfig {
             mg_useTor = preferences.getBoolean("mg_useTor", false);
             mg_torIdleStopMinutes = preferences.getInt("mg_torIdleStopMinutes", 5);
             mg_hideStories = preferences.getBoolean("mg_hideStories", false);
+            mg_disableGlobalSearch = preferences.getBoolean("mg_disableGlobalSearch", false);
             mg_translateMode = sanitizeMgTranslateMode(preferences.getString("mg_translateMode", MG_TRANSLATE_MODE_DEFAULT));
             mg_translateAutoFallback = preferences.getBoolean("mg_translateAutoFallback", true);
             mg_translateOfflineFormatToastShown = preferences.getBoolean("mg_translateOfflineFormatToastShown", false);
