@@ -20,6 +20,7 @@ public class MgAccountConfig {
     public boolean disableLivePhotosByDefault = false;
     public boolean savedMessagesHistory = false;
     public String transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
+    public boolean hideStories = false;
     // MG: the reduced temp-key TTL ladder (1h→6h→24h) exhausted on this
     // account — server kept rejecting bindTempAuthKey, so native reduced
     // mode was force-disabled here while the global SharedConfig toggle
@@ -38,6 +39,7 @@ public class MgAccountConfig {
         editor.putBoolean("disableLivePhotosByDefault", disableLivePhotosByDefault);
         editor.putBoolean("savedMessagesHistory", savedMessagesHistory);
         editor.putString("transcribeLang", transcribeLang);
+        editor.putBoolean("hideStories", hideStories);
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -50,6 +52,7 @@ public class MgAccountConfig {
         disableLivePhotosByDefault = preferences.getBoolean("disableLivePhotosByDefault", false);
         savedMessagesHistory = preferences.getBoolean("savedMessagesHistory", false);
         transcribeLang = preferences.getString("transcribeLang", SharedConfig.MG_TRANSCRIBE_LANG_DEVICE);
+        hideStories = preferences.getBoolean("hideStories", false);
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -62,6 +65,7 @@ public class MgAccountConfig {
         disableLivePhotosByDefault = false;
         savedMessagesHistory = false;
         transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
+        hideStories = false;
         mgReducedTrackingExhausted = false;
     }
 }
