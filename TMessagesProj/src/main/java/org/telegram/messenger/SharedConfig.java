@@ -218,6 +218,7 @@ public class SharedConfig {
                 .commit();
     }
 
+
     public static void setMgTranslateMode(String mode) {
         mode = sanitizeMgTranslateMode(mode);
         mg_translateMode = mode;
@@ -1045,6 +1046,7 @@ public class SharedConfig {
         mg_transcribeVad = preferences.getBoolean("mg_transcribeVad", true);
         migratePerAccountSettingsV1(preferences);
         migrateTranscribeLangToPerAccount(preferences);
+        migrateHideStoriesToPerAccount(preferences);
         String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
         if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
         String wpPub = preferences.getString("mg_webPushPublicKey", "");
@@ -1390,6 +1392,28 @@ public class SharedConfig {
         mainconfig.edit()
                 .remove("mg_transcribeLang")
                 .putBoolean("mg_transcribeLangPerAccountMigrated", true)
+                .apply();
+    }
+
+    // hideStories was shipped as a global mg_ key, then reclassified per-account
+    // (the stories bar shows the active account's contacts' stories — a user may
+    // want it hidden on one account, shown on another). Copy the formerly-global
+    // value into every account's userconfig, then drop the old key.
+    private static void migrateHideStoriesToPerAccount(SharedPreferences mainconfig) {
+        if (mainconfig.getBoolean("mg_hideStoriesPerAccountMigrated", false)) {
+            return;
+        }
+        boolean hideStories = mainconfig.getBoolean("mg_hideStories", false);
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            String name = a == 0 ? "userconfing" : "userconfig" + a;
+            ApplicationLoader.applicationContext.getSharedPreferences(name, Activity.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("hideStories", hideStories)
+                    .apply();
+        }
+        mainconfig.edit()
+                .remove("mg_hideStories")
+                .putBoolean("mg_hideStoriesPerAccountMigrated", true)
                 .apply();
     }
 
