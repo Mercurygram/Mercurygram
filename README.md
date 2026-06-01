@@ -81,6 +81,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Add toggle setting in Chat Settings to send large photos (2560px instead of 1280px)
 - Add per-account toggle setting in Settings → Mercurygram to hide the stories bar in the chat list
 - Add per-account toggle setting in Settings → Mercurygram to pre-tick "delete for everyone" (and "also delete for…" in private chats) by default in the delete-message dialog
+- Add a "Remove all proxies" bulk action to the proxy list (upstream only deletes one proxy at a time)
 - Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
 
 ### TF-originated de-googling patches
