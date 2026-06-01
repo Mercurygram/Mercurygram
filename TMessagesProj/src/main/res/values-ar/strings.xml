@@ -1263,6 +1263,7 @@
     <string name="MercurygramCheckForUpdatesToast">جارٍ التحقق من التحديثات…</string>
     <string name="MercurygramDisableLivePhotos">تعطيل Live Photos افتراضيًا</string>
     <string name="MercurygramDisableLivePhotosAbout">أرسل الصورة الثابتة فقط عند اختيار Google Motion Photo. لا يزال بإمكانك تمكين Live Photo لاختيار فردي بالنقر على أيقونة الحركة في لوحة المرفقات.</string>
+    <string name="MercurygramHideStories">إخفاء القصص</string>
     <string name="MercurygramUseSystemFont">استخدام خط النظام</string>
     <string name="MercurygramUseSystemFontAbout">يستبدل خطوط Roboto المضمنة بخطوط النظام في الجهاز. قد تحتاج إلى إعادة فتح الشاشات المفتوحة بالفعل لتطبيق التغيير بالكامل.</string>
     <string name="MercurygramSavedMessagesHistory">حفظ الرسائل المحذوفة والمعدّلة</string>

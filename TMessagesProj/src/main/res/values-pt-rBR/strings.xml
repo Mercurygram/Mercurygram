@@ -1269,6 +1269,7 @@
     <string name="MercurygramCheckForUpdatesToast">Verificando atualizações…</string>
     <string name="MercurygramDisableLivePhotos">Desativar Live Photos por padrão</string>
     <string name="MercurygramDisableLivePhotosAbout">Enviar apenas a foto estática ao escolher uma Google Motion Photo. Você ainda pode ativar Live Photo para uma seleção específica tocando no ícone de movimento no painel de anexos.</string>
+    <string name="MercurygramHideStories">Ocultar stories</string>
     <string name="MercurygramUseSystemFont">Usar a fonte do sistema</string>
     <string name="MercurygramUseSystemFontAbout">Substitui as fontes Roboto incluídas pelas fontes do sistema do dispositivo. Pode ser necessário reabrir as telas já abertas para que a alteração seja totalmente aplicada.</string>
     <string name="MercurygramSavedMessagesHistory">Salvar mensagens excluídas e editadas</string>
