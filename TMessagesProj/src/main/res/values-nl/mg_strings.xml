@@ -23,6 +23,8 @@
     <string name="MercurygramDisableLivePhotos">Live Photos standaard uitschakelen</string>
     <string name="MercurygramDisableLivePhotosAbout">Alleen de stilstaande foto verzenden wanneer je een Google Motion Photo kiest. Je kunt Live Photo voor een afzonderlijke selectie nog steeds inschakelen door op het bewegingspictogram in het bijlagenpaneel te tikken.</string>
     <string name="MercurygramHideStories">Stories verbergen</string>
+    <string name="MercurygramDisableGlobalSearch">Globaal zoeken uitschakelen</string>
+    <string name="MercurygramDisableGlobalSearchAbout">Globaal zoeken zoekt openbare gebruikersnamen, kanalen en berichten in heel Telegram. Als dit uit staat, doorzoekt de zoekfunctie alleen je eigen chats en contacten.</string>
     <string name="MercurygramUseSystemFont">Systeemlettertype gebruiken</string>
     <string name="MercurygramUseSystemFontAbout">Vervangt de meegeleverde Roboto-lettertypen door de systeemlettertypen van het apparaat. Reeds geopende schermen moeten mogelijk opnieuw worden geopend om de wijziging volledig toe te passen.</string>
     <string name="MercurygramSavedMessagesHistory">Verwijderde &amp; bewerkte berichten opslaan</string>
