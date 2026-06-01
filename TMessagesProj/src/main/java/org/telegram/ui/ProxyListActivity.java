@@ -787,7 +787,14 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 listAdapter.notifyItemRangeRemoved(proxyShadowRow + 1, 2);
             }
         }
-        if (proxyList.size() >= 10) {
+        // Mercurygram: 64gram-style "remove all proxies" — offer the bulk-clear row
+        // whenever at least one user proxy exists (upstream gated it at >= 10). The
+        // synthetic Tor entry (mgInternal) doesn't count and is never deleted below.
+        int deletableProxies = 0;
+        for (SharedConfig.ProxyInfo info : proxyList) {
+            if (!info.mgInternal) deletableProxies++;
+        }
+        if (deletableProxies >= 1) {
             deleteAllRow = rowCount++;
         } else {
             deleteAllRow = -1;
