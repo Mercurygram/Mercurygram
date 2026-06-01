@@ -1558,6 +1558,8 @@
     <string name="MercurygramDisableLivePhotos">Disabilita Live Photos di default</string>
     <string name="MercurygramDisableLivePhotosAbout">Invia solo la foto statica quando selezioni una Google Motion Photo. Puoi comunque abilitare Live Photo per la singola selezione toccando l\'icona movimento nel pannello allegati.</string>
     <string name="MercurygramHideStories">Nascondi le storie</string>
+    <string name="MercurygramDeleteForAllByDefault">Elimina per tutti come impostazione predefinita</string>
+    <string name="MercurygramDeleteForAllByDefaultAbout">Preseleziona «Elimina per tutti» (e «Elimina anche per…» nelle chat private) quando elimini i messaggi. Puoi comunque deselezionarlo prima di confermare.</string>
     <string name="MercurygramDisableGlobalSearch">Disattiva la ricerca globale</string>
     <string name="MercurygramDisableGlobalSearchAbout">La ricerca globale trova nomi utente, canali e messaggi pubblici in tutto Telegram. Con questa opzione disattivata, la ricerca riguarda solo le tue chat e i tuoi contatti.</string>
     <string name="MercurygramUseSystemFont">Usa il font di sistema</string>
