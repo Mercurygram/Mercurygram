@@ -1264,6 +1264,8 @@
     <string name="MercurygramDisableLivePhotos">تعطيل Live Photos افتراضيًا</string>
     <string name="MercurygramDisableLivePhotosAbout">أرسل الصورة الثابتة فقط عند اختيار Google Motion Photo. لا يزال بإمكانك تمكين Live Photo لاختيار فردي بالنقر على أيقونة الحركة في لوحة المرفقات.</string>
     <string name="MercurygramHideStories">إخفاء القصص</string>
+    <string name="MercurygramDeleteForAllByDefault">الحذف لدى الجميع افتراضيًا</string>
+    <string name="MercurygramDeleteForAllByDefaultAbout">يحدّد مسبقًا خيار «الحذف لدى الجميع» (و«الحذف أيضًا لدى…» في المحادثات الخاصة) عند حذف الرسائل. لا يزال بإمكانك إلغاء تحديده قبل التأكيد.</string>
     <string name="MercurygramDisableGlobalSearch">تعطيل البحث الشامل</string>
     <string name="MercurygramDisableGlobalSearchAbout">يبحث البحث الشامل عن أسماء المستخدمين والقنوات والرسائل العامة عبر تيليجرام. عند إيقافه، يقتصر البحث على محادثاتك وجهات اتصالك.</string>
     <string name="MercurygramUseSystemFont">استخدام خط النظام</string>
