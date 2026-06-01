@@ -218,6 +218,14 @@ public class SharedConfig {
                 .commit();
     }
 
+    public static void toggleMgHideStories() {
+        mg_hideStories = !mg_hideStories;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_hideStories", mg_hideStories)
+                .apply();
+    }
+
     public static void setMgTranslateMode(String mode) {
         mode = sanitizeMgTranslateMode(mode);
         mg_translateMode = mode;
@@ -603,6 +611,10 @@ public class SharedConfig {
     public static boolean mg_useTor = false;
     public static int mg_torIdleStopMinutes = 5;
 
+    // Mercurygram: client-side privacy/UI toggle ported from 64gram — a pure local
+    // display/transport choice (no server interaction beyond *not* issuing one
+    // optional RPC); see the api/terms review in AGENTS.md.
+    public static boolean mg_hideStories = false;            // suppress the stories bar in the dialog list
     // Mercurygram: Translation engine selection. "default" defers to
     // upstream MessagesController.translationsAutoEnabled; "cloud" forces
     // the Telegram MTProto messages.translateText RPC; "alternative" forces
@@ -1221,6 +1233,7 @@ public class SharedConfig {
             reduceTrackingFingerprint = preferences.getBoolean("mg_reduceTrackingFingerprint", false);
             mg_useTor = preferences.getBoolean("mg_useTor", false);
             mg_torIdleStopMinutes = preferences.getInt("mg_torIdleStopMinutes", 5);
+            mg_hideStories = preferences.getBoolean("mg_hideStories", false);
             mg_translateMode = sanitizeMgTranslateMode(preferences.getString("mg_translateMode", MG_TRANSLATE_MODE_DEFAULT));
             mg_translateAutoFallback = preferences.getBoolean("mg_translateAutoFallback", true);
             mg_translateOfflineFormatToastShown = preferences.getBoolean("mg_translateOfflineFormatToastShown", false);
