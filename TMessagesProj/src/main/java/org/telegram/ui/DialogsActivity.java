@@ -12496,9 +12496,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (StoryRecorder.isVisible() || (getLastStoryViewer() != null && getLastStoryViewer().isFullyVisible())) {
             animated = false;
         }
-        boolean onlySelfStories = !isArchive() && getStoriesController().hasOnlySelfStories();
+        // Mercurygram: hide-stories toggle (per-account) suppresses the dialog-list stories bar entirely.
+        boolean hideStories = getUserConfig().hideStories;
+        boolean onlySelfStories = !hideStories && !isArchive() && getStoriesController().hasOnlySelfStories();
         boolean newVisibility;
-        if (isArchive()) {
+        if (hideStories) {
+            newVisibility = false;
+        } else if (isArchive()) {
             newVisibility = !getStoriesController().getHiddenList().isEmpty();
         } else {
             newVisibility = !onlySelfStories && getStoriesController().hasStories();
