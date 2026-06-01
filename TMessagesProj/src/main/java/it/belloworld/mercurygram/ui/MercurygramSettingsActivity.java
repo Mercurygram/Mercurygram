@@ -47,6 +47,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_UNIFIED_PUSH = 30;
     private static final int ID_REDUCE_TRACKING_FINGERPRINT = 40;
     private static final int ID_TOR_SETTINGS = 41;
+    private static final int ID_DISABLE_GLOBAL_SEARCH = 44;
     private static final int ID_TRANSLATION = 50;
     private static final int ID_TRANSCRIPTION = 51;
 
@@ -123,6 +124,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                             ? R.string.NotificationsOn : R.string.NotificationsOff)));
             items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTorAbout)));
         }
+
+        items.add(UItem.asCheck(ID_DISABLE_GLOBAL_SEARCH,
+                        LocaleController.getString(R.string.MercurygramDisableGlobalSearch))
+                .setChecked(getUserConfig().mg.disableGlobalSearch));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableGlobalSearchAbout)));
 
         items.add(UItem.asButton(ID_TRANSLATION,
                 LocaleController.getString(R.string.MercurygramTranslationSettings),
@@ -245,6 +251,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_TOR_SETTINGS:
                 presentFragment(new MgTorSettingsActivity());
+                break;
+            case ID_DISABLE_GLOBAL_SEARCH:
+                getUserConfig().mg.disableGlobalSearch = !getUserConfig().mg.disableGlobalSearch;
+                getUserConfig().saveConfig(false);
+                refreshList();
                 break;
             case ID_TRANSCRIPTION:
                 presentFragment(new MercurygramTranscriptionSettingsActivity());
