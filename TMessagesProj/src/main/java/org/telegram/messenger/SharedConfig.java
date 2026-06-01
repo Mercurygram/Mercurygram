@@ -218,7 +218,6 @@ public class SharedConfig {
                 .commit();
     }
 
-
     public static void setMgTranslateMode(String mode) {
         mode = sanitizeMgTranslateMode(mode);
         mg_translateMode = mode;
@@ -1287,6 +1286,7 @@ public class SharedConfig {
             migratePerAccountSettingsV1(preferences);
             migrateTranscribeLangToPerAccount(preferences);
             migrateHideStoriesToPerAccount(preferences);
+            migrateDisableGlobalSearchToPerAccount(preferences);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
             String wpPub = preferences.getString("mg_webPushPublicKey", "");
@@ -1400,6 +1400,27 @@ public class SharedConfig {
         mainconfig.edit()
                 .remove("mg_hideStories")
                 .putBoolean("mg_hideStoriesPerAccountMigrated", true)
+                .apply();
+    }
+
+    // disableGlobalSearch was shipped as a global mg_ key, then reclassified
+    // per-account (search privacy plausibly differs work vs personal). Copy the
+    // formerly-global value into every account's userconfig, then drop the key.
+    private static void migrateDisableGlobalSearchToPerAccount(SharedPreferences mainconfig) {
+        if (mainconfig.getBoolean("mg_disableGlobalSearchPerAccountMigrated", false)) {
+            return;
+        }
+        boolean disableGlobalSearch = mainconfig.getBoolean("mg_disableGlobalSearch", false);
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            String name = a == 0 ? "userconfing" : "userconfig" + a;
+            ApplicationLoader.applicationContext.getSharedPreferences(name, Activity.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("disableGlobalSearch", disableGlobalSearch)
+                    .apply();
+        }
+        mainconfig.edit()
+                .remove("mg_disableGlobalSearch")
+                .putBoolean("mg_disableGlobalSearchPerAccountMigrated", true)
                 .apply();
     }
 
