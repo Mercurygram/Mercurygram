@@ -1227,6 +1227,7 @@ public class SharedConfig {
             migrateTranscribeLangToPerAccount(preferences);
             migrateHideStoriesToPerAccount(preferences);
             migrateDisableGlobalSearchToPerAccount(preferences);
+            migrateDeleteForAllByDefaultToPerAccount(preferences);
             String wpPriv = preferences.getString("mg_webPushPrivateKey", "");
             if (!TextUtils.isEmpty(wpPriv)) webPushPrivateKey = Base64.decode(wpPriv, Base64.DEFAULT);
             String wpPub = preferences.getString("mg_webPushPublicKey", "");
@@ -1361,6 +1362,28 @@ public class SharedConfig {
         mainconfig.edit()
                 .remove("mg_disableGlobalSearch")
                 .putBoolean("mg_disableGlobalSearchPerAccountMigrated", true)
+                .apply();
+    }
+
+    // deleteForAllByDefault was shipped as a global mg_ key, then reclassified
+    // per-account (a user may want a different delete default work vs personal).
+    // Copy the formerly-global value into every account's userconfig, then drop
+    // the old key.
+    private static void migrateDeleteForAllByDefaultToPerAccount(SharedPreferences mainconfig) {
+        if (mainconfig.getBoolean("mg_deleteForAllByDefaultPerAccountMigrated", false)) {
+            return;
+        }
+        boolean deleteForAllByDefault = mainconfig.getBoolean("mg_deleteForAllByDefault", false);
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            String name = a == 0 ? "userconfing" : "userconfig" + a;
+            ApplicationLoader.applicationContext.getSharedPreferences(name, Activity.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("deleteForAllByDefault", deleteForAllByDefault)
+                    .apply();
+        }
+        mainconfig.edit()
+                .remove("mg_deleteForAllByDefault")
+                .putBoolean("mg_deleteForAllByDefaultPerAccountMigrated", true)
                 .apply();
     }
 
