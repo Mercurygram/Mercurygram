@@ -51,6 +51,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_SAVED_MESSAGES_HISTORY = 5;
     private static final int ID_CLEAR_SAVED_HISTORY = 6;
     private static final int ID_HIDE_STORIES = 7;
+    private static final int ID_DELETE_FOR_ALL_DEFAULT = 9;
     private static final int ID_SEND_LARGE_PHOTOS = 10;
     private static final int ID_REAR_ROUND_VIDEOS = 11;
     private static final int ID_DISABLE_LIVE_PHOTOS = 12;
@@ -100,6 +101,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
                 .setChecked(SharedConfig.useSystemFont));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramUseSystemFontAbout)));
+
+        items.add(UItem.asCheck(ID_DELETE_FOR_ALL_DEFAULT,
+                        LocaleController.getString(R.string.MercurygramDeleteForAllByDefault))
+                .setChecked(getUserConfig().mg.deleteForAllByDefault));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDeleteForAllByDefaultAbout)));
 
         items.add(UItem.asCheck(ID_SAVED_MESSAGES_HISTORY, LocaleController.getString(R.string.MercurygramSavedMessagesHistory))
                 .setChecked(getUserConfig().mg.savedMessagesHistory));
@@ -273,6 +279,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_HIDE_STORIES:
                 getUserConfig().mg.hideStories = !getUserConfig().mg.hideStories;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_DELETE_FOR_ALL_DEFAULT:
+                getUserConfig().mg.deleteForAllByDefault = !getUserConfig().mg.deleteForAllByDefault;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
