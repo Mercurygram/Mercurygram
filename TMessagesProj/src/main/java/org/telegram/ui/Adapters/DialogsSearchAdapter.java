@@ -43,6 +43,7 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
@@ -352,7 +353,8 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                 return searchId == lastSearchId;
             }
         });
-        searchAdapterHelper.setAllowGlobalResults(allowGlobalSearch);
+        // Mercurygram: disable-global-search keeps search local — no public username/channel lookup.
+        searchAdapterHelper.setAllowGlobalResults(allowGlobalSearch && !UserConfig.getInstance(currentAccount).mg.disableGlobalSearch);
         mContext = context;
         needMessagesSearch = messagesSearch;
         dialogsType = type;
@@ -544,6 +546,32 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                 delegate.searchStateChanged(waitingResponseCount > 0, true);
                 delegate.runResultsEnterAnimation();
             }
+            return;
+        }
+
+        // Mercurygram: disable-global-search suppresses the global message-search RPC
+        // (messages.searchGlobal). Search stays local; the earlier guards already
+        // handled the empty-query / forum / bot-request paths, so reaching here means
+        // a real global query would have been sent. Mirror the empty-result branch of
+        // the RPC callback (drain waitingResponseCount, clear the spinner) so the search
+        // state machine settles instead of hanging on "searching".
+        if (UserConfig.getInstance(currentAccount).mg.disableGlobalSearch) {
+            lastMessagesSearchString = query;
+            lastMessagesSearchFilterFlags = currentMessagesFilter.flags;
+            if (searchId > 0) {
+                lastMessagesSearchId = searchId;
+            }
+            searchResultMessages.clear();
+            searchWas = true;
+            messagesSearchEndReached = true;
+            forceLoadingMessages = false;
+            waitingResponseCount--;
+            searchAdapterHelper.mergeResults(searchResult, filtered2RecentSearchObjects);
+            if (delegate != null) {
+                delegate.searchStateChanged(waitingResponseCount > 0, true);
+                delegate.runResultsEnterAnimation();
+            }
+            notifyDataSetChanged();
             return;
         }
 
