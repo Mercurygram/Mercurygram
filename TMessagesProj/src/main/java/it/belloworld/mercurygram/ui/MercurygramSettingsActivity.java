@@ -65,6 +65,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_TOR_IDLE_TIMEOUT = 42;
     private static final int ID_UPDATE_TOR_PLUGIN = 43;
     private static final int ID_TOR_TRANSPORT = 48;
+    private static final int ID_DISABLE_GLOBAL_SEARCH = 44;
     private static final int ID_TRANSLATION = 50;
     private static final int ID_TRANSCRIPTION = 51;
 
@@ -185,6 +186,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             }
             items.add(UItem.asShadow(torAbout));
         }
+
+        items.add(UItem.asCheck(ID_DISABLE_GLOBAL_SEARCH,
+                        LocaleController.getString(R.string.MercurygramDisableGlobalSearch))
+                .setChecked(getUserConfig().mg.disableGlobalSearch));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableGlobalSearchAbout)));
 
         items.add(UItem.asButton(ID_TRANSLATION,
                 LocaleController.getString(R.string.MercurygramTranslationSettings),
@@ -344,6 +350,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                                 Toast.LENGTH_SHORT).show();
                     }
                 }
+                break;
+            case ID_DISABLE_GLOBAL_SEARCH:
+                getUserConfig().mg.disableGlobalSearch = !getUserConfig().mg.disableGlobalSearch;
+                getUserConfig().saveConfig(false);
+                refreshList();
                 break;
             case ID_TRANSCRIPTION:
                 presentFragment(new MercurygramTranscriptionSettingsActivity());
