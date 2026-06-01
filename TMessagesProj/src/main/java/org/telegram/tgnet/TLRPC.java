@@ -38886,6 +38886,10 @@ public class TLRPC {
     public static class TL_themeDocumentNotModified_layer106 extends TL_theme {
         public static final int constructor = 0x483d270c;
 
+        public void readParams(InputSerializedData stream, boolean exception) {
+
+        }
+
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
         }
