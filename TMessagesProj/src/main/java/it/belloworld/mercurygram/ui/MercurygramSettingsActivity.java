@@ -38,6 +38,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_USE_SYSTEM_FONT = 4;
     private static final int ID_SAVED_MESSAGES_HISTORY = 5;
     private static final int ID_CLEAR_SAVED_HISTORY = 6;
+    private static final int ID_HIDE_STORIES = 7;
     private static final int ID_REAR_ROUND_VIDEOS = 11;
     private static final int ID_DISABLE_LIVE_PHOTOS = 12;
     private static final int ID_DISABLE_AUTO_UPDATE = 20;
@@ -75,6 +76,8 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 .setChecked(getUserConfig().mg.hideChatKeyboard));
         items.add(UItem.asCheck(ID_HIDE_ALL_TAB, LocaleController.getString(R.string.HideAllTab))
                 .setChecked(getUserConfig().mg.hideAllTab));
+        items.add(UItem.asCheck(ID_HIDE_STORIES, LocaleController.getString(R.string.MercurygramHideStories))
+                .setChecked(getUserConfig().mg.hideStories));
         items.add(UItem.asCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
                 .setChecked(SharedConfig.useSystemFont));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramUseSystemFontAbout)));
@@ -196,6 +199,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_USE_SYSTEM_FONT:
                 SharedConfig.toggleUseSystemFont();
+                refreshList();
+                break;
+            case ID_HIDE_STORIES:
+                getUserConfig().mg.hideStories = !getUserConfig().mg.hideStories;
+                getUserConfig().saveConfig(false);
                 refreshList();
                 break;
             case ID_SAVED_MESSAGES_HISTORY:
