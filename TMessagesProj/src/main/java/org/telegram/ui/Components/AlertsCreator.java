@@ -7700,6 +7700,10 @@ public class AlertsCreator {
                     cell.setText(LocaleController.getString(R.string.DeleteMessagesOption), "", false, false);
                 }
                 cell.setPadding(LocaleController.isRTL ? dp(16) : dp(8), 0, LocaleController.isRTL ? dp(8) : dp(16), 0);
+                // Mercurygram: pre-tick "delete for everyone" by default when the user opted in.
+                if (SharedConfig.mg_deleteForAllByDefault) {
+                    cell.setChecked(deleteForAll[0] = true, false);
+                }
                 frameLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.TOP | Gravity.LEFT, 0, 0, 0, 0));
                 cell.setOnClickListener(v -> {
                     CheckBoxCell cell12 = (CheckBoxCell) v;
@@ -7759,6 +7763,10 @@ public class AlertsCreator {
                     cell.setText(LocaleController.getString(R.string.DeleteMessagesOption), "", false, false);
                 }
                 cell.setPadding(LocaleController.isRTL ? dp(16) : dp(8), 0, LocaleController.isRTL ? dp(8) : dp(16), 0);
+                // Mercurygram: pre-tick "also delete for X / delete for everyone" by default when opted in.
+                if (SharedConfig.mg_deleteForAllByDefault) {
+                    cell.setChecked(deleteForAll[0] = true, false);
+                }
                 frameLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.TOP | Gravity.LEFT, 0, 0, 0, 0));
                 cell.setOnClickListener(v -> {
                     CheckBoxCell cell1 = (CheckBoxCell) v;

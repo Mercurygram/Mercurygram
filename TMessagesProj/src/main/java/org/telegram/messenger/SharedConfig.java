@@ -234,6 +234,14 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleMgDeleteForAllByDefault() {
+        mg_deleteForAllByDefault = !mg_deleteForAllByDefault;
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_deleteForAllByDefault", mg_deleteForAllByDefault)
+                .apply();
+    }
+
     public static void setMgTranslateMode(String mode) {
         mode = sanitizeMgTranslateMode(mode);
         mg_translateMode = mode;
@@ -624,6 +632,8 @@ public class SharedConfig {
     // optional RPC); see the api/terms review in AGENTS.md.
     public static boolean mg_hideStories = false;            // suppress the stories bar in the dialog list
     public static boolean mg_disableGlobalSearch = false;    // skip the messages.searchGlobal RPC (search stays local)
+    public static boolean mg_deleteForAllByDefault = false;  // pre-tick "delete for everyone / also delete for X" in the delete dialog
+
     // Mercurygram: Translation engine selection. "default" defers to
     // upstream MessagesController.translationsAutoEnabled; "cloud" forces
     // the Telegram MTProto messages.translateText RPC; "alternative" forces
@@ -1244,6 +1254,7 @@ public class SharedConfig {
             mg_torIdleStopMinutes = preferences.getInt("mg_torIdleStopMinutes", 5);
             mg_hideStories = preferences.getBoolean("mg_hideStories", false);
             mg_disableGlobalSearch = preferences.getBoolean("mg_disableGlobalSearch", false);
+            mg_deleteForAllByDefault = preferences.getBoolean("mg_deleteForAllByDefault", false);
             mg_translateMode = sanitizeMgTranslateMode(preferences.getString("mg_translateMode", MG_TRANSLATE_MODE_DEFAULT));
             mg_translateAutoFallback = preferences.getBoolean("mg_translateAutoFallback", true);
             mg_translateOfflineFormatToastShown = preferences.getBoolean("mg_translateOfflineFormatToastShown", false);
