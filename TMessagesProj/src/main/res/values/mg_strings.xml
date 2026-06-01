@@ -75,6 +75,8 @@
     <string name="MercurygramDisableLivePhotos">Disable Live Photos by default</string>
     <string name="MercurygramDisableLivePhotosAbout">Send only the still photo when picking a Google Motion Photo. You can still enable Live Photo for an individual selection by tapping the motion icon in the attach panel.</string>
     <string name="MercurygramHideStories">Hide stories</string>
+    <string name="MercurygramDeleteForAllByDefault">Delete for everyone by default</string>
+    <string name="MercurygramDeleteForAllByDefaultAbout">Pre-selects \"Delete for everyone\" (and \"Also delete for…\" in private chats) when deleting messages. You can still untick it before confirming.</string>
     <string name="MercurygramDisableGlobalSearch">Disable global search</string>
     <string name="MercurygramDisableGlobalSearchAbout">Global search looks up public usernames, channels and messages across Telegram. With this off, search only covers your own chats and contacts.</string>
     <string name="MercurygramUseSystemFont">Use system font</string>
