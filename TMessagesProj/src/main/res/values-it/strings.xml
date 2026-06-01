@@ -1558,6 +1558,8 @@
     <string name="MercurygramDisableLivePhotos">Disabilita Live Photos di default</string>
     <string name="MercurygramDisableLivePhotosAbout">Invia solo la foto statica quando selezioni una Google Motion Photo. Puoi comunque abilitare Live Photo per la singola selezione toccando l\'icona movimento nel pannello allegati.</string>
     <string name="MercurygramHideStories">Nascondi le storie</string>
+    <string name="MercurygramDisableGlobalSearch">Disattiva la ricerca globale</string>
+    <string name="MercurygramDisableGlobalSearchAbout">La ricerca globale trova nomi utente, canali e messaggi pubblici in tutto Telegram. Con questa opzione disattivata, la ricerca riguarda solo le tue chat e i tuoi contatti.</string>
     <string name="MercurygramUseSystemFont">Usa il font di sistema</string>
     <string name="MercurygramUseSystemFontAbout">Sostituisce i font Roboto inclusi con i font di sistema del dispositivo. Le schermate già aperte potrebbero dover essere riaperte perché la modifica abbia pieno effetto.</string>
     <string name="MercurygramSavedMessagesHistory">Salva messaggi eliminati e modificati</string>
