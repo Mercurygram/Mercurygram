@@ -67,6 +67,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_DISABLE_GLOBAL_SEARCH = 44;
     private static final int ID_TRANSLATION = 50;
     private static final int ID_TRANSCRIPTION = 51;
+    private static final int ID_EMOJI_PACK = 60;
 
     @Override
     protected CharSequence getTitle() {
@@ -99,6 +100,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
                 .setChecked(SharedConfig.useSystemFont));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramUseSystemFontAbout)));
+
+        items.add(UItem.asButton(ID_EMOJI_PACK,
+                LocaleController.getString(R.string.MercurygramEmojiTitle),
+                emojiPackShortLabel()));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramEmojiRowAbout)));
 
         items.add(UItem.asCheck(ID_DELETE_FOR_ALL_DEFAULT,
                         LocaleController.getString(R.string.MercurygramDeleteForAllByDefault))
@@ -360,7 +366,25 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_TRANSLATION:
                 presentFragment(new MercurygramTranslationSettingsActivity());
                 break;
+            case ID_EMOJI_PACK:
+                presentFragment(new MercurygramEmojiSettingsActivity());
+                break;
         }
+    }
+
+    // Subtitle for the Custom-emoji-pack row: "Off" when disabled; the installed
+    // glyph count when a pack is loaded; "No pack installed" when the toggle is
+    // on but nothing is imported — every glyph still falls back to the bundled
+    // set, so the row must not imply custom emoji are active.
+    private static String emojiPackShortLabel() {
+        if (!SharedConfig.mg_useCustomEmojiPack) {
+            return LocaleController.getString(R.string.MercurygramEmojiRowDisabled);
+        }
+        int installed = it.belloworld.mercurygram.emoji.MgEmojiPack.installedCount();
+        return installed > 0
+                ? LocaleController.formatString("MercurygramEmojiInstalled",
+                        R.string.MercurygramEmojiInstalled, installed)
+                : LocaleController.getString(R.string.MercurygramEmojiNotInstalled);
     }
 
     // Subtitle for the Voice-transcription row, mirroring translationModeShortLabel():
