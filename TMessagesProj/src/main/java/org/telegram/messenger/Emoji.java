@@ -62,6 +62,12 @@ public class Emoji {
     };
     private static Bitmap[][] emojiBmp = new Bitmap[8][];
     private static boolean[][] loadingEmoji = new boolean[8][];
+    // Mercurygram: bumped by clearEmojiCache(). A loadEmoji runnable that was
+    // already in flight when the cache was cleared (e.g. the custom-pack toggle
+    // flipped) captured the old epoch and drops its now-stale decoded bitmap
+    // instead of caching it — otherwise the previous source's glyph would stick
+    // until app restart since emojiBmp[][] would be non-null again.
+    private static volatile int cacheEpoch = 0;
 
     public final static HashMap<String, Integer> emojiUseHistory = new HashMap<>();
     public final static ArrayList<String> recentEmoji = new ArrayList<>();
@@ -113,8 +119,12 @@ public class Emoji {
                 return;
             }
             loadingEmoji[page][page2] = true;
+            final int epoch = cacheEpoch;
             Utilities.globalQueue.postRunnable(() -> {
-                Bitmap bitmap = loadBitmap("emoji/" + String.format(Locale.US, "%d_%d.png", page, page2));
+                // Mercurygram: route through the custom emoji pack — returns the
+                // user-supplied glyph when a pack is installed + enabled, else
+                // falls back to the bundled asset per-glyph.
+                Bitmap bitmap = it.belloworld.mercurygram.emoji.MgEmojiPack.loadEmojiBitmap(page, page2);
                 try {
                     if (emojiAlphaMasks == null) {
                         emojiAlphaMasks = loadEmojiAlphaMasks();
@@ -153,7 +163,7 @@ public class Emoji {
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
-                if (bitmap != null) {
+                if (bitmap != null && epoch == cacheEpoch) {
                     emojiBmp[page][page2] = bitmap;
                     AndroidUtilities.cancelRunOnUIThread(invalidateUiRunnable);
                     AndroidUtilities.runOnUIThread(invalidateUiRunnable);
@@ -207,6 +217,24 @@ public class Emoji {
         } else if (view instanceof TextView) {
             view.invalidate();
         }
+    }
+
+    // Mercurygram: drop every cached glyph bitmap so the next draw re-loads from
+    // the (possibly just-changed) source — bundled asset or custom pack. Called
+    // when the custom-emoji-pack toggle flips or a pack is imported/removed.
+    // Don't recycle: a concurrent draw may still hold a reference; null the
+    // entry and let GC reclaim. SimpleEmojiDrawable.draw reads emojiBmp[][]
+    // per-draw, so nulling refreshes already-attached spans on the next frame.
+    public static void clearEmojiCache() {
+        cacheEpoch++;
+        for (int a = 0; a < emojiBmp.length; a++) {
+            for (int b = 0; b < emojiBmp[a].length; b++) {
+                emojiBmp[a][b] = null;
+                loadingEmoji[a][b] = false;
+            }
+        }
+        AndroidUtilities.cancelRunOnUIThread(invalidateUiRunnable);
+        AndroidUtilities.runOnUIThread(invalidateUiRunnable);
     }
 
     public static String fixEmoji(String emoji) {
