@@ -306,6 +306,19 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleMgUseCustomEmojiPack() {
+        mg_useCustomEmojiPack = !mg_useCustomEmojiPack;
+        // "userconfing" is the file mgLoadConfig() reads at startup; writing
+        // anywhere else silently loses the flag on the next launch.
+        ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_useCustomEmojiPack", mg_useCustomEmojiPack)
+                .apply();
+        // Drop cached glyph bitmaps so already-rendered spans repaint from the
+        // newly-selected source on the next frame.
+        Emoji.clearEmojiCache();
+    }
+
     public static void setMgTranslateAltEngine(String engine) {
         engine = sanitizeMgTranslateAltEngine(engine);
         mg_translateAltEngine = engine;
@@ -672,6 +685,12 @@ public class SharedConfig {
     // above) apart from a fresh opt-in that has never been on a prerelease.
     public static String mgLastPreReleaseTag = "";
     public static boolean useSystemFont = false;
+    // Mercurygram: when on, Emoji rendering loads user-supplied glyphs from a
+    // side-loaded pack (it.belloworld.mercurygram.emoji.MgEmojiPack) instead of
+    // the bundled Noto set, falling back per-glyph to the bundle for any glyph
+    // the pack is missing. Global because the emoji bitmap cache (Emoji.emojiBmp)
+    // is a process-wide static, same as useSystemFont/useSystemEmoji.
+    public static boolean mg_useCustomEmojiPack = false;
 
     // Mercurygram: Privacy
     public static boolean reduceTrackingFingerprint = false;
@@ -1023,6 +1042,7 @@ public class SharedConfig {
         editor.putBoolean("mg_transcribeOffline", mg_transcribeOffline);
         editor.putString("mg_transcribeModel", mg_transcribeModel);
         editor.putBoolean("mg_transcribeVad", mg_transcribeVad);
+        editor.putBoolean("mg_useCustomEmojiPack", mg_useCustomEmojiPack);
         editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -1077,6 +1097,7 @@ public class SharedConfig {
         mg_transcribeOffline = preferences.getBoolean("mg_transcribeOffline", false);
         mg_transcribeModel = preferences.getString("mg_transcribeModel", "tiny-q8_0");
         mg_transcribeVad = preferences.getBoolean("mg_transcribeVad", true);
+        mg_useCustomEmojiPack = preferences.getBoolean("mg_useCustomEmojiPack", false);
         migratePerAccountSettingsV1(preferences);
         migrateTranscribeLangToPerAccount(preferences);
         migrateHideStoriesToPerAccount(preferences);
