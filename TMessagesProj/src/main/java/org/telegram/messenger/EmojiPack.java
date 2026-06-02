@@ -67,6 +67,10 @@ public final class EmojiPack {
     }
 
     private EmojiPack() throws IOException {
+        this(mapAsset());
+    }
+
+    private static MappedByteBuffer mapAsset() throws IOException {
         // The mapping remains valid after closing the descriptors.
         try (AssetFileDescriptor afd = ApplicationLoader.applicationContext
                 .getAssets().openFd(ASSET_NAME);
@@ -75,9 +79,24 @@ public final class EmojiPack {
             if (length < HEADER_SIZE || length > Integer.MAX_VALUE) {
                 throw new IOException("Invalid emoji pack length: " + length);
             }
-            buffer = stream.getChannel().map(FileChannel.MapMode.READ_ONLY,
+            return stream.getChannel().map(FileChannel.MapMode.READ_ONLY,
                     afd.getStartOffset(), length);
         }
+    }
+
+    // Mercurygram: open a user-imported pack (see MgEmojiPack).
+    public static EmojiPack open(java.io.File file) throws IOException {
+        try (FileInputStream stream = new FileInputStream(file)) {
+            long length = file.length();
+            if (length < HEADER_SIZE || length > Integer.MAX_VALUE) {
+                throw new IOException("Invalid emoji pack length: " + length);
+            }
+            return new EmojiPack(stream.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, length));
+        }
+    }
+
+    private EmojiPack(MappedByteBuffer buffer) throws IOException {
+        this.buffer = buffer;
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         if (buffer.getInt(0) != 0x334B5045 || (u16(4) != 2 && u16(4) != 3) || u16(6) != ENTRY_SIZE
                 || buffer.getInt(8) != SIDE || buffer.getInt(12) != SIDE
