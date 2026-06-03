@@ -1812,14 +1812,44 @@ public class SecretChatHelper extends BaseController {
         } else {
             newTaskId = taskId;
         }
+        // Mercurygram: upstream discardEncryption(delete_history=true) does not reliably
+        // delete the secret chat on the peer's device (bugs.telegram.org/c/27416). Send the
+        // E2E flush-history service message first — the same reliable mechanism "Clear history"
+        // uses — so the peer actually wipes the chat regardless of the broken history_deleted relay.
+        boolean sentFlush = false;
+        if (revoke && taskId == 0) {
+            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(chat_id);
+            if (encryptedChat instanceof TLRPC.TL_encryptedChat) {
+                sendClearHistoryMessage(encryptedChat, null);
+                sentFlush = true;
+                // sendClearHistoryMessage persists the flush as a local service message via
+                // putMessages, which REPLACEs the dialogs row MessagesController.deleteDialog just
+                // removed (storage queue is FIFO: the dialog delete is already enqueued, this insert
+                // runs after it) — resurrecting the just-deleted secret chat as a ghost on next
+                // launch. Re-enqueue the delete so it clobbers the insert. The in-flight flush still
+                // transmits: its message object is captured by the performSendEncryptedRequest
+                // runnable on stageQueue and is never read back from storage.
+                getMessagesStorage().deleteDialog(DialogObject.makeEncryptedDialogId(chat_id), 0);
+            }
+        }
         TLRPC.TL_messages_discardEncryption req = new TLRPC.TL_messages_discardEncryption();
         req.chat_id = chat_id;
         req.delete_history = revoke;
-        getConnectionsManager().sendRequest(req, (response, error) -> {
+        Runnable sendDiscard = () -> getConnectionsManager().sendRequest(req, (response, error) -> {
             if (newTaskId != 0) {
                 getMessagesStorage().removePendingTask(newTaskId);
             }
         });
+        if (sentFlush) {
+            // performSendEncryptedRequest enqueues the flush's encrypt+sendRequest on
+            // Utilities.stageQueue; queue the discard behind it on the same single-threaded
+            // FIFO queue so sendRequest(flush) is issued before sendRequest(discard) —
+            // otherwise the discard tears the chat down server-side and the late flush
+            // sendEncryptedService is rejected, never reaching the peer.
+            Utilities.stageQueue.postRunnable(sendDiscard);
+        } else {
+            sendDiscard.run();
+        }
     }
 
     public void acceptSecretChat(TLRPC.EncryptedChat encryptedChat) {
