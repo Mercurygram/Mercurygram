@@ -69,6 +69,13 @@ public:
     }
     
     int decode(AVPacket &packet, AVFrame *frame) {
+        if (!_codecContext) {
+            // Decoder construction failed (codec not found / params rejected /
+            // avcodec_open2 failed) — without this guard avcodec_send_packet
+            // dereferences a null AVCodecContext and SIGSEGVs the tgc-media
+            // thread (livestream unified-audio path).
+            return -1;
+        }
         int ret = avcodec_send_packet(_codecContext, &packet);
         if (ret < 0) {
             return ret;
