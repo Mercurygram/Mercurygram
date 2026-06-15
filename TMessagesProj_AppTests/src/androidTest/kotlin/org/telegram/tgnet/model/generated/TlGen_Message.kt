@@ -238,7 +238,7 @@ public sealed class TlGen_Message : TlGen_Object {
     )
 
     public companion object {
-      public const val MAGIC: UInt = 0x95EF6F2BU
+      public const val MAGIC: UInt = 0x7600B9D3U
     }
   }
 

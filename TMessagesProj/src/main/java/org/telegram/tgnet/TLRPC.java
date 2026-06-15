@@ -65,7 +65,7 @@ public class TLRPC {
     public static final int MESSAGE_FLAG_HAS_BOT_ID         = 0x00000800;
     public static final int MESSAGE_FLAG_EDITED             = 0x00008000;
 
-    public static final int LAYER = 225;
+    public static final int LAYER = 227; // Mercurygram: layer 226/227 rich-message backport
 
     public static abstract class EmailVerifyPurpose extends TLObject {
 
@@ -356,6 +356,7 @@ public class TLRPC {
         public SuggestedPost suggested_post;
         public int date;
         public long effect;
+        public RichMessage rich_message; // Mercurygram: layer 227
 
         public static DraftMessage TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             DraftMessage result = null;
@@ -376,6 +377,7 @@ public class TLRPC {
                     result = new TL_draftMessage_layer205();
                     break;
                 case TL_draftMessage.constructor:
+                case 0x96eaa5eb: // Mercurygram: layer 205+ draft (pre-rich_message), DB back-compat
                     result = new TL_draftMessage();
                     break;
             }
@@ -411,7 +413,7 @@ public class TLRPC {
     }
 
     public static class TL_draftMessage extends DraftMessage {
-        public static final int constructor = 0x96eaa5eb;
+        public static final int constructor = 0x60fe3294; // Mercurygram: layer 227 (was 0x96eaa5eb), adds rich_message
 
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -434,6 +436,9 @@ public class TLRPC {
             if (hasFlag(flags, FLAG_8)) {
                 suggested_post = SuggestedPost.TLdeserialize(stream, stream.readInt32(exception), exception);
             }
+            if (hasFlag(flags, FLAG_9)) {
+                rich_message = RichMessage.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
         }
 
         public void serializeToStream(OutputSerializedData stream) {
@@ -441,6 +446,7 @@ public class TLRPC {
             flags = setFlag(flags, FLAG_1, no_webpage);
             flags = setFlag(flags, FLAG_6, invert_media);
             flags = setFlag(flags, FLAG_8, suggested_post != null);
+            flags = setFlag(flags, FLAG_9, rich_message != null);
             stream.writeInt32(flags);
             if (hasFlag(flags, FLAG_4)) {
                 reply_to.serializeToStream(stream);
@@ -458,6 +464,9 @@ public class TLRPC {
             }
             if (hasFlag(flags, FLAG_8)) {
                 suggested_post.serializeToStream(stream);
+            }
+            if (hasFlag(flags, FLAG_9)) {
+                rich_message.serializeToStream(stream);
             }
         }
     }
@@ -11341,6 +11350,7 @@ public class TLRPC {
         public int stargifts_count;
         public long send_paid_messages_stars;
         public ProfileTab main_tab;
+        public long guard_bot_id; // Mercurygram: layer 227
         public long inviterId; //custom
         public int invitesCount; //custom
 
@@ -11351,6 +11361,7 @@ public class TLRPC {
                     result = new TL_chatFull();
                     break;
                 case TL_channelFull.constructor:
+                case 0xe4e0b29d: // Mercurygram: layer 226 channelFull (pre-guard_bot_id), DB back-compat
                     result = new TL_channelFull();
                     break;
                 case TL_channelFull_layer212.constructor:
@@ -13467,7 +13478,7 @@ public class TLRPC {
     }
 
     public static class TL_channelFull extends ChatFull {
-        public static final int constructor = 0xe4e0b29d;
+        public static final int constructor = 0xa04e8d3a; // Mercurygram: layer 227 (was 0xe4e0b29d), adds guard_bot_id
 
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -13610,6 +13621,9 @@ public class TLRPC {
             if (hasFlag(flags2, FLAG_22)) {
                 main_tab = ProfileTab.TLdeserialize(stream, stream.readInt32(exception), exception);
             }
+            if (hasFlag(flags2, FLAG_23)) {
+                guard_bot_id = stream.readInt64(exception); // Mercurygram: layer 227
+            }
         }
 
         public void serializeToStream(OutputSerializedData stream) {
@@ -13637,6 +13651,7 @@ public class TLRPC {
             flags2 = setFlag(flags2, FLAG_19, stargifts_available);
             flags2 = setFlag(flags2, FLAG_20, paid_messages_available);
             flags2 = setFlag(flags2, FLAG_22, main_tab != null);
+            flags2 = setFlag(flags2, FLAG_23, guard_bot_id != 0);
             stream.writeInt32(flags2);
             stream.writeInt64(id);
             stream.writeString(about);
@@ -13755,6 +13770,9 @@ public class TLRPC {
             if (hasFlag(flags2, FLAG_22)) {
                 // Vector.serialize(stream, tabs_order);
                 main_tab.serializeToStream(stream);
+            }
+            if (hasFlag(flags2, FLAG_23)) {
+                stream.writeInt64(guard_bot_id); // Mercurygram: layer 227
             }
         }
     }
@@ -29988,6 +30006,33 @@ public class TLRPC {
                 case 0x9a8ae1e1:
                     result = new TL_pageBlockOrderedList();
                     break;
+                case 0xbaff072f:
+                    result = new TL_pageBlockHeading1();
+                    break;
+                case 0x96b2aec:
+                    result = new TL_pageBlockHeading2();
+                    break;
+                case 0x67e731ad:
+                    result = new TL_pageBlockHeading3();
+                    break;
+                case 0xb532772b:
+                    result = new TL_pageBlockHeading4();
+                    break;
+                case 0xdbbe6c6a:
+                    result = new TL_pageBlockHeading5();
+                    break;
+                case 0x682a41a9:
+                    result = new TL_pageBlockHeading6();
+                    break;
+                case 0x3c29a3e2:
+                    result = new TL_pageBlockThinking();
+                    break;
+                case 0x59080c20:
+                    result = new TL_pageBlockMath();
+                    break;
+                case 0xe6e47c4:
+                    result = new TL_pageBlockBlockquoteBlocks();
+                    break;
                 case 0xd9d71866:
                     result = new TL_pageBlockVideo_layer82();
                     break;
@@ -30167,6 +30212,317 @@ public class TLRPC {
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
             text.serializeToStream(stream);
+        }
+    }
+
+    // Mercurygram: layer 226/227 rich-message backport (RichMessage + new PageBlock/RichText types)
+    public static abstract class RichMessage extends TLObject {
+        public int flags;
+        public boolean rtl;
+        public boolean part;
+        public ArrayList<PageBlock> blocks = new ArrayList<>();
+        public ArrayList<Photo> photos = new ArrayList<>();
+        public ArrayList<Document> documents = new ArrayList<>();
+
+        public static RichMessage TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
+            RichMessage result = null;
+            switch (constructor) {
+                case 0xbaf39d8b:
+                    result = new TL_richMessage();
+                    break;
+            }
+            return TLdeserialize(RichMessage.class, result, stream, constructor, exception);
+        }
+    }
+
+    public static class TL_richMessage extends RichMessage {
+        public static final int constructor = 0xbaf39d8b;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            rtl = hasFlag(flags, FLAG_0);
+            part = hasFlag(flags, FLAG_1);
+            blocks = Vector.deserialize(stream, PageBlock::TLdeserialize, exception);
+            photos = Vector.deserialize(stream, Photo::TLdeserialize, exception);
+            documents = Vector.deserialize(stream, Document::TLdeserialize, exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = setFlag(flags, FLAG_0, rtl);
+            flags = setFlag(flags, FLAG_1, part);
+            stream.writeInt32(flags);
+            Vector.serialize(stream, blocks);
+            Vector.serialize(stream, photos);
+            Vector.serialize(stream, documents);
+        }
+    }
+
+    public static class TL_pageBlockHeading1 extends PageBlock {
+        public static final int constructor = 0xbaff072f;
+        public RichText text;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_pageBlockHeading2 extends PageBlock {
+        public static final int constructor = 0x96b2aec;
+        public RichText text;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_pageBlockHeading3 extends PageBlock {
+        public static final int constructor = 0x67e731ad;
+        public RichText text;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_pageBlockHeading4 extends PageBlock {
+        public static final int constructor = 0xb532772b;
+        public RichText text;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_pageBlockHeading5 extends PageBlock {
+        public static final int constructor = 0xdbbe6c6a;
+        public RichText text;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_pageBlockHeading6 extends PageBlock {
+        public static final int constructor = 0x682a41a9;
+        public RichText text;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_pageBlockThinking extends PageBlock {
+        public static final int constructor = 0x3c29a3e2;
+        public RichText text;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_pageBlockMath extends PageBlock {
+        public static final int constructor = 0x59080c20;
+        public String source;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            source = stream.readString(exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeString(source);
+        }
+    }
+
+    public static class TL_pageBlockBlockquoteBlocks extends PageBlock {
+        public static final int constructor = 0xe6e47c4;
+        public ArrayList<PageBlock> blocks = new ArrayList<>();
+        public RichText caption;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            blocks = Vector.deserialize(stream, PageBlock::TLdeserialize, exception);
+            caption = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            Vector.serialize(stream, blocks);
+            caption.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textMath extends RichText {
+        public static final int constructor = 0x9d2eac97;
+        public String source;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            source = stream.readString(exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeString(source);
+        }
+    }
+
+    public static class TL_textCustomEmoji extends RichText {
+        public static final int constructor = 0xa26156c0;
+        public long document_id;
+        public String alt;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            document_id = stream.readInt64(exception);
+            alt = stream.readString(exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt64(document_id);
+            stream.writeString(alt);
+        }
+    }
+
+    public static class TL_textSpoiler extends RichText {
+        public static final int constructor = 0x4c2a5d62;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textMention extends RichText {
+        public static final int constructor = 0xcd24cf44;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textHashtag extends RichText {
+        public static final int constructor = 0x519524ea;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textBotCommand extends RichText {
+        public static final int constructor = 0x2ff29d3;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textCashtag extends RichText {
+        public static final int constructor = 0x7b9e1801;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textAutoUrl extends RichText {
+        public static final int constructor = 0xac6a83aa;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textAutoEmail extends RichText {
+        public static final int constructor = 0xc556a45d;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textAutoPhone extends RichText {
+        public static final int constructor = 0x24c26789;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textBankCard extends RichText {
+        public static final int constructor = 0xb956812d;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_textMentionName extends RichText {
+        public static final int constructor = 0x1a9fbfc;
+        public long user_id;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+            user_id = stream.readInt64(exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            text.serializeToStream(stream);
+            stream.writeInt64(user_id);
+        }
+    }
+
+    public static class TL_textDate extends RichText {
+        public static final int constructor = 0xa5b45e2b;
+        public int flags;
+        public int date;
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            text = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+            date = stream.readInt32(exception);
+        }
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(flags);
+            text.serializeToStream(stream);
+            stream.writeInt32(date);
         }
     }
 
@@ -61926,6 +62282,45 @@ public class TLRPC {
                 case 0x1ccb966a:
                     result = new TL_textPhone();
                     break;
+                case 0x9d2eac97:
+                    result = new TL_textMath();
+                    break;
+                case 0xa26156c0:
+                    result = new TL_textCustomEmoji();
+                    break;
+                case 0x4c2a5d62:
+                    result = new TL_textSpoiler();
+                    break;
+                case 0xcd24cf44:
+                    result = new TL_textMention();
+                    break;
+                case 0x519524ea:
+                    result = new TL_textHashtag();
+                    break;
+                case 0x2ff29d3:
+                    result = new TL_textBotCommand();
+                    break;
+                case 0x7b9e1801:
+                    result = new TL_textCashtag();
+                    break;
+                case 0xac6a83aa:
+                    result = new TL_textAutoUrl();
+                    break;
+                case 0xc556a45d:
+                    result = new TL_textAutoEmail();
+                    break;
+                case 0x24c26789:
+                    result = new TL_textAutoPhone();
+                    break;
+                case 0xb956812d:
+                    result = new TL_textBankCard();
+                    break;
+                case 0x1a9fbfc:
+                    result = new TL_textMentionName();
+                    break;
+                case 0xa5b45e2b:
+                    result = new TL_textDate();
+                    break;
                 case 0xc7fb5e01:
                     result = new TL_textSuperscript();
                     break;
@@ -62668,6 +63063,7 @@ public class TLRPC {
         public String summary_from_language;
         public String from_rank;
         public TLRPC.Peer guestchat_via_from;
+        public RichMessage rich_message; // Mercurygram: layer 227
         public int send_state = 0; //custom
         public int fwd_msg_id = 0; //custom
         public String attachPath = ""; //custom
@@ -62794,6 +63190,7 @@ public class TLRPC {
                     result = new TL_legacy_message.TL_message_layer135();
                     break;
                 case TL_message.constructor:
+                case 0x95ef6f2b: // Mercurygram: layer 226 message (pre-rich_message), DB back-compat
                     result = new TL_message();
                     break;
                 case TL_legacy_message.TL_message_layer224.constructor:
@@ -63492,7 +63889,7 @@ public class TLRPC {
     }
 
     public static class TL_message extends Message {
-        public static final int constructor = 0x95ef6f2b;
+        public static final int constructor = 0x7600b9d3; // Mercurygram: layer 227 (was 0x95ef6f2b), adds rich_message
 
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -63609,6 +64006,9 @@ public class TLRPC {
             if (hasFlag(flags2, FLAG_11)) {
                 summary_from_language = stream.readString(exception);
             }
+            if (hasFlag(flags2, FLAG_13)) {
+                rich_message = RichMessage.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
         }
 
         public void serializeToStream(OutputSerializedData stream) {
@@ -63632,6 +64032,7 @@ public class TLRPC {
             flags2 = setFlag(flags2, FLAG_9, paid_suggested_post_ton);
             flags2 = setFlag(flags2, FLAG_12, from_rank != null);
             flags2 = setFlag(flags2, FLAG_19, guestchat_via_from != null);
+            flags2 = setFlag(flags2, FLAG_13, rich_message != null);
             stream.writeInt32(flags2);
             stream.writeInt32(id);
             if (hasFlag(flags, FLAG_8)) {
@@ -63723,6 +64124,9 @@ public class TLRPC {
             }
             if (hasFlag(flags2, FLAG_11)) {
                 stream.writeString(summary_from_language);
+            }
+            if (hasFlag(flags2, FLAG_13)) {
+                rich_message.serializeToStream(stream);
             }
             writeAttachPath(stream);
         }
