@@ -541,7 +541,11 @@ public class MusicPlayerService extends Service implements NotificationCenter.No
 
             mediaSession.setMetadata(meta.build());
 
-            bldr.setVisibility(Notification.VISIBILITY_PUBLIC);
+            // Mercurygram: redact voice/round metadata (sender name + avatar) on the
+            // lock screen; music keeps PUBLIC for legit lock-screen control (#67).
+            bldr.setVisibility(messageObject.isVoice() || messageObject.isRoundVideo()
+                    ? Notification.VISIBILITY_PRIVATE
+                    : Notification.VISIBILITY_PUBLIC);
 
             notification = bldr.build();
 
