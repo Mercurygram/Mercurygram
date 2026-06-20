@@ -1,0 +1,107 @@
+name: Generated APK AAB (Upload - Create Artifact To Github Action)
+
+env:
+  # The name of the main module repository
+  main_project_module: TMessagesProj_App
+
+  # The name of the Play Store
+  #playstore_name: Frogobox ID
+
+on:
+
+  push:
+    branches:
+      - 'release/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      # Set Current Date As Env Variable
+      - name: Set current date as env variable
+        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      # Set Repository Name As Env Variable
+      - name: Set repository name as env variable
+        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+
+      # Set API_KEYS
+      - name: Set API_KEYS
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_HASH: ${{ secrets.APP_HASH }}
+        run: printf '%s = %s\n' "APP_ID" "$APP_ID" "APP_HASH" "$APP_HASH" > API_KEYS
+
+      - name: Install Android NDK
+        run: ./gradlew --no-daemon
+
+      # Build jni libraries
+      - name: Install jni build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install ninja-build yasm
+      - name: Set SDK and NDK versions as env variables
+        run: |
+          sed -n 's:^\s*ndkVersion "\([^"]*\)"\s*$:ndk_version=\1:p' TMessagesProj/build.gradle >> $GITHUB_ENV
+          sed -n "s:^\s*buildToolsVersion '\([^']*\)'\s*$:sdk_version=\1:p" TMessagesProj_App/build.gradle >> $GITHUB_ENV
+      - name: Build libvpx
+        env:
+          NDK: /usr/local/lib/android/sdk/ndk/${{ env.ndk_version }}
+        working-directory: ./TMessagesProj/jni
+        run: ./build_libvpx_clang.sh
+
+      - name: Build ffmpeg
+        env:
+          NDK: /usr/local/lib/android/sdk/ndk/${{ env.ndk_version }}
+        working-directory: ./TMessagesProj/jni
+        run: ./build_ffmpeg_clang.sh && ./patch_ffmpeg.sh
+
+      - name: Build boringssl
+        env:
+          NDK: /usr/local/lib/android/sdk/ndk/${{ env.ndk_version }}
+          NINJA_PATH: /usr/bin/ninja
+        working-directory: ./TMessagesProj/jni
+        run: ./patch_boringssl.sh && ./build_boringssl.sh
+
+      # Run Tests Build
+      #- name: Run gradle tests
+      #  run: ./gradlew --no-daemon test
+
+      # Create APK Debug
+      - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
+        run: ./gradlew --no-daemon assembleAfatDebug
+
+      # Create APK Release
+      - name: Build apk release project (APK) - ${{ env.main_project_module }} module
+        run: ./gradlew --no-daemon assembleAfatRelease
+
+      # Upload Artifact Build
+      # Noted For Output [main_project_module]/build/outputs/apk/debug/
+      - name: Upload APK Debug - ${{ env.repository_name }}
+        uses: actions/upload-artifact@v3
+        with:
+          #name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) debug generated
+          path: ${{ env.main_project_module }}/build/outputs/afat/apk/debug/app.apk
+
+      # Noted For Output [main_project_module]/build/outputs/apk/release/
+      - name: Upload APK Release - ${{ env.repository_name }}
+        uses: actions/upload-artifact@v3
+        with:
+          #name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) release generated
+          path: ${{ env.main_project_module }}/build/outputs/afat/apk/release/app.apk
