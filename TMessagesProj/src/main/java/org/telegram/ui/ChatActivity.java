@@ -13963,6 +13963,15 @@ public class ChatActivity extends BaseFragment implements
     }
 
     public void searchLinks(final CharSequence charSequence, final boolean force) {
+        // Mercurygram: chat-field chokepoint for the "disable link previews"
+        // toggle. Every preview-fetch entry point here (onTextChanged,
+        // onTextSpansChanged, the internal re-search) funnels through this, so
+        // gating it suppresses the account.getWebPagePreview RPC URL leak
+        // regardless of entry point (#26). Other compose surfaces gate at their
+        // own call sites — see it.belloworld.mercurygram.MgLinkPreview.
+        if (it.belloworld.mercurygram.MgLinkPreview.suppressed(currentAccount)) {
+            return;
+        }
         if (currentEncryptedChat != null && getMessagesController().secretWebpagePreview == 0 || editingMessageObject != null && (!editingMessageObject.isWebpage() || editingMessageObject.messageOwner.media.webpage instanceof TLRPC.TL_webPagePending)) {
             return;
         }

@@ -1109,6 +1109,8 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Selecteert vooraf “Voor iedereen verwijderen” (en “Ook verwijderen voor…” in privéchats) bij het verwijderen van berichten. Je kunt het vóór bevestigen nog uitschakelen.</string>
     <string name="MercurygramDisableGlobalSearch">Globaal zoeken uitschakelen</string>
     <string name="MercurygramDisableGlobalSearchAbout">Globaal zoeken zoekt openbare gebruikersnamen, kanalen en berichten in heel Telegram. Als dit uit staat, doorzoekt de zoekfunctie alleen je eigen chats en contacten.</string>
+    <string name="MercurygramDisableLinkPreviews">Linkvoorbeelden uitschakelen</string>
+    <string name="MercurygramDisableLinkPreviewsAbout">Haal tijdens het typen geen webpaginavoorbeelden op. Dit voorkomt dat de servers van Telegram links die je typt of plakt laden. Voorbeelden blijven in elke chat uit.</string>
     <string name="MercurygramUseSystemFont">Systeemlettertype gebruiken</string>
     <string name="MercurygramUseSystemFontAbout">Vervangt de meegeleverde Roboto-lettertypen door de systeemlettertypen van het apparaat. Reeds geopende schermen moeten mogelijk opnieuw worden geopend om de wijziging volledig toe te passen.</string>
     <string name="MercurygramSavedMessagesHistory">Verwijderde &amp; bewerkte berichten opslaan</string>
