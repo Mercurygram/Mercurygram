@@ -27,6 +27,8 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Pré-seleciona “Excluir para todos” (e “Excluir também para…” em conversas privadas) ao excluir mensagens. Você ainda pode desmarcar antes de confirmar.</string>
     <string name="MercurygramDisableGlobalSearch">Desativar busca global</string>
     <string name="MercurygramDisableGlobalSearchAbout">A busca global procura nomes de usuário, canais e mensagens públicas em todo o Telegram. Com isto desativado, a busca abrange apenas suas próprias conversas e contatos.</string>
+    <string name="MercurygramDisableLinkPreviews">Desativar prévias de links</string>
+    <string name="MercurygramDisableLinkPreviewsAbout">Não buscar prévias de páginas da web ao redigir. Isto impede que os servidores do Telegram carreguem os links que você digita ou cola. As prévias ficam desativadas em todas as conversas.</string>
     <string name="MercurygramUseSystemFont">Usar a fonte do sistema</string>
     <string name="MercurygramUseSystemFontAbout">Substitui as fontes Roboto incluídas pelas fontes do sistema do dispositivo. Pode ser necessário reabrir as telas já abertas para que a alteração seja totalmente aplicada.</string>
     <string name="MercurygramSavedMessagesHistory">Salvar mensagens excluídas e editadas</string>
