@@ -355,7 +355,14 @@ public class ApplicationLoader extends Application {
         }
         if (enabled) {
             try {
-                applicationContext.startService(new Intent(applicationContext, NotificationsService.class));
+                // [TF] startForegroundService on Oreo+: a background startService() throws
+                // IllegalStateException and the Service is reaped before it can keep the app alive.
+                Intent intent = new Intent(applicationContext, NotificationsService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    applicationContext.startForegroundService(intent);
+                } else {
+                    applicationContext.startService(intent);
+                }
             } catch (Throwable ignore) {
 
             }
