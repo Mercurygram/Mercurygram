@@ -29,6 +29,8 @@
     <string name="MercurygramDisableGlobalSearchAbout">Die globale Suche findet öffentliche Benutzernamen, Kanäle und Nachrichten in ganz Telegram. Wenn sie deaktiviert ist, durchsucht die Suche nur deine eigenen Chats und Kontakte.</string>
     <string name="MercurygramDisableLinkPreviews">Linkvorschauen deaktivieren</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Beim Schreiben keine Webseitenvorschauen abrufen. Das verhindert, dass Telegrams Server von dir eingegebene oder eingefügte Links laden. Vorschauen bleiben in allen Chats aus.</string>
+    <string name="MercurygramPreferSecretChats">Neue Chats als geheim starten</string>
+    <string name="MercurygramPreferSecretChatsAbout">Wenn du auf die Schaltfläche zum Verfassen tippst, um eine neue Unterhaltung zu beginnen, wird ein Ende-zu-Ende-verschlüsselter geheimer Chat statt eines normalen erstellt. Geheime Chats bleiben nur auf diesem Gerät und werden nicht zwischen deinen Geräten synchronisiert. Bestehende Chats und andere Wege, einen Chat zu öffnen, sind nicht betroffen.</string>
     <string name="MercurygramUseSystemFont">Systemschriftart verwenden</string>
     <string name="MercurygramUseSystemFontAbout">Ersetzt die mitgelieferten Roboto-Schriftarten durch die Systemschriftarten des Geräts. Bereits geöffnete Bildschirme müssen ggf. neu geöffnet werden, damit die Änderung vollständig wirksam wird.</string>
     <string name="MercurygramSavedMessagesHistory">Gelöschte &amp; bearbeitete Nachrichten speichern</string>
