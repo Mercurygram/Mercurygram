@@ -6904,6 +6904,14 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     public boolean isMessageWebPageSearchEnabled() {
+        // Mercurygram: when "disable link previews" is on, report search as
+        // disabled so the send / edit / draft paths set no_webpage=true. The
+        // account.getWebPagePreview RPC itself is suppressed at the
+        // searchLinks() chokepoint in ChatActivity. Hard-off for now;
+        // per-chat/per-link override deferred (#26).
+        if (it.belloworld.mercurygram.MgLinkPreview.suppressed(currentAccount)) {
+            return false;
+        }
         return messageWebPageSearch;
     }
 
@@ -7634,7 +7642,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (!TextUtils.equals(message[0], editingMessageObject.messageText) || entities != null && !entities.isEmpty() || !editingMessageObject.messageOwner.entities.isEmpty() || editingMessageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
             editingMessageObject.editingMessage = message[0];
             editingMessageObject.editingMessageEntities = entities;
-            editingMessageObject.editingMessageSearchWebPage = messageWebPageSearch;
+            editingMessageObject.editingMessageSearchWebPage = isMessageWebPageSearchEnabled();
             if (parentFragment != null && parentFragment.getCurrentChat() != null && (editingMessageObject.type == MessageObject.TYPE_TEXT || editingMessageObject.type == MessageObject.TYPE_EMOJIS) && !ChatObject.canSendEmbed(parentFragment.getCurrentChat())) {
                 editingMessageObject.editingMessageSearchWebPage = false;
                 editingMessageObject.messageOwner.flags &=~ 512;
@@ -7795,7 +7803,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 if (replyToTopMsg == null && replyingTopMessage != null) {
                     replyToTopMsg = replyingTopMessage;
                 }
-                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(message[0].toString(), dialog_id, replyingMessageObject, replyToTopMsg, messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, sendAnimationData, updateStickersOrder);
+                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(message[0].toString(), dialog_id, replyingMessageObject, replyToTopMsg, messageWebPage, isMessageWebPageSearchEnabled(), entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, sendAnimationData, updateStickersOrder);
                 params.quick_reply_shortcut = parentFragment != null ? parentFragment.quickReplyShortcut : null;
                 params.quick_reply_shortcut_id = parentFragment != null ? parentFragment.getQuickReplyId() : 0;
                 params.effect_id = effectId;
