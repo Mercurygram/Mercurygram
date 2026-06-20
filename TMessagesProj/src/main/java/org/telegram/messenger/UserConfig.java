@@ -74,6 +74,7 @@ public class UserConfig extends BaseController {
     public String transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
     public boolean hideStories = false;
     public boolean disableGlobalSearch = false;
+    public boolean disableLinkPreviews = false;
     public boolean deleteForAllByDefault = false;
     // MG: the reduced temp-key TTL ladder (1h→6h→24h) exhausted on this
     // account — server kept rejecting bindTempAuthKey, so native reduced
@@ -193,6 +194,7 @@ public class UserConfig extends BaseController {
                     editor.putString("transcribeLang", transcribeLang);
                     editor.putBoolean("hideStories", hideStories);
                     editor.putBoolean("disableGlobalSearch", disableGlobalSearch);
+                    editor.putBoolean("disableLinkPreviews", disableLinkPreviews);
                     editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
                     editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
                     editor.putBoolean("hasSecureData", hasSecureData);
@@ -357,6 +359,7 @@ public class UserConfig extends BaseController {
             transcribeLang = preferences.getString("transcribeLang", SharedConfig.MG_TRANSCRIBE_LANG_DEVICE);
             hideStories = preferences.getBoolean("hideStories", false);
             disableGlobalSearch = preferences.getBoolean("disableGlobalSearch", false);
+            disableLinkPreviews = preferences.getBoolean("disableLinkPreviews", false);
             deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
             mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
             hasSecureData = preferences.getBoolean("hasSecureData", false);
@@ -542,6 +545,7 @@ public class UserConfig extends BaseController {
         transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
         hideStories = false;
         disableGlobalSearch = false;
+        disableLinkPreviews = false;
         deleteForAllByDefault = false;
         mgReducedTrackingExhausted = false;
         unreadDialogsLoaded = true;
