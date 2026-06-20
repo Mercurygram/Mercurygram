@@ -303,6 +303,8 @@
     <string name="MercurygramDisableGlobalSearchAbout">Глобальний пошук знаходить публічні імена користувачів, канали та повідомлення по всьому Telegram. Коли його вимкнено, пошук охоплює лише ваші чати та контакти.</string>
     <string name="MercurygramDisableLinkPreviews">Вимкнути попередній перегляд посилань</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Не завантажувати попередній перегляд вебсторінок під час набору. Це не дає серверам Telegram завантажувати посилання, які ви вводите або вставляєте. Попередній перегляд лишається вимкненим у всіх чатах.</string>
+    <string name="MercurygramPreferSecretChats">Починати нові чати як секретні</string>
+    <string name="MercurygramPreferSecretChatsAbout">Коли ви натискаєте кнопку створення, щоб почати нову розмову, створюється наскрізно зашифрований секретний чат замість звичайного. Секретні чати зберігаються лише на цьому пристрої й не синхронізуються між вашими пристроями. Наявні чати та інші способи відкрити чат не змінюються.</string>
     <string name="MercurygramUseSystemFont">Використовувати системний шрифт</string>
     <string name="MercurygramUseSystemFontAbout">Замінює вбудовані шрифти Roboto на системні шрифти пристрою. Уже відкриті екрани, можливо, доведеться відкрити знову, щоб зміна повністю застосувалася.</string>
     <string name="MercurygramSavedMessagesHistory">Зберігати видалені та змінені повідомлення</string>
