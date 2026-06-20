@@ -3846,6 +3846,11 @@ public class AndroidUtilities {
         return km.isKeyguardSecure();
     }
 
+    public static boolean isKeyguardLocked() {
+        KeyguardManager km = (KeyguardManager) ApplicationLoader.applicationContext.getSystemService(Context.KEYGUARD_SERVICE);
+        return km != null && km.isKeyguardLocked();
+    }
+
     public static boolean isSimAvailable() {
         TelephonyManager tm = (TelephonyManager) ApplicationLoader.applicationContext.getSystemService(Context.TELEPHONY_SERVICE);
         int state = tm.getSimState();
