@@ -11,6 +11,8 @@ This is an unofficial fork of [Telegram App for Android](https://github.com/DrKL
 [![Releases](https://img.shields.io/github/release/Mercurygram/Mercurygram.svg)](https://github.com/Mercurygram/Mercurygram/releases/latest)
 [![Discussions](https://img.shields.io/badge/Official-Group-blue.svg?logo=telegram)](https://t.me/Mercurygram)
 
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/en/packages/it.belloworld.mercurygram/)
+
 </div>
 
 ## Install
