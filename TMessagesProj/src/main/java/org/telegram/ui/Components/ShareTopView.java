@@ -378,6 +378,8 @@ public class ShareTopView extends FrameLayout implements NotificationCenter.Noti
     private void requestLinkPreview(String message) {
         cancelLinkRequest();
         if (message == null || message.isEmpty()) return;
+        // Mercurygram: don't fetch a preview for a URL typed in the share field (#26)
+        if (it.belloworld.mercurygram.MgLinkPreview.suppressed(currentAccount)) return;
         final TL_account.getWebPagePreview req = new TL_account.getWebPagePreview();
         req.message = message;
         final int serial = ++linkRequestSerial;
