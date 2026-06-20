@@ -83,6 +83,8 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Pre-selects \"Delete for everyone\" (and \"Also delete for…\" in private chats) when deleting messages. You can still untick it before confirming.</string>
     <string name="MercurygramDisableGlobalSearch">Disable global search</string>
     <string name="MercurygramDisableGlobalSearchAbout">Global search looks up public usernames, channels and messages across Telegram. With this off, search only covers your own chats and contacts.</string>
+    <string name="MercurygramDisableLinkPreviews">Disable link previews</string>
+    <string name="MercurygramDisableLinkPreviewsAbout">Don\'t fetch web page previews while composing. This stops Telegram\'s servers from loading links you type or paste. Previews stay off in every chat.</string>
     <string name="MercurygramUseSystemFont">Use system font</string>
     <string name="MercurygramUseSystemFontAbout">Replace the bundled Roboto fonts with the device system fonts. Existing screens may need to be reopened for the change to fully apply.</string>
     <string name="MercurygramSavedMessagesHistory">Save deleted &amp; edited messages</string>
