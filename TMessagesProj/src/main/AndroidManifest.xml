@@ -31,6 +31,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -466,12 +467,21 @@
             android:exported="true"
             android:foregroundServiceType="mediaPlayback"
         />
+        <!-- [TF] specialUse, not dataSync: an app targeting API 35+ may only run dataSync
+             foreground services for 6h per day (shared with the live-location service) and is
+             killed with RemoteServiceException when the quota runs out, and BOOT_COMPLETED may
+             not start one at all, so the keep-alive died after every reboot. dataSync stays for
+             API < 34, which has neither limit and no specialUse type. -->
         <service
             android:name=".NotificationsService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="dataSync"
-        />
+            android:foregroundServiceType="specialUse|dataSync"
+        >
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps the messaging connection open so new messages are delivered when push is unavailable" />
+        </service>
         <service
             android:name=".NotificationRepeat"
             android:exported="false"
@@ -570,6 +580,7 @@
             <intent-filter>
                 <action android:name="org.telegram.start" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 
