@@ -1161,6 +1161,8 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">메시지를 삭제할 때 “모두에게서 삭제”(비공개 대화에서는 “…에게서도 삭제”)를 미리 선택합니다. 확인하기 전에 해제할 수 있습니다.</string>
     <string name="MercurygramDisableGlobalSearch">전역 검색 비활성화</string>
     <string name="MercurygramDisableGlobalSearchAbout">전역 검색은 텔레그램 전체에서 공개 사용자 이름, 채널, 메시지를 찾습니다. 이 기능을 끄면 검색은 내 채팅과 연락처만 대상으로 합니다.</string>
+    <string name="MercurygramDisableLinkPreviews">링크 미리보기 비활성화</string>
+    <string name="MercurygramDisableLinkPreviewsAbout">메시지를 작성하는 동안 웹페이지 미리보기를 가져오지 않습니다. 입력하거나 붙여넣은 링크를 텔레그램 서버가 불러오지 못하게 합니다. 모든 채팅에서 미리보기가 꺼진 상태로 유지됩니다.</string>
     <string name="MercurygramUseSystemFont">시스템 글꼴 사용</string>
     <string name="MercurygramUseSystemFontAbout">내장된 Roboto 글꼴을 기기의 시스템 글꼴로 교체합니다. 변경 사항이 완전히 적용되려면 이미 열린 화면을 다시 열어야 할 수 있습니다.</string>
     <string name="MercurygramSavedMessagesHistory">삭제 및 수정된 메시지 저장</string>
