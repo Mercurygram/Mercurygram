@@ -1400,6 +1400,8 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Wählt beim Löschen von Nachrichten „Für alle löschen“ (und „Auch löschen für…“ in privaten Chats) vor. Du kannst es vor dem Bestätigen weiterhin abwählen.</string>
     <string name="MercurygramDisableGlobalSearch">Globale Suche deaktivieren</string>
     <string name="MercurygramDisableGlobalSearchAbout">Die globale Suche findet öffentliche Benutzernamen, Kanäle und Nachrichten in ganz Telegram. Wenn sie deaktiviert ist, durchsucht die Suche nur deine eigenen Chats und Kontakte.</string>
+    <string name="MercurygramDisableLinkPreviews">Linkvorschauen deaktivieren</string>
+    <string name="MercurygramDisableLinkPreviewsAbout">Beim Schreiben keine Webseitenvorschauen abrufen. Das verhindert, dass Telegrams Server von dir eingegebene oder eingefügte Links laden. Vorschauen bleiben in allen Chats aus.</string>
     <string name="MercurygramUseSystemFont">Systemschriftart verwenden</string>
     <string name="MercurygramUseSystemFontAbout">Ersetzt die mitgelieferten Roboto-Schriftarten durch die Systemschriftarten des Geräts. Bereits geöffnete Bildschirme müssen ggf. neu geöffnet werden, damit die Änderung vollständig wirksam wird.</string>
     <string name="MercurygramSavedMessagesHistory">Gelöschte &amp; bearbeitete Nachrichten speichern</string>
