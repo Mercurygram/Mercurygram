@@ -81,6 +81,8 @@
     <string name="MercurygramDisableGlobalSearchAbout">Global search looks up public usernames, channels and messages across Telegram. With this off, search only covers your own chats and contacts.</string>
     <string name="MercurygramDisableLinkPreviews">Disable link previews</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Don\'t fetch web page previews while composing. This stops Telegram\'s servers from loading links you type or paste. Previews stay off in every chat.</string>
+    <string name="MercurygramPreferSecretChats">Start new chats as secret</string>
+    <string name="MercurygramPreferSecretChatsAbout">When you tap the compose button to start a new conversation, create an end-to-end encrypted secret chat instead of a regular one. Secret chats live only on this device and don\'t sync across your devices. Existing chats and other ways to open a chat are unaffected.</string>
     <string name="MercurygramUseSystemFont">Use system font</string>
     <string name="MercurygramUseSystemFontAbout">Replace the bundled Roboto fonts with the device system fonts. Existing screens may need to be reopened for the change to fully apply.</string>
     <string name="MercurygramSavedMessagesHistory">Save deleted &amp; edited messages</string>
