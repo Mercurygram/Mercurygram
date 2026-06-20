@@ -13258,6 +13258,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private void openWriteContacts() {
         Bundle args = new Bundle();
         args.putBoolean("destroyAfterSelect", true);
+        // Mercurygram: start new conversations as secret chats when opted in (#42)
+        if (getUserConfig().preferSecretChats) {
+            args.putBoolean("createSecretChat", true);
+        }
         presentFragment(new ContactsActivity(args));
     }
 
