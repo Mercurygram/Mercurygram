@@ -3621,6 +3621,15 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         if (messageObject == null) {
             return false;
         }
+        // Mercurygram: never (re)start a voice / round-video message while the device
+        // is locked — the lock-screen media controls otherwise let anyone replay a
+        // private voice message without unlocking (#67). Every replay surface
+        // (MediaSession transport, media-button KeyEvents, notification-action
+        // broadcasts) funnels through here. Music is intentionally still controllable
+        // from the lock screen.
+        if ((messageObject.isVoice() || messageObject.isRoundVideo()) && AndroidUtilities.isKeyguardLocked()) {
+            return false;
+        }
         isSilent = silent;
         checkVolumeBarUI();
         if ((audioPlayer != null || videoPlayer != null) && isSamePlayingMessage(messageObject)) {
