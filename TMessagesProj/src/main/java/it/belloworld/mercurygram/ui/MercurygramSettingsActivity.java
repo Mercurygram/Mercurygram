@@ -55,6 +55,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_SEND_LARGE_PHOTOS = 10;
     private static final int ID_REAR_ROUND_VIDEOS = 11;
     private static final int ID_DISABLE_LIVE_PHOTOS = 12;
+    private static final int ID_DISABLE_LINK_PREVIEWS = 13;
     private static final int ID_DISABLE_AUTO_UPDATE = 20;
     private static final int ID_ACCEPT_PRERELEASES = 21;
     private static final int ID_CHECK_FOR_UPDATES_NOW = 22;
@@ -203,6 +204,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramDisableGlobalSearch))
                 .setChecked(getUserConfig().mg.disableGlobalSearch));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableGlobalSearchAbout)));
+
+        items.add(UItem.asCheck(ID_DISABLE_LINK_PREVIEWS,
+                        LocaleController.getString(R.string.MercurygramDisableLinkPreviews))
+                .setChecked(getUserConfig().mg.disableLinkPreviews));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableLinkPreviewsAbout)));
 
         items.add(UItem.asButton(ID_TRANSLATION,
                 LocaleController.getString(R.string.MercurygramTranslationSettings),
@@ -370,6 +376,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_DISABLE_GLOBAL_SEARCH:
                 getUserConfig().mg.disableGlobalSearch = !getUserConfig().mg.disableGlobalSearch;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_DISABLE_LINK_PREVIEWS:
+                getUserConfig().mg.disableLinkPreviews = !getUserConfig().mg.disableLinkPreviews;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
