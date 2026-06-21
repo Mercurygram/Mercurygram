@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: 'recursive'
 
@@ -35,7 +35,7 @@ jobs:
         run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
 
       - name: Set Up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '11'
@@ -94,14 +94,14 @@ jobs:
       # Upload Artifact Build
       # Noted For Output [main_project_module]/build/outputs/apk/debug/
       - name: Upload APK Debug - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           #name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) debug generated
           path: ${{ env.main_project_module }}/build/outputs/afat/apk/debug/app.apk
 
       # Noted For Output [main_project_module]/build/outputs/apk/release/
       - name: Upload APK Release - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           #name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) release generated
           path: ${{ env.main_project_module }}/build/outputs/afat/apk/release/app.apk
