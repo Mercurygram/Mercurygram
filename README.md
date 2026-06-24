@@ -86,6 +86,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Add a "Remove all proxies" bulk action to the proxy list (upstream only deletes one proxy at a time)
 - Add a custom emoji pack importer in Settings → Mercurygram → Custom emoji pack: load a `.zip` of emoji images or extract the emoji directly from an official Telegram APK (since the proprietary Apple set can't be bundled in a FOSS build). The pack is your own file, stored on-device and never shared; any emoji it's missing falls back per-glyph to the bundled Noto set
 - Add a "Translate" item to the text-selection toolbar in the message input field (and other caption/input editors): select text you're composing and translate it in place, with a "Use This Translation" button that replaces the selection. Uses the same [privacy-respecting translation engine](#privacy--anti-tracking-mercurygram-only) as message translation; in secret chats it's forced on-device only (offline, fail-closed)
+- Add a "Mention" item to the text-selection toolbar (next to "Create Link"): turn the selected text into a user mention by typing a user ID or picking from your contacts. Only works for users the app already knows (contacts, chat members) — a hard MTProto limitation, same as typing `@`; an unknown ID is rejected with a hint to use the picker
 - Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
 
 ### TF-originated de-googling patches
