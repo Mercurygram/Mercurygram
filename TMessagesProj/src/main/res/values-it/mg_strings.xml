@@ -156,6 +156,10 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (tramite Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
     <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
+    <string name="MercurygramCreateMention">Menziona</string>
+    <string name="MercurygramMentionUserIdHint">ID utente</string>
+    <string name="MercurygramMentionChoose">Scegli contatto</string>
+    <string name="MercurygramMentionUserNotFound">Questo utente è sconosciuto all\'app, quindi non può essere menzionato. Selezionalo invece dai tuoi contatti.</string>
     <string name="NtfyDefaultServerDisableUP">Disattiva UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">Il server ntfy.sh predefinito ha limiti di frequenza molto bassi e blocca il gateway push di Mercurygram. Le notifiche push non funzioneranno in modo affidabile.</string>
     <string name="NtfyDefaultServerNoAlternative">Nessun distributore alternativo installato. UnifiedPush verrà disattivato. Puoi riattivarlo dopo aver installato un distributore compatibile con un server self-hosted.</string>
