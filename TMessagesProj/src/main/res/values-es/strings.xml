@@ -1465,4 +1465,8 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (vía Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
     <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
+    <string name="MercurygramCreateMention">Mencionar</string>
+    <string name="MercurygramMentionUserIdHint">ID de usuario</string>
+    <string name="MercurygramMentionChoose">Elegir contacto</string>
+    <string name="MercurygramMentionUserNotFound">Este usuario es desconocido para la aplicación, por lo que no se puede mencionar. Elígelo desde tus contactos.</string>
 </resources>
