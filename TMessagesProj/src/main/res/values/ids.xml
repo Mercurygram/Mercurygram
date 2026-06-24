@@ -5,6 +5,7 @@
     <item name="menu_bold" type="id"/>
     <item name="menu_italic" type="id"/>
     <item name="menu_link" type="id"/>
+    <item name="menu_mention" type="id"/>
     <item name="menu_mono" type="id"/>
     <item name="menu_strike" type="id"/>
     <item name="menu_underline" type="id"/>
