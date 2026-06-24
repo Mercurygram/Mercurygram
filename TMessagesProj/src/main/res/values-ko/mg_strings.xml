@@ -158,6 +158,10 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (Mozhi 경유)</string>
     <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
     <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
+    <string name="MercurygramCreateMention">멘션</string>
+    <string name="MercurygramMentionUserIdHint">사용자 ID</string>
+    <string name="MercurygramMentionChoose">연락처 선택</string>
+    <string name="MercurygramMentionUserNotFound">이 사용자는 앱에 알려져 있지 않아 멘션할 수 없습니다. 대신 연락처에서 선택하세요.</string>
     <string name="NtfyDefaultServerDisableUP">UnifiedPush 비활성화</string>
     <string name="NtfyDefaultServerMessage">기본 ntfy.sh 서버는 요청 제한이 매우 낮아 Mercurygram의 푸시 게이트웨이를 차단합니다. 푸시 알림이 안정적으로 작동하지 않습니다.</string>
     <string name="NtfyDefaultServerNoAlternative">설치된 대체 배포자가 없습니다. UnifiedPush가 비활성화됩니다. 자체 호스팅 서버를 사용하는 호환 배포자를 설치한 후 다시 활성화할 수 있습니다.</string>
