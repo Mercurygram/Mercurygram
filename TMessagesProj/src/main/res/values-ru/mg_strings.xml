@@ -156,6 +156,10 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (через Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
     <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
+    <string name="MercurygramCreateMention">Упомянуть</string>
+    <string name="MercurygramMentionUserIdHint">ID пользователя</string>
+    <string name="MercurygramMentionChoose">Выбрать контакт</string>
+    <string name="MercurygramMentionUserNotFound">Этот пользователь неизвестен приложению, поэтому его нельзя упомянуть. Выберите его из контактов.</string>
     <string name="NtfyDefaultServerDisableUP">Отключить UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">Сервер ntfy.sh по умолчанию имеет очень низкие лимиты запросов и блокирует push-шлюз Mercurygram. Push-уведомления будут работать нестабильно.</string>
     <string name="NtfyDefaultServerNoAlternative">Альтернативные дистрибьюторы не установлены. UnifiedPush будет отключён. Вы можете снова включить его после установки совместимого дистрибьютора с собственным сервером.</string>
