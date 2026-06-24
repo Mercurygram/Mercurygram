@@ -225,4 +225,8 @@
     <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
     <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
     <string name="MercurygramTranslationPoweredBy">Translations are powered by\n**%1$s**.</string>
+    <string name="MercurygramCreateMention">Mention</string>
+    <string name="MercurygramMentionUserIdHint">User ID</string>
+    <string name="MercurygramMentionChoose">Choose contact</string>
+    <string name="MercurygramMentionUserNotFound">This user is unknown to this app, so it can\'t be mentioned. Pick them from your contacts instead.</string>
 </resources>
