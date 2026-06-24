@@ -22,6 +22,7 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.Layout;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -41,6 +42,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
@@ -51,8 +53,10 @@ import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.messenger.utils.CopyUtilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -60,6 +64,7 @@ import org.telegram.ui.ActionBar.AlertDialogDecor;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.FloatingToolbar;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.ContactsActivity;
 import org.telegram.ui.LaunchActivity;
 
 import java.util.List;
@@ -498,6 +503,172 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
         return false;
     }
 
+    // Mercurygram: turn the selected text into a user mention (text_mention) by
+    // user id or via the contacts picker. The send path
+    // (MediaDataController.getEntities) already serialises URLSpanUserMention to
+    // TL_inputMessageEntityMentionName. A mention only resolves for a user this
+    // client already knows (getInputUser needs an access_hash) — same scope as @
+    // autocomplete; the id field validates and the picker only offers known users.
+    public void makeSelectedMention() {
+        final int start;
+        final int end;
+        if (selectionStart >= 0 && selectionEnd >= 0) {
+            start = selectionStart;
+            end = selectionEnd;
+            selectionStart = selectionEnd = -1;
+        } else {
+            start = getSelectionStart();
+            end = getSelectionEnd();
+        }
+        if (start < 0 || end <= start) {
+            return;
+        }
+
+        // Resolve the mention in the editor's account — the fragment showing this
+        // field — not UserConfig.selectedAccount: with multiple accounts the chat
+        // may live on a different account, and the send path (MediaDataController)
+        // resolves the mention in the chat's account. Validating on selectedAccount
+        // would falsely reject or silently break legitimate mentions.
+        final BaseFragment parentFragment = LaunchActivity.getSafeLastFragment();
+        final int account = parentFragment != null ? parentFragment.getCurrentAccount() : UserConfig.selectedAccount;
+
+        AlertDialog.Builder builder;
+        if (adaptiveCreateLinkDialog) {
+            builder = new AlertDialogDecor.Builder(getContext(), resourcesProvider);
+        } else {
+            builder = new AlertDialog.Builder(getContext(), resourcesProvider);
+        }
+        builder.setTitle(getString(R.string.MercurygramCreateMention));
+
+        FrameLayout container = new FrameLayout(getContext());
+        final EditTextBoldCursor editText = new EditTextBoldCursor(getContext()) {
+            @Override
+            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(64), MeasureSpec.EXACTLY));
+            }
+        };
+        editText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+        editText.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        editText.setHintText(getString(R.string.MercurygramMentionUserIdHint));
+        editText.setHeaderHintColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueHeader));
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+        editText.setSingleLine(true);
+        editText.setFocusable(true);
+        editText.setTransformHintToHeader(true);
+        editText.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_text_RedRegular));
+        editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        editText.setBackgroundDrawable(null);
+        editText.requestFocus();
+        editText.setPadding(0, 0, 0, 0);
+        editText.setHighlightColor(getThemedColor(Theme.key_chat_inTextSelectionHighlight));
+        editText.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
+        container.addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL));
+        builder.setView(container);
+
+        builder.setPositiveButton(getString(R.string.OK), (dialogInterface, i) -> {
+            long userId = Utilities.parseLong(editText.getText().toString());
+            if (userId == 0 || !isMentionableUser(account, userId)) {
+                Toast.makeText(getContext(), getString(R.string.MercurygramMentionUserNotFound), Toast.LENGTH_LONG).show();
+                return;
+            }
+            applyMentionSpan(userId, start, end);
+        });
+        builder.setNeutralButton(getString(R.string.MercurygramMentionChoose), (dialogInterface, i) -> {
+            if (parentFragment == null) {
+                return;
+            }
+            Bundle args = new Bundle();
+            args.putBoolean("onlyUsers", true);
+            args.putBoolean("returnAsResult", true);
+            ContactsActivity fragment = new ContactsActivity(args);
+            fragment.setDelegate((user, param, activity) -> {
+                if (user != null) {
+                    applyMentionSpan(user.id, start, end);
+                }
+            });
+            parentFragment.presentFragment(fragment);
+        });
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        if (adaptiveCreateLinkDialog) {
+            // Register as creationLinkDialog so the composer's back-button hook
+            // (closeCreationLinkDialog) dismisses this dialog like the link one.
+            creationLinkDialog = builder.create();
+            creationLinkDialog.setOnDismissListener(dialog -> {
+                creationLinkDialog = null;
+                requestFocus();
+            });
+            creationLinkDialog.setOnShowListener(dialog -> {
+                editText.requestFocus();
+                AndroidUtilities.showKeyboard(editText);
+            });
+            creationLinkDialog.showDelayed(250);
+        } else {
+            AlertDialog dialog = builder.create();
+            dialog.setOnShowListener(d -> {
+                editText.requestFocus();
+                AndroidUtilities.showKeyboard(editText);
+            });
+            dialog.show();
+        }
+        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) editText.getLayoutParams();
+        if (layoutParams != null) {
+            if (layoutParams instanceof FrameLayout.LayoutParams) {
+                ((FrameLayout.LayoutParams) layoutParams).gravity = Gravity.CENTER_HORIZONTAL;
+            }
+            layoutParams.rightMargin = layoutParams.leftMargin = AndroidUtilities.dp(24);
+            layoutParams.height = AndroidUtilities.dp(36);
+            editText.setLayoutParams(layoutParams);
+        }
+    }
+
+    // A mention only serialises to a resolvable TL_inputMessageEntityMentionName
+    // when getInputUser yields a usable input user. getUser()!=null is not enough:
+    // an unknown user gives TL_inputUserEmpty, and a "min" record (access_hash==0
+    // with no message context) gives a TL_inputUser the server can't resolve — both
+    // would be silently dropped. TL_inputUserFromMessage / TL_inputUserSelf are fine.
+    private static boolean isMentionableUser(int account, long userId) {
+        TLRPC.InputUser inputUser = MessagesController.getInstance(account).getInputUser(userId);
+        if (inputUser == null || inputUser instanceof TLRPC.TL_inputUserEmpty) {
+            return false;
+        }
+        if (inputUser instanceof TLRPC.TL_inputUser) {
+            return ((TLRPC.TL_inputUser) inputUser).access_hash != 0;
+        }
+        return true;
+    }
+
+    private void applyMentionSpan(long userId, int start, int end) {
+        Editable editable = getText();
+        if (editable == null || start < 0 || end <= start || end > editable.length()) {
+            return;
+        }
+        CharacterStyle[] spans = editable.getSpans(start, end, CharacterStyle.class);
+        if (spans != null && spans.length > 0) {
+            for (int a = 0; a < spans.length; a++) {
+                CharacterStyle oldSpan = spans[a];
+                if (!(oldSpan instanceof AnimatedEmojiSpan) && !(oldSpan instanceof QuoteSpan.QuoteStyleSpan)) {
+                    int spanStart = editable.getSpanStart(oldSpan);
+                    int spanEnd = editable.getSpanEnd(oldSpan);
+                    editable.removeSpan(oldSpan);
+                    if (spanStart < start) {
+                        editable.setSpan(oldSpan, spanStart, start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    if (spanEnd > end) {
+                        editable.setSpan(oldSpan, end, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+            }
+        }
+        try {
+            editable.setSpan(new URLSpanUserMention("" + userId, 3), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } catch (Exception ignore) {
+
+        }
+        if (delegate != null) {
+            delegate.onSpansChanged();
+        }
+    }
+
     public void makeSelectedRegular() {
         applyTextStyleToSelection(null);
     }
@@ -775,6 +946,9 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
         } else if (itemId == R.id.menu_link) {
             makeSelectedUrl();
             return true;
+        } else if (itemId == R.id.menu_mention) {
+            makeSelectedMention();
+            return true;
         } else if (itemId == R.id.menu_strike) {
             makeSelectedStrike();
             return true;
@@ -924,6 +1098,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_strike, LocaleController.getString(R.string.Strike)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_underline, LocaleController.getString(R.string.Underline)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_link, LocaleController.getString(R.string.CreateLink)));
+            infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_mention, LocaleController.getString(R.string.MercurygramCreateMention)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_regular, LocaleController.getString(R.string.Regular)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_date, LocaleController.getString(R.string.FormattedDate)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_translate, LocaleController.getString(R.string.TranslateMessage)));
