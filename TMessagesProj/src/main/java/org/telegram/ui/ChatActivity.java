@@ -27737,6 +27737,15 @@ public class ChatActivity extends BaseFragment implements
             menu.add(R.id.menu_groupbolditalic, R.id.menu_underline, order++, stringBuilder);
         }
         if (includeLinks) menu.add(R.id.menu_groupbolditalic, R.id.menu_link, order++, LocaleController.getString(R.string.CreateLink));
+        // Mercurygram: mention a user (text_mention) over the selection, by id or
+        // via the contacts picker. Gated on `chat` (not just includeLinks): that is
+        // true only for the message field and media/photo-viewer captions, which are
+        // sent as messages where text_mention entities are valid. It is false for
+        // poll questions, channel/group titles & descriptions, and story captions,
+        // where the server does not accept text_mention. Not added to
+        // FloatingToolbar.premiumOptions so it stays free; handled in
+        // EditTextCaption.makeSelectedMention.
+        if (chat && includeLinks) menu.add(R.id.menu_groupbolditalic, R.id.menu_mention, order++, LocaleController.getString(R.string.MercurygramCreateMention));
         if (chat && encryptedChat == null) {
             menu.add(R.id.menu_groupbolditalic, R.id.menu_date, order++, LocaleController.getString(R.string.FormattedDate));
         }
