@@ -1233,4 +1233,8 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (via Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
     <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
+    <string name="MercurygramCreateMention">Vermelden</string>
+    <string name="MercurygramMentionUserIdHint">Gebruikers-ID</string>
+    <string name="MercurygramMentionChoose">Contact kiezen</string>
+    <string name="MercurygramMentionUserNotFound">Deze gebruiker is onbekend bij de app en kan daarom niet worden vermeld. Kies hem in plaats daarvan uit je contacten.</string>
 </resources>
