@@ -1399,4 +1399,8 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (عبر Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineMyMemory">MyMemory</string>
     <string name="MercurygramTranslationAlternativeEngineReverso">Reverso</string>
+    <string name="MercurygramCreateMention">إشارة</string>
+    <string name="MercurygramMentionUserIdHint">معرّف المستخدم</string>
+    <string name="MercurygramMentionChoose">اختيار جهة اتصال</string>
+    <string name="MercurygramMentionUserNotFound">هذا المستخدم غير معروف للتطبيق، لذا لا يمكن الإشارة إليه. اختره من جهات اتصالك بدلاً من ذلك.</string>
 </resources>
