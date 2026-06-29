@@ -10940,6 +10940,10 @@
     <string name="MercurygramMentionUserIdHint">User ID</string>
     <string name="MercurygramMentionChoose">Choose contact</string>
     <string name="MercurygramMentionUserNotFound">This user is unknown to this app, so it can\'t be mentioned. Pick them from your contacts instead.</string>
+    <string name="MercurygramSendMediaPermissionStickers">Stickers</string>
+    <string name="MercurygramSendMediaPermissionGifs">GIFs</string>
+    <string name="MercurygramSendMediaPermissionGames">Games</string>
+    <string name="MercurygramSendMediaPermissionInline">Inline Bots</string>
 
     <string name="PollV2ShowWhoVoted">Show Who Voted</string>
     <string name="PollV2ShowWhoVotedInfo">Display voter name on each option</string>
