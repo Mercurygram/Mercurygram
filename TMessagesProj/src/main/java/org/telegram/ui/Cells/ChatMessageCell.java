@@ -99,6 +99,8 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.math.MathUtils;
 
+import it.belloworld.mercurygram.map.MgMapSnapshot;
+
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -9507,6 +9509,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             currentMapProvider = 1;
                         } else if (SharedConfig.mapPreviewType == 3) {
                             currentMapProvider = 1;
+                        } else if (SharedConfig.mapPreviewType == 4) {
+                            currentMapProvider = 5;
                         } else {
                             currentMapProvider = -1;
                         }
@@ -9537,6 +9541,19 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             messageObject.lastGeoWebFileSet = ImageLocation.getForWebFile(currentWebFile);
                             photoImage.setImage(ImageLocation.getForWebFile(currentWebFile), null, lastLocation, null, locationLoadingThumb, messageObject, 0);
                         }
+                    } else if (currentMapProvider == 5) {
+                        // Mercurygram: render the preview on-device from OpenFreeMap (no third-party static-map service).
+                        // Reset/show the placeholder synchronously (like every sibling branch) so a recycled
+                        // cell never keeps a stale map while the async render runs or if it fails.
+                        photoImage.setImage((String) null, null, locationLoadingThumb, null, 0);
+                        final java.lang.ref.WeakReference<ChatMessageCell> cellRef = new java.lang.ref.WeakReference<>(this);
+                        final MessageObject mapMessageObject = messageObject;
+                        MgMapSnapshot.get(getContext(), lat, lon, photoWidth, photoHeight, path -> {
+                            ChatMessageCell cell = cellRef.get();
+                            if (cell != null && cell.currentMessageObject == mapMessageObject && cell.currentMapProvider == 5) {
+                                cell.photoImage.setImage(path, null, cell.locationLoadingThumb, null, 0);
+                            }
+                        });
                     } else {
                         if (currentMapProvider == 3 || currentMapProvider == 4) {
                             ImageLoader.getInstance().addTestWebFile(currentUrl, currentWebFile);
