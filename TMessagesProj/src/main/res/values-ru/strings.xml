@@ -423,4 +423,8 @@
     <string name="MercurygramMentionUserIdHint">ID пользователя</string>
     <string name="MercurygramMentionChoose">Выбрать контакт</string>
     <string name="MercurygramMentionUserNotFound">Этот пользователь неизвестен приложению, поэтому его нельзя упомянуть. Выберите его из контактов.</string>
+    <string name="MercurygramSendMediaPermissionStickers">Стикеры</string>
+    <string name="MercurygramSendMediaPermissionGifs">GIF</string>
+    <string name="MercurygramSendMediaPermissionGames">Игры</string>
+    <string name="MercurygramSendMediaPermissionInline">Инлайн-боты</string>
 </resources>

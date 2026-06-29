@@ -436,4 +436,8 @@
     <string name="MercurygramMentionUserIdHint">ID користувача</string>
     <string name="MercurygramMentionChoose">Вибрати контакт</string>
     <string name="MercurygramMentionUserNotFound">Цей користувач невідомий додатку, тому його не можна згадати. Виберіть його зі своїх контактів.</string>
+    <string name="MercurygramSendMediaPermissionStickers">Стікери</string>
+    <string name="MercurygramSendMediaPermissionGifs">GIF</string>
+    <string name="MercurygramSendMediaPermissionGames">Ігри</string>
+    <string name="MercurygramSendMediaPermissionInline">Інлайн-боти</string>
 </resources>
