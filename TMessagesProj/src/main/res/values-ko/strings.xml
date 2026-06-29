@@ -1296,4 +1296,8 @@
     <string name="MercurygramMentionUserIdHint">사용자 ID</string>
     <string name="MercurygramMentionChoose">연락처 선택</string>
     <string name="MercurygramMentionUserNotFound">이 사용자는 앱에 알려져 있지 않아 멘션할 수 없습니다. 대신 연락처에서 선택하세요.</string>
+    <string name="MercurygramSendMediaPermissionStickers">스티커</string>
+    <string name="MercurygramSendMediaPermissionGifs">GIF</string>
+    <string name="MercurygramSendMediaPermissionGames">게임</string>
+    <string name="MercurygramSendMediaPermissionInline">인라인 봇</string>
 </resources>
