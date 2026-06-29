@@ -139,6 +139,9 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
     private int sendMediaPhotosRow;
     private int sendMediaVideosRow;
     private int sendMediaStickerGifsRow;
+    private int sendMediaGifsRow;
+    private int sendMediaGamesRow;
+    private int sendMediaInlineRow;
     private int sendMediaMusicRow;
     private int sendMediaFilesRow;
     private int sendMediaVoiceMessagesRow;
@@ -385,6 +388,9 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
         sendMediaPhotosRow = -1;
         sendMediaVideosRow = -1;
         sendMediaStickerGifsRow = -1;
+        sendMediaGifsRow = -1;
+        sendMediaGamesRow = -1;
+        sendMediaInlineRow = -1;
         sendMediaMusicRow = -1;
         sendMediaFilesRow = -1;
         sendMediaVoiceMessagesRow = -1;
@@ -407,6 +413,9 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     sendMediaPhotosRow = rowCount++;
                     sendMediaVideosRow = rowCount++;
                     sendMediaStickerGifsRow = rowCount++;
+                    sendMediaGifsRow = rowCount++;
+                    sendMediaGamesRow = rowCount++;
+                    sendMediaInlineRow = rowCount++;
                     sendMediaMusicRow = rowCount++;
                     sendMediaFilesRow = rowCount++;
                     sendMediaVoiceMessagesRow = rowCount++;
@@ -870,7 +879,13 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     } else if (position == sendMediaVideosRow) {
                         defaultBannedRights.send_videos = !defaultBannedRights.send_videos;
                     } else if (position == sendMediaStickerGifsRow) {
-                        defaultBannedRights.send_stickers = defaultBannedRights.send_games = defaultBannedRights.send_gifs = defaultBannedRights.send_inline = !defaultBannedRights.send_stickers;
+                        defaultBannedRights.send_stickers = !defaultBannedRights.send_stickers;
+                    } else if (position == sendMediaGifsRow) {
+                        defaultBannedRights.send_gifs = !defaultBannedRights.send_gifs;
+                    } else if (position == sendMediaGamesRow) {
+                        defaultBannedRights.send_games = !defaultBannedRights.send_games;
+                    } else if (position == sendMediaInlineRow) {
+                        defaultBannedRights.send_inline = !defaultBannedRights.send_inline;
                     } else if (position == sendMediaMusicRow) {
                         defaultBannedRights.send_audios = !defaultBannedRights.send_audios;
                     } else if (position == sendMediaFilesRow) {
@@ -3680,7 +3695,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     } else if (position == sendMediaRow) {
                         int sentMediaCount = getSendMediaSelectedCount();
                         checkCell.setTextAndCheck(getString("UserRestrictionsSendMedia", R.string.UserRestrictionsSendMedia), sentMediaCount > 0, true, animated);
-                        checkCell.setCollapseArrow(String.format(Locale.US, "%d/10", sentMediaCount), !sendMediaExpanded, new Runnable() {
+                        checkCell.setCollapseArrow(String.format(Locale.US, "%d/13", sentMediaCount), !sendMediaExpanded, new Runnable() {
                             @Override
                             public void run() {
                                 boolean checked = !checkCell.isChecked();
@@ -3763,7 +3778,13 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     } else if (position == sendMediaVideosRow) {
                         checkBoxCell.setText(getString("SendMediaPermissionVideos", R.string.SendMediaPermissionVideos), "", !defaultBannedRights.send_videos, true, animated);
                     } else if (position == sendMediaStickerGifsRow) {
-                        checkBoxCell.setText(getString("SendMediaPermissionStickersGifs", R.string.SendMediaPermissionStickersGifs), "", !defaultBannedRights.send_stickers, true, animated);
+                        checkBoxCell.setText(getString(R.string.MercurygramSendMediaPermissionStickers), "", !defaultBannedRights.send_stickers, true, animated);
+                    } else if (position == sendMediaGifsRow) {
+                        checkBoxCell.setText(getString(R.string.MercurygramSendMediaPermissionGifs), "", !defaultBannedRights.send_gifs, true, animated);
+                    } else if (position == sendMediaGamesRow) {
+                        checkBoxCell.setText(getString(R.string.MercurygramSendMediaPermissionGames), "", !defaultBannedRights.send_games, true, animated);
+                    } else if (position == sendMediaInlineRow) {
+                        checkBoxCell.setText(getString(R.string.MercurygramSendMediaPermissionInline), "", !defaultBannedRights.send_inline, true, animated);
                     } else if (position == sendMediaMusicRow) {
                         checkBoxCell.setText(getString("SendMediaPermissionMusic", R.string.SendMediaPermissionMusic), "", !defaultBannedRights.send_audios, true, animated);
                     } else if (position == sendMediaFilesRow) {
@@ -3892,6 +3913,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
 
     private boolean isExpandableSendMediaRow(int position) {
         return position == sendMediaPhotosRow || position == sendMediaVideosRow || position == sendMediaStickerGifsRow ||
+                position == sendMediaGifsRow || position == sendMediaGamesRow || position == sendMediaInlineRow ||
                 position == sendMediaMusicRow || position == sendMediaFilesRow || position == sendMediaVoiceMessagesRow ||
                 position == sendReactionsRow ||
                 position == sendMediaVideoMessagesRow || position == sendMediaEmbededLinksRow || position == sendPollsRow;
@@ -4067,6 +4089,15 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
             i++;
         }
         if (!bannedRights.send_stickers) {
+            i++;
+        }
+        if (!bannedRights.send_gifs) {
+            i++;
+        }
+        if (!bannedRights.send_games) {
+            i++;
+        }
+        if (!bannedRights.send_inline) {
             i++;
         }
         if (!bannedRights.send_audios) {
