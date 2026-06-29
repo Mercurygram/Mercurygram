@@ -367,6 +367,7 @@ public class EmojiView extends FrameLayout implements
     private long currentChatId;
     boolean emojiBanned;
     boolean stickersBanned;
+    boolean gifsBanned;
 
     private TLRPC.StickerSetCovered[] primaryInstallingStickerSets = new TLRPC.StickerSetCovered[10];
     private LongSparseArray<TLRPC.StickerSetCovered> installingStickerSets = new LongSparseArray<>();
@@ -6097,7 +6098,7 @@ public class EmojiView extends FrameLayout implements
     }
 
     public void onOpen(boolean forceEmoji, boolean groupEmojiHintWasVisible) {
-        if (currentPage != 0 && stickersBanned) {
+        if (currentPage == 1 && gifsBanned || currentPage == 2 && stickersBanned) {
             currentPage = 0;
         }
         if (currentPage == 0 && emojiBanned) {
@@ -6305,7 +6306,8 @@ public class EmojiView extends FrameLayout implements
         }
         this.emojiBanned = emojiBanned;
         this.stickersBanned = stickersBanned;
-        if (stickersBanned || emojiBanned) {
+        gifsBanned = !ChatObject.canSendGifs(MessagesController.getInstance(currentAccount).getChat(chatId));
+        if (stickersBanned || gifsBanned || emojiBanned) {
             currentChatId = chatId;
         } else {
             currentChatId = 0;
@@ -6338,7 +6340,7 @@ public class EmojiView extends FrameLayout implements
         }
 
         if (show) {
-            if (!ChatObject.hasAdminRights(chat) && chat.default_banned_rights != null && (chat.default_banned_rights.send_stickers || (emoji && chat.default_banned_rights.send_plain))) {
+            if (!ChatObject.hasAdminRights(chat) && chat.default_banned_rights != null && ((gif ? chat.default_banned_rights.send_gifs : chat.default_banned_rights.send_stickers) || (emoji && chat.default_banned_rights.send_plain))) {
                 if (fragment instanceof ChatActivity && ((ChatActivity) fragment).checkCanRemoveRestrictionsByBoosts()) {
                     return;
                 }
@@ -8581,7 +8583,7 @@ public class EmojiView extends FrameLayout implements
 
         @Override
         public boolean canScrollToTab(int position) {
-            if ((position == 1 || position == 2) && stickersBanned) {
+            if (position == 1 && gifsBanned || position == 2 && stickersBanned) {
                 showStickerBanHint(true, false, position == 1);
                 return false;
             }
