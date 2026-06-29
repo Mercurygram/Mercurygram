@@ -1221,6 +1221,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                             case 2:
                                 value = getString("MapPreviewProviderNobody", R.string.MapPreviewProviderNobody);
                                 break;
+                            case 4:
+                                value = getString(R.string.MercurygramMapPreviewProviderOpenStreetMap);
+                                break;
                             case 3:
                             default:
                                 value = getString("MapPreviewProviderYandex", R.string.MapPreviewProviderYandex);
