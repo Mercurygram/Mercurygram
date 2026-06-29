@@ -164,6 +164,7 @@
     <string name="MercurygramSendMediaPermissionGifs">GIF</string>
     <string name="MercurygramSendMediaPermissionGames">Игры</string>
     <string name="MercurygramSendMediaPermissionInline">Инлайн-боты</string>
+    <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
     <string name="NtfyDefaultServerDisableUP">Отключить UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">Сервер ntfy.sh по умолчанию имеет очень низкие лимиты запросов и блокирует push-шлюз Mercurygram. Push-уведомления будут работать нестабильно.</string>
     <string name="NtfyDefaultServerNoAlternative">Альтернативные дистрибьюторы не установлены. UnifiedPush будет отключён. Вы можете снова включить его после установки совместимого дистрибьютора с собственным сервером.</string>
