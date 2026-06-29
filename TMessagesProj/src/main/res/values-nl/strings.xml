@@ -1248,4 +1248,5 @@
     <string name="MercurygramSendMediaPermissionGifs">GIFs</string>
     <string name="MercurygramSendMediaPermissionGames">Spellen</string>
     <string name="MercurygramSendMediaPermissionInline">Inline-bots</string>
+    <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
 </resources>

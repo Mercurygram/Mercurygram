@@ -440,4 +440,5 @@
     <string name="MercurygramSendMediaPermissionGifs">GIF</string>
     <string name="MercurygramSendMediaPermissionGames">Ігри</string>
     <string name="MercurygramSendMediaPermissionInline">Інлайн-боти</string>
+    <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
 </resources>
