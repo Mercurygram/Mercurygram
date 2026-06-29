@@ -162,4 +162,8 @@
     <string name="MercurygramMentionUserIdHint">Gebruikers-ID</string>
     <string name="MercurygramMentionChoose">Contact kiezen</string>
     <string name="MercurygramMentionUserNotFound">Deze gebruiker is onbekend bij de app en kan daarom niet worden vermeld. Kies hem in plaats daarvan uit je contacten.</string>
+    <string name="MercurygramSendMediaPermissionStickers">Stickers</string>
+    <string name="MercurygramSendMediaPermissionGifs">GIFs</string>
+    <string name="MercurygramSendMediaPermissionGames">Spellen</string>
+    <string name="MercurygramSendMediaPermissionInline">Inline-bots</string>
 </resources>

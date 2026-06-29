@@ -162,4 +162,8 @@
     <string name="MercurygramMentionUserIdHint">Benutzer-ID</string>
     <string name="MercurygramMentionChoose">Kontakt auswählen</string>
     <string name="MercurygramMentionUserNotFound">Dieser Benutzer ist der App unbekannt und kann daher nicht erwähnt werden. Wähle ihn stattdessen aus deinen Kontakten aus.</string>
+    <string name="MercurygramSendMediaPermissionStickers">Sticker</string>
+    <string name="MercurygramSendMediaPermissionGifs">GIFs</string>
+    <string name="MercurygramSendMediaPermissionGames">Spiele</string>
+    <string name="MercurygramSendMediaPermissionInline">Inline-Bots</string>
 </resources>

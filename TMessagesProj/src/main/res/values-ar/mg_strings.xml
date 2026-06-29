@@ -162,4 +162,8 @@
     <string name="MercurygramMentionUserIdHint">معرّف المستخدم</string>
     <string name="MercurygramMentionChoose">اختيار جهة اتصال</string>
     <string name="MercurygramMentionUserNotFound">هذا المستخدم غير معروف للتطبيق، لذا لا يمكن الإشارة إليه. اختره من جهات اتصالك بدلاً من ذلك.</string>
+    <string name="MercurygramSendMediaPermissionStickers">ملصقات</string>
+    <string name="MercurygramSendMediaPermissionGifs">صور GIF</string>
+    <string name="MercurygramSendMediaPermissionGames">ألعاب</string>
+    <string name="MercurygramSendMediaPermissionInline">بوتات داخلية</string>
 </resources>
