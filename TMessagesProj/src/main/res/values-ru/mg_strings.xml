@@ -166,4 +166,5 @@
     <string name="MercurygramSendMediaPermissionGifs">GIF</string>
     <string name="MercurygramSendMediaPermissionGames">Игры</string>
     <string name="MercurygramSendMediaPermissionInline">Инлайн-боты</string>
+    <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
 </resources>
