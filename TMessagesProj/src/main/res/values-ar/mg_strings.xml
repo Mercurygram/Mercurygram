@@ -160,6 +160,10 @@
     <string name="MercurygramMentionUserIdHint">معرّف المستخدم</string>
     <string name="MercurygramMentionChoose">اختيار جهة اتصال</string>
     <string name="MercurygramMentionUserNotFound">هذا المستخدم غير معروف للتطبيق، لذا لا يمكن الإشارة إليه. اختره من جهات اتصالك بدلاً من ذلك.</string>
+    <string name="MercurygramSendMediaPermissionStickers">ملصقات</string>
+    <string name="MercurygramSendMediaPermissionGifs">صور GIF</string>
+    <string name="MercurygramSendMediaPermissionGames">ألعاب</string>
+    <string name="MercurygramSendMediaPermissionInline">بوتات داخلية</string>
     <string name="NtfyDefaultServerDisableUP">تعطيل UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">خادم ntfy.sh الافتراضي لديه حدود معدل منخفضة جدًا ويحظر بوابة الدفع الخاصة بـ Mercurygram. لن تعمل إشعارات الدفع بشكل موثوق.</string>
     <string name="NtfyDefaultServerNoAlternative">لا توجد موزّعات بديلة مثبَّتة. سيتم تعطيل UnifiedPush. يمكنك إعادة تفعيله بعد تثبيت موزّع متوافق يستخدم خادمًا ذاتي الاستضافة.</string>
