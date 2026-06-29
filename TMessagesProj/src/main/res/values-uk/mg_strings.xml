@@ -162,6 +162,10 @@
     <string name="MercurygramMentionUserIdHint">ID користувача</string>
     <string name="MercurygramMentionChoose">Вибрати контакт</string>
     <string name="MercurygramMentionUserNotFound">Цей користувач невідомий додатку, тому його не можна згадати. Виберіть його зі своїх контактів.</string>
+    <string name="MercurygramSendMediaPermissionStickers">Стікери</string>
+    <string name="MercurygramSendMediaPermissionGifs">GIF</string>
+    <string name="MercurygramSendMediaPermissionGames">Ігри</string>
+    <string name="MercurygramSendMediaPermissionInline">Інлайн-боти</string>
     <string name="NtfyDefaultServerDisableUP">Вимкнути UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">Стандартний сервер ntfy.sh має дуже низькі ліміти швидкості та блокує push-шлюз Mercurygram. Push-сповіщення працюватимуть ненадійно.</string>
     <string name="NtfyDefaultServerNoAlternative">Альтернативні дистриб\'ютори не встановлено. UnifiedPush буде вимкнено. Ви можете знову увімкнути його після встановлення сумісного дистриб\'ютора із власним сервером.</string>

@@ -498,7 +498,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
         if (!inlineMediaEnabled && foundContextBot != null && parentFragment != null) {
             TLRPC.Chat chat = parentFragment.getCurrentChat();
             if (chat != null) {
-                inlineMediaEnabled = ChatObject.canSendStickers(chat);
+                inlineMediaEnabled = ChatObject.canSendInline(chat);
                 if (inlineMediaEnabled) {
                     searchResultUsernames = null;
                     notifyDataSetChanged();
@@ -572,7 +572,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
             if (parentFragment != null) {
                 TLRPC.Chat chat = parentFragment.getCurrentChat();
                 if (chat != null) {
-                    inlineMediaEnabled = ChatObject.canSendStickers(chat);
+                    inlineMediaEnabled = ChatObject.canSendInline(chat);
                     if (!inlineMediaEnabled) {
                         notifyDataSetChanged();
                         delegate.needChangePanelVisibility(true);
