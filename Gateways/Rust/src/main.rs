@@ -453,7 +453,14 @@ async fn main() {
                 std_listener.set_nonblocking(true).unwrap();
                 tokio::net::TcpListener::from_std(std_listener).unwrap()
             }
-            None => tokio::net::TcpListener::bind("127.0.0.1:8001").await.unwrap(),
+            None => {
+                // No socket-activated fd: bind directly. LISTEN_ADDR lets a
+                // container override the default loopback bind (the systemd
+                // deployment uses socket activation and never sets it).
+                let addr = std::env::var("LISTEN_ADDR")
+                    .unwrap_or_else(|_| "127.0.0.1:8001".to_owned());
+                tokio::net::TcpListener::bind(&addr).await.unwrap()
+            }
         }
     };
 
