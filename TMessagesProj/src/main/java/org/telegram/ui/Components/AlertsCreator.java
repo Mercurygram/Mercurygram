@@ -1557,10 +1557,10 @@ public class AlertsCreator {
         ArrayList<String> arrayList = new ArrayList<>();
         ArrayList<Integer> types = new ArrayList<>();
         int providers = MessagesController.getInstance(currentAccount).availableMapProviders;
-        if ((providers & 1) != 0) {
-            arrayList.add(LocaleController.getString(R.string.MapPreviewProviderTelegram));
-            types.add(0);
-        }
+        // Mercurygram: always offer Telegram (server-rendered, no third party from the client),
+        // independent of the server-advertised provider set.
+        arrayList.add(LocaleController.getString(R.string.MapPreviewProviderTelegram));
+        types.add(0);
         if ((providers & 2) != 0) {
             arrayList.add(LocaleController.getString(R.string.MapPreviewProviderGoogle));
             types.add(1);
@@ -1569,6 +1569,9 @@ public class AlertsCreator {
             arrayList.add(LocaleController.getString(R.string.MapPreviewProviderYandex));
             types.add(3);
         }
+        // Mercurygram: on-device OpenStreetMap (OpenFreeMap) preview, always available.
+        arrayList.add(LocaleController.getString(R.string.MercurygramMapPreviewProviderOpenStreetMap));
+        types.add(4);
         arrayList.add(LocaleController.getString(R.string.MapPreviewProviderNobody));
         types.add(2);
 
