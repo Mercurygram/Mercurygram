@@ -2298,7 +2298,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                         blockCell.setTextAndValueAndIcon(getString("ChannelBlacklist", R.string.ChannelBlacklist), String.format("%d", Math.max(info.banned_count, info.kicked_count)), R.drawable.msg_user_remove, logCell != null && logCell.getVisibility() == View.VISIBLE);
                     } else {
                         int count = 0;
-                        int totalCount = forum ? 16 : 15;
+                        int totalCount = forum ? 19 : 18;
                         if (currentChat.default_banned_rights != null) {
                             if (!currentChat.default_banned_rights.send_plain) {
                                 count++;
