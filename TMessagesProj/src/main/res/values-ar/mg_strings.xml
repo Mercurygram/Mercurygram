@@ -166,6 +166,7 @@
     <string name="MercurygramSendMediaPermissionGifs">صور GIF</string>
     <string name="MercurygramSendMediaPermissionGames">ألعاب</string>
     <string name="MercurygramSendMediaPermissionInline">بوتات داخلية</string>
+    <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
     <string name="NtfyDefaultServerDisableUP">تعطيل UnifiedPush</string>
     <string name="NtfyDefaultServerMessage">خادم ntfy.sh الافتراضي لديه حدود معدل منخفضة جدًا ويحظر بوابة الدفع الخاصة بـ Mercurygram. لن تعمل إشعارات الدفع بشكل موثوق.</string>
     <string name="NtfyDefaultServerNoAlternative">لا توجد موزّعات بديلة مثبَّتة. سيتم تعطيل UnifiedPush. يمكنك إعادة تفعيله بعد تثبيت موزّع متوافق يستخدم خادمًا ذاتي الاستضافة.</string>
