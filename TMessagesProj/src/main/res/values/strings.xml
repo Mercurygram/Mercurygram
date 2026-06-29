@@ -10944,6 +10944,7 @@
     <string name="MercurygramSendMediaPermissionGifs">GIFs</string>
     <string name="MercurygramSendMediaPermissionGames">Games</string>
     <string name="MercurygramSendMediaPermissionInline">Inline Bots</string>
+    <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
 
     <string name="PollV2ShowWhoVoted">Show Who Voted</string>
     <string name="PollV2ShowWhoVotedInfo">Display voter name on each option</string>
