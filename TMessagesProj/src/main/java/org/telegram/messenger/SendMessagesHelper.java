@@ -2087,6 +2087,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             final TLRPC.Peer peer_id = getMessagesController().getPeer(peer);
             boolean isSignature = false;
             boolean canSendStickers = true;
+            boolean canSendGifs = true;
+            boolean canSendGames = true;
             boolean canSendPhoto = true;
             boolean canSendVideo = true;
             boolean canSendDocument = true;
@@ -2136,6 +2138,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     rank = getMessagesController().getAdminRank(chat.id, myId);
                 }
                 canSendStickers = ChatObject.canSendStickers(chat);
+                canSendGifs = ChatObject.canSendGifs(chat);
+                canSendGames = ChatObject.canSendGames(chat);
                 canSendPhoto = ChatObject.canSendPhoto(chat);
                 canSendVideo = ChatObject.canSendVideo(chat);
                 canSendDocument = ChatObject.canSendDocument(chat);
@@ -2172,7 +2176,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     continue;
                 }
                 boolean mediaIsSticker = (msgObj.isSticker() || msgObj.isAnimatedSticker() || msgObj.isGif() || msgObj.isGame());
-                if (!canSendStickers && mediaIsSticker) {
+                if (!canSendStickers && (msgObj.isSticker() || msgObj.isAnimatedSticker()) || !canSendGifs && msgObj.isGif() || !canSendGames && msgObj.isGame()) {
                     if (sendResult == 0) {
                         sendResult = ChatObject.isActionBannedByDefault(chat, ChatObject.ACTION_SEND_STICKERS) ? 4 : 1;
                     }
@@ -2831,7 +2835,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         boolean canSendMusic = ChatObject.canSendMusic(chat);
 
         boolean mediaIsSticker = (msgObj.isSticker() || msgObj.isAnimatedSticker() || msgObj.isGif() || msgObj.isGame());
-        if (!canSendStickers && mediaIsSticker) {
+        if (!canSendStickers && (msgObj.isSticker() || msgObj.isAnimatedSticker()) || !ChatObject.canSendGifs(chat) && msgObj.isGif() || !ChatObject.canSendGames(chat) && msgObj.isGame()) {
             return ChatObject.isActionBannedByDefault(chat, ChatObject.ACTION_SEND_STICKERS) ? 4 : 1;
         } else if (!canSendPhoto && msgObj.messageOwner.media instanceof TLRPC.TL_messageMediaPhoto && !msgObj.isVideo() && !mediaIsSticker) {
             return ChatObject.isActionBannedByDefault(chat, ChatObject.ACTION_SEND_PHOTO) ? 10 : 12;
@@ -4666,7 +4670,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         newMsg = new TLRPC.TL_message();
                     }
                     if (DialogObject.isChatDialog(peer)) {
-                        if (!canSendStickers) {
+                        if (!ChatObject.canSendGifs(getMessagesController().getChat(-peer))) {
                             for (int a = 0, N = document.attributes.size(); a < N; a++) {
                                 if (document.attributes.get(a) instanceof TLRPC.TL_documentAttributeAnimated) {
                                     document.attributes.remove(a);
