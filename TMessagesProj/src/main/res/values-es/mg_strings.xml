@@ -27,6 +27,10 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Preselecciona «Eliminar para todos» (y «Eliminar también para…» en chats privados) al eliminar mensajes. Aún puedes desmarcarlo antes de confirmar.</string>
     <string name="MercurygramDisableGlobalSearch">Desactivar la búsqueda global</string>
     <string name="MercurygramDisableGlobalSearchAbout">La búsqueda global localiza nombres de usuario, canales y mensajes públicos en todo Telegram. Con esto desactivado, la búsqueda solo abarca tus propios chats y contactos.</string>
+    <string name="MercurygramDisableAiEditor">Desactivar editor de texto con IA</string>
+    <string name="MercurygramDisableAiEditorAbout">Oculta el botón de IA en los editores de mensajes y descripciones. El editor de IA envía tu borrador al servicio de IA de Telegram para reescribirlo, corregirlo o cambiar su estilo.</string>
+    <string name="MercurygramDisableAiSummary">Desactivar resúmenes con IA</string>
+    <string name="MercurygramDisableAiSummaryAbout">Oculta el botón Resumen con IA en los mensajes. Los resúmenes envían el texto del mensaje al servicio de IA de Telegram.</string>
     <string name="MercurygramDisableLinkPreviews">Desactivar vistas previas de enlaces</string>
     <string name="MercurygramDisableLinkPreviewsAbout">No obtener vistas previas de páginas web al redactar. Esto impide que los servidores de Telegram carguen los enlaces que escribes o pegas. Las vistas previas quedan desactivadas en todos los chats.</string>
     <string name="MercurygramPreferSecretChats">Iniciar chats nuevos como secretos</string>
