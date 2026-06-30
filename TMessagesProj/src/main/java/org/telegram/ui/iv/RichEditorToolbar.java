@@ -457,6 +457,13 @@ public class RichEditorToolbar extends FrameLayout {
         backButton.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
+    // Mercurygram: the toolbar has no account of its own, so the owner (which does)
+    // drives the AI buttons off the disable-AI-text-editor toggle.
+    public void setAiVisible(boolean visible) {
+        aiButton.setVisibility(visible ? View.VISIBLE : View.GONE);
+        aiStyleButton.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
     public void setTopPanelVisible(boolean visible) {
         topPanel.setVisibility(visible ? View.VISIBLE : View.GONE);
         topGradient.setVisibility(visible ? View.VISIBLE : View.GONE);
