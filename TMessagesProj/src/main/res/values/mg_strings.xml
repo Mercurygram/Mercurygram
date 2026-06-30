@@ -42,6 +42,7 @@
     <string name="HideChatKeyboard">Hide keyboard on chat scroll</string>
     <string name="HideAllTab">Hide \"All Chats\" tab</string>
     <string name="HideAllTabAbout">Long press title bar to temporarily show it</string>
+    <string name="MercurygramDefaultFolder">Default launch folder</string>
     <string name="UnifiedPushDistributor">UnifiedPush Distributor</string>
     <string name="MercurygramEmbeddedFcm">Google FCM (built in)</string>
     <string name="MercurygramEmbeddedFcmWarning">Delivers notifications through Google Play Services on this device, using the Mercurygram gateway to sign them. No Google library is bundled in the app, but Google learns when a notification is sent to you and Play Services must stay installed. Any other distributor keeps Google out of the path entirely.</string>
