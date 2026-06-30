@@ -51,6 +51,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_SAVED_MESSAGES_HISTORY = 5;
     private static final int ID_CLEAR_SAVED_HISTORY = 6;
     private static final int ID_HIDE_STORIES = 7;
+    private static final int ID_HIDE_PREMIUM_PROMO = 8;
     private static final int ID_DELETE_FOR_ALL_DEFAULT = 9;
     private static final int ID_SEND_LARGE_PHOTOS = 10;
     private static final int ID_REAR_ROUND_VIDEOS = 11;
@@ -103,6 +104,10 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 .setChecked(getUserConfig().hideAllTab));
         items.add(UItem.asCheck(ID_HIDE_STORIES, LocaleController.getString(R.string.MercurygramHideStories))
                 .setChecked(getUserConfig().hideStories));
+        // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+        items.add(UItem.asCheck(ID_HIDE_PREMIUM_PROMO, LocaleController.getString(R.string.MercurygramHidePremiumPromo))
+                .setChecked(getUserConfig().hidePremiumPromo));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramHidePremiumPromoAbout)));
         items.add(UItem.asCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
                 .setChecked(SharedConfig.useSystemFont));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramUseSystemFontAbout)));
@@ -309,6 +314,12 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_HIDE_STORIES:
                 getUserConfig().hideStories = !getUserConfig().hideStories;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+            case ID_HIDE_PREMIUM_PROMO:
+                getUserConfig().hidePremiumPromo = !getUserConfig().hidePremiumPromo;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
