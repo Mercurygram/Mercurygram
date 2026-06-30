@@ -17,6 +17,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UnifiedPushReceiver;
@@ -47,6 +48,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_MESSAGE_DETAILS_MENU = 1;
     private static final int ID_HIDE_CHAT_KEYBOARD = 2;
     private static final int ID_HIDE_ALL_TAB = 3;
+    private static final int ID_DEFAULT_FOLDER = 15;
     private static final int ID_USE_SYSTEM_FONT = 4;
     private static final int ID_SAVED_MESSAGES_HISTORY = 5;
     private static final int ID_CLEAR_SAVED_HISTORY = 6;
@@ -102,6 +104,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 .setChecked(getUserConfig().hideChatKeyboard));
         items.add(UItem.asCheck(ID_HIDE_ALL_TAB, LocaleController.getString(R.string.HideAllTab))
                 .setChecked(getUserConfig().hideAllTab));
+        items.add(UItem.asButton(ID_DEFAULT_FOLDER, LocaleController.getString(R.string.MercurygramDefaultFolder), defaultFolderLabel()));
         items.add(UItem.asCheck(ID_HIDE_STORIES, LocaleController.getString(R.string.MercurygramHideStories))
                 .setChecked(getUserConfig().hideStories));
         // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
@@ -307,6 +310,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 getUserConfig().hideAllTab = !getUserConfig().hideAllTab;
                 getUserConfig().saveConfig(false);
                 refreshList();
+                break;
+            case ID_DEFAULT_FOLDER:
+                handleDefaultFolderClick();
                 break;
             case ID_USE_SYSTEM_FONT:
                 SharedConfig.toggleUseSystemFont();
@@ -778,6 +784,66 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                     });
         }
         showDialog(b.create());
+    }
+
+    private String defaultFolderLabel() {
+        final int defaultFolderId = getUserConfig().defaultFolderId;
+        if (defaultFolderId != 0) {
+            final ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
+            for (int a = 0; a < filters.size(); a++) {
+                final MessagesController.DialogFilter filter = filters.get(a);
+                if (!filter.isDefault() && filter.id == defaultFolderId && !filter.locked) {
+                    return filter.name;
+                }
+            }
+        }
+        return LocaleController.getString(R.string.FilterAllChats);
+    }
+
+    private void handleDefaultFolderClick() {
+        Context context = getParentActivity();
+        if (context == null) return;
+        // getDialogFilters() is kept sorted by order with the default "All chats"
+        // filter at index 0, so the dialog already lists All chats first.
+        final ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
+        final int current = getUserConfig().defaultFolderId;
+        AtomicReference<Dialog> dialogRef = new AtomicReference<>();
+        LinearLayout linearLayout = new LinearLayout(context);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        for (int i = 0; i < filters.size(); i++) {
+            final MessagesController.DialogFilter filter = filters.get(i);
+            // Locked (over-limit) folders are skipped by both honouring paths
+            // (mgDefaultFolderStableId / first-build auto-select), so don't offer
+            // them as selectable defaults: picking one would be silently ignored.
+            if (filter.locked) {
+                continue;
+            }
+            final int chosenId = filter.id;
+            String label = filter.isDefault()
+                    ? LocaleController.getString(R.string.FilterAllChats)
+                    : filter.name;
+            RadioColorCell cell = new RadioColorCell(context);
+            cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
+            cell.setCheckColor(Theme.getColor(Theme.key_radioBackground),
+                    Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
+            cell.setTextAndValue(label, chosenId == current);
+            cell.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL));
+            linearLayout.addView(cell);
+            cell.setOnClickListener(v -> {
+                getUserConfig().defaultFolderId = chosenId;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                Dialog d = dialogRef.get();
+                if (d != null) d.dismiss();
+            });
+        }
+        Dialog dialog = new AlertDialog.Builder(context)
+                .setTitle(LocaleController.getString(R.string.MercurygramDefaultFolder))
+                .setView(linearLayout)
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .create();
+        dialogRef.set(dialog);
+        showDialog(dialog);
     }
 
     private void handleTorIdleTimeoutClick() {

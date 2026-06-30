@@ -71,6 +71,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Add toggle setting in Chat Settings to start video messages with rear-facing camera
 - Add toggle setting in Chat Settings to hide keyboard on chat scroll
 - Add toggle setting in Chat Setting to hide "All Chats" tab (feature from NekoX)
+- Add a per-account "default launch folder" setting in Settings → Mercurygram, so the chat list opens on a chosen folder instead of "All Chats" on the first build of the tabs after launch (local only, no server involvement)
 - Add administrators item in group/channel info
 - Add toggle setting in Debug Menu to enable Message Details menu
 - Add toggle setting in Debug Menu to disable Unified Push support
