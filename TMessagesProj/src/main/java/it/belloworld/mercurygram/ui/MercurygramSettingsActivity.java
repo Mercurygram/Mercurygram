@@ -51,6 +51,8 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_REDUCE_TRACKING_FINGERPRINT = 40;
     private static final int ID_TOR_SETTINGS = 41;
     private static final int ID_DISABLE_GLOBAL_SEARCH = 44;
+    private static final int ID_DISABLE_AI_EDITOR = 45;
+    private static final int ID_DISABLE_AI_SUMMARY = 46;
     private static final int ID_TRANSLATION = 50;
     private static final int ID_TRANSCRIPTION = 51;
     private static final int ID_EMOJI_PACK = 60;
@@ -143,6 +145,16 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramDisableGlobalSearch))
                 .setChecked(getUserConfig().mg.disableGlobalSearch));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableGlobalSearchAbout)));
+
+        items.add(UItem.asCheck(ID_DISABLE_AI_EDITOR,
+                        LocaleController.getString(R.string.MercurygramDisableAiEditor))
+                .setChecked(getUserConfig().mg.disableAiEditor));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableAiEditorAbout)));
+
+        items.add(UItem.asCheck(ID_DISABLE_AI_SUMMARY,
+                        LocaleController.getString(R.string.MercurygramDisableAiSummary))
+                .setChecked(getUserConfig().mg.disableAiSummary));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableAiSummaryAbout)));
 
         items.add(UItem.asCheck(ID_DISABLE_LINK_PREVIEWS,
                         LocaleController.getString(R.string.MercurygramDisableLinkPreviews))
@@ -283,6 +295,16 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_DISABLE_GLOBAL_SEARCH:
                 getUserConfig().mg.disableGlobalSearch = !getUserConfig().mg.disableGlobalSearch;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_DISABLE_AI_EDITOR:
+                getUserConfig().mg.disableAiEditor = !getUserConfig().mg.disableAiEditor;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_DISABLE_AI_SUMMARY:
+                getUserConfig().mg.disableAiSummary = !getUserConfig().mg.disableAiSummary;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
