@@ -1268,6 +1268,10 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">يحدّد مسبقًا خيار «الحذف لدى الجميع» (و«الحذف أيضًا لدى…» في المحادثات الخاصة) عند حذف الرسائل. لا يزال بإمكانك إلغاء تحديده قبل التأكيد.</string>
     <string name="MercurygramDisableGlobalSearch">تعطيل البحث الشامل</string>
     <string name="MercurygramDisableGlobalSearchAbout">يبحث البحث الشامل عن أسماء المستخدمين والقنوات والرسائل العامة عبر تيليجرام. عند إيقافه، يقتصر البحث على محادثاتك وجهات اتصالك.</string>
+    <string name="MercurygramDisableAiEditor">تعطيل محرر النصوص بالذكاء الاصطناعي</string>
+    <string name="MercurygramDisableAiEditorAbout">يخفي زر الذكاء الاصطناعي في محرري الرسائل والتعليقات. يرسل محرر الذكاء الاصطناعي مسودتك إلى خدمة الذكاء الاصطناعي في تيليجرام لإعادة صياغتها أو تدقيقها أو تغيير أسلوبها.</string>
+    <string name="MercurygramDisableAiSummary">تعطيل ملخصات الذكاء الاصطناعي</string>
+    <string name="MercurygramDisableAiSummaryAbout">يخفي زر ملخص الذكاء الاصطناعي على الرسائل. ترسل الملخصات نص الرسالة إلى خدمة الذكاء الاصطناعي في تيليجرام.</string>
     <string name="MercurygramDisableLinkPreviews">تعطيل معاينات الروابط</string>
     <string name="MercurygramDisableLinkPreviewsAbout">لا تجلب معاينات صفحات الويب أثناء الكتابة. هذا يمنع خوادم تيليجرام من تحميل الروابط التي تكتبها أو تلصقها. تبقى المعاينات معطّلة في كل المحادثات.</string>
     <string name="MercurygramPreferSecretChats">بدء المحادثات الجديدة كمحادثات سرية</string>

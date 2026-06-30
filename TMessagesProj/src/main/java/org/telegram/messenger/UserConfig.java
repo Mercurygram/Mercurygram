@@ -74,6 +74,8 @@ public class UserConfig extends BaseController {
     public String transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
     public boolean hideStories = false;
     public boolean disableGlobalSearch = false;
+    public boolean disableAiEditor = false;
+    public boolean disableAiSummary = false;
     public boolean disableLinkPreviews = false;
     public boolean preferSecretChats = false;
     public boolean deleteForAllByDefault = false;
@@ -195,6 +197,8 @@ public class UserConfig extends BaseController {
                     editor.putString("transcribeLang", transcribeLang);
                     editor.putBoolean("hideStories", hideStories);
                     editor.putBoolean("disableGlobalSearch", disableGlobalSearch);
+                    editor.putBoolean("disableAiEditor", disableAiEditor);
+                    editor.putBoolean("disableAiSummary", disableAiSummary);
                     editor.putBoolean("disableLinkPreviews", disableLinkPreviews);
                     editor.putBoolean("preferSecretChats", preferSecretChats);
                     editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
@@ -361,6 +365,8 @@ public class UserConfig extends BaseController {
             transcribeLang = preferences.getString("transcribeLang", SharedConfig.MG_TRANSCRIBE_LANG_DEVICE);
             hideStories = preferences.getBoolean("hideStories", false);
             disableGlobalSearch = preferences.getBoolean("disableGlobalSearch", false);
+            disableAiEditor = preferences.getBoolean("disableAiEditor", false);
+            disableAiSummary = preferences.getBoolean("disableAiSummary", false);
             disableLinkPreviews = preferences.getBoolean("disableLinkPreviews", false);
             preferSecretChats = preferences.getBoolean("preferSecretChats", false);
             deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
@@ -548,6 +554,8 @@ public class UserConfig extends BaseController {
         transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
         hideStories = false;
         disableGlobalSearch = false;
+        disableAiEditor = false;
+        disableAiSummary = false;
         disableLinkPreviews = false;
         preferSecretChats = false;
         deleteForAllByDefault = false;
