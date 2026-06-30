@@ -79,6 +79,10 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Pre-selects \"Delete for everyone\" (and \"Also delete for…\" in private chats) when deleting messages. You can still untick it before confirming.</string>
     <string name="MercurygramDisableGlobalSearch">Disable global search</string>
     <string name="MercurygramDisableGlobalSearchAbout">Global search looks up public usernames, channels and messages across Telegram. With this off, search only covers your own chats and contacts.</string>
+    <string name="MercurygramDisableAiEditor">Disable AI text editor</string>
+    <string name="MercurygramDisableAiEditorAbout">Hides the AI button in the message and caption editors. The AI editor sends your draft to Telegram\'s AI service to rewrite, proofread or restyle it.</string>
+    <string name="MercurygramDisableAiSummary">Disable AI summaries</string>
+    <string name="MercurygramDisableAiSummaryAbout">Hides the AI Summary button on messages. Summaries send the message text to Telegram\'s AI service.</string>
     <string name="MercurygramDisableLinkPreviews">Disable link previews</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Don\'t fetch web page previews while composing. This stops Telegram\'s servers from loading links you type or paste. Previews stay off in every chat.</string>
     <string name="MercurygramPreferSecretChats">Start new chats as secret</string>
