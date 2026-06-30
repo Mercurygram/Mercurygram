@@ -82,6 +82,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Unlock premium app icons for anybody
 - Unlock 8 accounts (was 3) and remove premium check for number of accounts
 - Let non-premium users use the per-language "Do Not Translate" list (*Settings → Language → Do Not Translate*), which upstream only enforced for Premium accounts, and keep the *Translate Entire Chats* switch on the same screen listed for everyone so the in-chat "Translate to X" bar can always be switched off. The list stays local to the device and feeds the suggested target languages; it does not by itself hide the in-chat bar, because this build has no on-device language detection (ML Kit is stripped), so no source language is ever attributed to a chat. Manual translation is always available
+- Let non-premium users reorder dialog folders freely, including moving the "All chats" tab off the first position (the new order is synced to the server like any other reorder)
 - Add per-account toggle setting in Settings → Mercurygram to hide the stories bar in the chat list
 - Add per-account toggle setting in Settings → Mercurygram to pre-tick "delete for everyone" (and "also delete for…" in private chats) by default in the delete-message dialog
 - Add a "Remove all proxies" bulk action to the proxy list (upstream only deletes one proxy at a time)
