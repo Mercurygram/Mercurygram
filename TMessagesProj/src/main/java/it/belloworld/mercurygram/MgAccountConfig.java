@@ -21,6 +21,7 @@ public class MgAccountConfig {
     public boolean savedMessagesHistory = false;
     public String transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
     public boolean hideStories = false;
+    public boolean hidePremiumPromo = false;
     public boolean disableGlobalSearch = false;
     public boolean disableAiEditor = false;
     public boolean disableAiSummary = false;
@@ -46,6 +47,7 @@ public class MgAccountConfig {
         editor.putBoolean("savedMessagesHistory", savedMessagesHistory);
         editor.putString("transcribeLang", transcribeLang);
         editor.putBoolean("hideStories", hideStories);
+        editor.putBoolean("hidePremiumPromo", hidePremiumPromo);
         editor.putBoolean("disableGlobalSearch", disableGlobalSearch);
         editor.putBoolean("disableAiEditor", disableAiEditor);
         editor.putBoolean("disableAiSummary", disableAiSummary);
@@ -65,6 +67,7 @@ public class MgAccountConfig {
         savedMessagesHistory = preferences.getBoolean("savedMessagesHistory", false);
         transcribeLang = preferences.getString("transcribeLang", SharedConfig.MG_TRANSCRIBE_LANG_DEVICE);
         hideStories = preferences.getBoolean("hideStories", false);
+        hidePremiumPromo = preferences.getBoolean("hidePremiumPromo", false);
         disableGlobalSearch = preferences.getBoolean("disableGlobalSearch", false);
         disableAiEditor = preferences.getBoolean("disableAiEditor", false);
         disableAiSummary = preferences.getBoolean("disableAiSummary", false);
@@ -84,6 +87,7 @@ public class MgAccountConfig {
         savedMessagesHistory = false;
         transcribeLang = SharedConfig.MG_TRANSCRIBE_LANG_DEVICE;
         hideStories = false;
+        hidePremiumPromo = false;
         disableGlobalSearch = false;
         disableAiEditor = false;
         disableAiSummary = false;
