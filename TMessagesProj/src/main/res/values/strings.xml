@@ -10773,6 +10773,7 @@
     <string name="HideChatKeyboard">Hide keyboard on chat scroll</string>
     <string name="HideAllTab">Hide \"All Chats\" tab</string>
     <string name="HideAllTabAbout">Long press title bar to temporarily show it</string>
+    <string name="MercurygramDefaultFolder">Default launch folder</string>
     <string name="UnifiedPushDistributor">UnifiedPush Distributor</string>
     <string name="UnifiedPushGateway">Gateway URL</string>
     <string name="UnifiedPushGatewayInfo">URL prefix for the UnifiedPush gateway</string>
