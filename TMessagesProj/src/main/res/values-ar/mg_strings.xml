@@ -22,6 +22,7 @@
     <string name="MercurygramCheckForUpdatesToast">جارٍ التحقق من التحديثات…</string>
     <string name="MercurygramDisableLivePhotos">تعطيل Live Photos افتراضيًا</string>
     <string name="MercurygramDisableLivePhotosAbout">أرسل الصورة الثابتة فقط عند اختيار Google Motion Photo. لا يزال بإمكانك تمكين Live Photo لاختيار فردي بالنقر على أيقونة الحركة في لوحة المرفقات.</string>
+    <string name="MercurygramDefaultFolder">مجلد التشغيل الافتراضي</string>
     <string name="MercurygramHideStories">إخفاء القصص</string>
     <string name="MercurygramHidePremiumPromo">إخفاء ترويج Premium</string>
     <string name="MercurygramHidePremiumPromoAbout">يخفي صفوف Telegram Premium وBusiness والإهداء في الإعدادات ولافتات Premium في قائمة المحادثات. لا يؤثر على الرسائل المموَّلة ولا يفتح أي ميزة.</string>
