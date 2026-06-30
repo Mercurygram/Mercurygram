@@ -1175,7 +1175,8 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         }
 
         private void resetDefaultPosition() {
-            if (UserConfig.getInstance(UserConfig.selectedAccount).isPremium()) {
+            // Mercurygram: Premium is a Telegram monetization gate, not a technical requirement
+            if (true) {
                 return;
             }
             ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
