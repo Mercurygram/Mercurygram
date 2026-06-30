@@ -1270,6 +1270,8 @@
     <string name="MercurygramDisableLivePhotos">Desativar Live Photos por padrão</string>
     <string name="MercurygramDisableLivePhotosAbout">Enviar apenas a foto estática ao escolher uma Google Motion Photo. Você ainda pode ativar Live Photo para uma seleção específica tocando no ícone de movimento no painel de anexos.</string>
     <string name="MercurygramHideStories">Ocultar stories</string>
+    <string name="MercurygramHidePremiumPromo">Ocultar promoção do Premium</string>
+    <string name="MercurygramHidePremiumPromoAbout">Oculta as linhas do Telegram Premium, Business e presentes nas Configurações e os banners do Premium na lista de conversas. Não afeta as mensagens patrocinadas e não desbloqueia nada.</string>
     <string name="MercurygramDeleteForAllByDefault">Excluir para todos por padrão</string>
     <string name="MercurygramDeleteForAllByDefaultAbout">Pré-seleciona “Excluir para todos” (e “Excluir também para…” em conversas privadas) ao excluir mensagens. Você ainda pode desmarcar antes de confirmar.</string>
     <string name="MercurygramDisableGlobalSearch">Desativar busca global</string>
