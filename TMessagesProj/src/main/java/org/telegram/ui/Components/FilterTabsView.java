@@ -86,15 +86,26 @@ public class FilterTabsView extends FrameLayout {
         return positionToStableId.get(selectedType, -1);
     }
 
-    public boolean selectTabWithStableId(int stableId) {
+    // Mercurygram: position of the tab carrying the given stableId, or -1.
+    // Shared lookup for selectTabWithStableId (state-only) and
+    // selectTabByStableId (animated).
+    private int positionForStableId(int stableId) {
         for (int i = 0; i < tabs.size(); i++) {
             if (positionToStableId.get(i, -1) == stableId) {
-                currentPosition = i;
-                selectedTabId = positionToId.get(i);
-                return true;
+                return i;
             }
         }
-        return false;
+        return -1;
+    }
+
+    public boolean selectTabWithStableId(int stableId) {
+        final int i = positionForStableId(stableId);
+        if (i < 0) {
+            return false;
+        }
+        currentPosition = i;
+        selectedTabId = positionToId.get(i);
+        return true;
     }
 
     public interface FilterTabsViewDelegate {
@@ -1210,6 +1221,16 @@ public class FilterTabsView extends FrameLayout {
         if (defaultTab == null) return;
         if (defaultTab.id == getCurrentTabId()) return;
         scrollToTab(defaultTab, defaultTab.id);
+    }
+
+    // Mercurygram: animate to the tab carrying the given stableId and switch the
+    // page through the delegate, mirroring selectFirstTab() for the default
+    // launch folder. No-op when the stableId is not present.
+    public void selectTabByStableId(int stableId) {
+        final int i = positionForStableId(stableId);
+        if (i >= 0) {
+            scrollToTab(tabs.get(i), i);
+        }
     }
 
     public boolean isFirstTab() {
