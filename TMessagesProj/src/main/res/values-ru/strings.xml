@@ -288,6 +288,10 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Заранее выбирает «Удалить у всех» (и «Удалить также у…» в личных чатах) при удалении сообщений. Вы можете снять отметку перед подтверждением.</string>
     <string name="MercurygramDisableGlobalSearch">Отключить глобальный поиск</string>
     <string name="MercurygramDisableGlobalSearchAbout">Глобальный поиск находит публичные имена пользователей, каналы и сообщения по всему Telegram. Когда он отключён, поиск охватывает только ваши чаты и контакты.</string>
+    <string name="MercurygramDisableAiEditor">Отключить ИИ-редактор текста</string>
+    <string name="MercurygramDisableAiEditorAbout">Скрывает кнопку ИИ в редакторах сообщений и подписей. ИИ-редактор отправляет ваш черновик в сервис ИИ Telegram для переписывания, исправления или изменения стиля.</string>
+    <string name="MercurygramDisableAiSummary">Отключить ИИ-сводки</string>
+    <string name="MercurygramDisableAiSummaryAbout">Скрывает кнопку «ИИ-сводка» на сообщениях. Сводки отправляют текст сообщения в сервис ИИ Telegram.</string>
     <string name="MercurygramDisableLinkPreviews">Отключить предпросмотр ссылок</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Не загружать предпросмотр веб-страниц при наборе сообщения. Это не даёт серверам Telegram загружать ссылки, которые вы вводите или вставляете. Предпросмотр остаётся отключённым во всех чатах.</string>
     <string name="MercurygramPreferSecretChats">Начинать новые чаты как секретные</string>
