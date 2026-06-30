@@ -8417,6 +8417,10 @@ public class MessagesController extends BaseController implements NotificationCe
                             putUsers(res.users, false);
                             onLoaded(offset, count, res);
                         });
+                    } else {
+                        // Mercurygram: clear paging state so a transient error does not
+                        // permanently wedge `loading` and block all further pages.
+                        AndroidUtilities.runOnUIThread(this::resetLoadState);
                     }
                 });
             } else {
@@ -8445,13 +8449,23 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
                             onLoaded(offset, count, res);
                         });
+                    } else {
+                        // Mercurygram: clear paging state so a transient error does not
+                        // permanently wedge `loading` and block all further pages.
+                        AndroidUtilities.runOnUIThread(this::resetLoadState);
                     }
                 });
             }
         }
 
+        // Mercurygram: reset paging state so a failed or superseded load can be retried.
+        private void resetLoadState() {
+            loading = false;
+            lastLoadOffset = -1;
+            lastLoadCount = -1;
+        }
+
         private void onLoaded(int offset, int count, TLRPC.photos_Photos res) {
-            boolean wasLoaded = loaded;
             loading = false;
             loaded = true;
             fromCache = false;
@@ -8483,8 +8497,23 @@ public class MessagesController extends BaseController implements NotificationCe
             saveCache();
             getNotificationCenter().postNotificationName(NotificationCenter.dialogPhotosUpdate, this);
 
-            if (!wasLoaded && offset == 0 && count < photos.size() && photos.size() - count > STEP) {
-                load(photos.size() - STEP, STEP);
+            // Mercurygram: page through the remaining photos in the background so
+            // galleries with more than STEP photos fill without depending on the user
+            // swiping into each unloaded slot (upstream only prefetched head + tail,
+            // leaving 81..160-photo galleries stuck after the first STEP).
+            int firstNull = -1;
+            for (int i = 0; i < photos.size(); ++i) {
+                if (photos.get(i) == null) {
+                    firstNull = i;
+                    break;
+                }
+            }
+            if (firstNull >= 0) {
+                int run;
+                for (run = 0; run < STEP && firstNull + run < photos.size() && photos.get(firstNull + run) == null; ++run);
+                if (run > 0) {
+                    load(firstNull, run);
+                }
             }
         }
 
