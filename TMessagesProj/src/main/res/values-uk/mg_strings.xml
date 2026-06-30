@@ -23,6 +23,8 @@
     <string name="MercurygramDisableLivePhotos">Вимкнути Live Photos за замовчуванням</string>
     <string name="MercurygramDisableLivePhotosAbout">Надсилати лише статичне фото під час вибору Google Motion Photo. Live Photo для окремого вибору можна увімкнути, торкнувшись піктограми руху на панелі вкладень.</string>
     <string name="MercurygramHideStories">Сховати історії</string>
+    <string name="MercurygramHidePremiumPromo">Сховати рекламу Premium</string>
+    <string name="MercurygramHidePremiumPromoAbout">Приховує розділи Telegram Premium, Business і подарунків у налаштуваннях та банери Premium у списку чатів. Не впливає на рекламні повідомлення й нічого не розблоковує.</string>
     <string name="MercurygramDeleteForAllByDefault">Видаляти в усіх за замовчуванням</string>
     <string name="MercurygramDeleteForAllByDefaultAbout">Заздалегідь вибирає «Видалити в усіх» (і «Видалити також у…» в особистих чатах) під час видалення повідомлень. Ви можете зняти позначку перед підтвердженням.</string>
     <string name="MercurygramDisableGlobalSearch">Вимкнути глобальний пошук</string>
