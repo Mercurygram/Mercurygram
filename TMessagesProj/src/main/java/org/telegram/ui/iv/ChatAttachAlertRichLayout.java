@@ -157,6 +157,7 @@ public class ChatAttachAlertRichLayout extends ChatAttachAlert.AttachAlertLayout
 
         toolbar = new RichEditorToolbar(context, toolbarDelegate);
         toolbar.setBackVisible(false);
+        toolbar.setAiVisible(!UserConfig.getInstance(currentAccount).mg.disableAiEditor);
         toolbar.setTopGradientVisible(false);
         updateSendButtonLocked();
         addView(toolbar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL));
