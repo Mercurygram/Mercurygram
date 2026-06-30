@@ -719,7 +719,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(UItem.asShadow(null));
         }
 
-        if (!getMessagesController().premiumFeaturesBlocked()) {
+        // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+        if (!getMessagesController().premiumFeaturesBlocked() && !getUserConfig().mg.hidePremiumPromo) {
             items.add(SettingCell.Factory.of(11, 0xFFB659FF, 0xFF617CFF, R.drawable.settings_premium, getString(R.string.TelegramPremium)));
         }
         if (getMessagesController().starsPurchaseAvailable()) {
@@ -734,10 +735,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(SettingCell.Factory.of(13, 0xFF1BA4ED, 0xFF1488E1, R.drawable.filled_gram_earnings, getString(R.string.GramEarnings), null, c.balanceAvailable() && balance > 0 ? StarsIntroActivity.formatStarsAmount(c.getBalance(), 0.85f, ' ') : ""));
         }
 
-        if (!getMessagesController().premiumFeaturesBlocked()) {
+        // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+        if (!getMessagesController().premiumFeaturesBlocked() && !getUserConfig().mg.hidePremiumPromo) {
             items.add(SettingCell.Factory.of(15, 0xFFF45255, 0xFFDF3955, R.drawable.settings_business, getString(R.string.TelegramBusiness)));
         }
-        if (!getMessagesController().premiumPurchaseBlocked()) {
+        // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+        if (!getMessagesController().premiumPurchaseBlocked() && !getUserConfig().mg.hidePremiumPromo) {
             items.add(SettingCell.Factory.of(16, 0xFFF38B31, 0xFFE26314, R.drawable.settings_gift, getString(R.string.SendAGift)));
         }
         if (items.get(items.size() - 1).viewType != UniversalAdapter.VIEW_TYPE_SHADOW)
