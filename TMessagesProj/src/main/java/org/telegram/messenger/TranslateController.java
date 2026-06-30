@@ -134,6 +134,7 @@ public class TranslateController extends BaseController {
     public static boolean isSummarizable(MessageObject messageObject) {
         return (
             messageObject != null &&
+            !UserConfig.getInstance(messageObject.currentAccount).disableAiSummary &&
             messageObject.messageOwner != null &&
             messageObject.messageOwner.summary_from_language != null &&
             !messageObject.isOutOwner() &&
@@ -611,7 +612,7 @@ public class TranslateController extends BaseController {
 
         final long dialogId = messageObject.getDialogId();
 
-        if (onScreen && messageObject.messageOwner.summarizedOpen && messageObject.messageOwner.summaryText == null && !isTranslatingDialog(messageObject.getDialogId())) {
+        if (onScreen && messageObject.messageOwner.summarizedOpen && messageObject.messageOwner.summaryText == null && !UserConfig.getInstance(currentAccount).disableAiSummary && !isTranslatingDialog(messageObject.getDialogId())) {
             final MessageObject finalMessageObject = messageObject;
             pushToSummarize(finalMessageObject, null, (text) -> {
                 finalMessageObject.messageOwner.summaryText = text;
@@ -662,7 +663,7 @@ public class TranslateController extends BaseController {
 
         if (onScreen && isTranslatingDialog(dialogId)) {
             final MessageObject finalMessageObject = messageObject;
-            if (finalMessageObject.messageOwner.summarizedOpen) {
+            if (finalMessageObject.messageOwner.summarizedOpen && !UserConfig.getInstance(currentAccount).disableAiSummary) {
                 if (finalMessageObject.messageOwner.translatedSummaryText == null || !language.equals(finalMessageObject.messageOwner.translatedSummaryLanguage)) {
                     pushToSummarize(finalMessageObject, language, text -> {
                         finalMessageObject.messageOwner.translatedSummaryLanguage = text != null ? language : null;
