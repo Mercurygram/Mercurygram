@@ -23,6 +23,8 @@
     <string name="MercurygramDisableLivePhotos">Live Photos standardmäßig deaktivieren</string>
     <string name="MercurygramDisableLivePhotosAbout">Nur das Standbild senden, wenn du ein Google Motion Photo auswählst. Du kannst Live Photo für eine einzelne Auswahl trotzdem aktivieren, indem du das Bewegungssymbol im Anhang-Panel antippst.</string>
     <string name="MercurygramHideStories">Storys ausblenden</string>
+    <string name="MercurygramHidePremiumPromo">Premium-Werbung ausblenden</string>
+    <string name="MercurygramHidePremiumPromoAbout">Blendet die Zeilen für Telegram Premium, Business und Geschenke in den Einstellungen sowie die Premium-Banner in der Chatliste aus. Betrifft keine gesponserten Nachrichten und schaltet nichts frei.</string>
     <string name="MercurygramDeleteForAllByDefault">Standardmäßig für alle löschen</string>
     <string name="MercurygramDeleteForAllByDefaultAbout">Wählt beim Löschen von Nachrichten „Für alle löschen“ (und „Auch löschen für…“ in privaten Chats) vor. Du kannst es vor dem Bestätigen weiterhin abwählen.</string>
     <string name="MercurygramDisableGlobalSearch">Globale Suche deaktivieren</string>
