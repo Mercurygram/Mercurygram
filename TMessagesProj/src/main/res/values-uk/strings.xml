@@ -301,6 +301,10 @@
     <string name="MercurygramDeleteForAllByDefaultAbout">Заздалегідь вибирає «Видалити в усіх» (і «Видалити також у…» в особистих чатах) під час видалення повідомлень. Ви можете зняти позначку перед підтвердженням.</string>
     <string name="MercurygramDisableGlobalSearch">Вимкнути глобальний пошук</string>
     <string name="MercurygramDisableGlobalSearchAbout">Глобальний пошук знаходить публічні імена користувачів, канали та повідомлення по всьому Telegram. Коли його вимкнено, пошук охоплює лише ваші чати та контакти.</string>
+    <string name="MercurygramDisableAiEditor">Вимкнути ШІ-редактор тексту</string>
+    <string name="MercurygramDisableAiEditorAbout">Приховує кнопку ШІ в редакторах повідомлень і підписів. ШІ-редактор надсилає ваш чорновик до сервісу ШІ Telegram для переписування, виправлення або зміни стилю.</string>
+    <string name="MercurygramDisableAiSummary">Вимкнути ШІ-зведення</string>
+    <string name="MercurygramDisableAiSummaryAbout">Приховує кнопку «ШІ-зведення» на повідомленнях. Зведення надсилають текст повідомлення до сервісу ШІ Telegram.</string>
     <string name="MercurygramDisableLinkPreviews">Вимкнути попередній перегляд посилань</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Не завантажувати попередній перегляд вебсторінок під час набору. Це не дає серверам Telegram завантажувати посилання, які ви вводите або вставляєте. Попередній перегляд лишається вимкненим у всіх чатах.</string>
     <string name="MercurygramPreferSecretChats">Починати нові чати як секретні</string>
