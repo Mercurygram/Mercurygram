@@ -1337,6 +1337,8 @@
     <string name="MercurygramDisableLivePhotos">Desactivar Live Photos de forma predeterminada</string>
     <string name="MercurygramDisableLivePhotosAbout">Envía solo la foto estática al seleccionar una Google Motion Photo. Aún puedes activar Live Photo en una selección concreta tocando el icono de movimiento en el panel de adjuntos.</string>
     <string name="MercurygramHideStories">Ocultar historias</string>
+    <string name="MercurygramHidePremiumPromo">Ocultar promoción de Premium</string>
+    <string name="MercurygramHidePremiumPromoAbout">Oculta las filas de Telegram Premium, Business y regalos en Ajustes y los banners de Premium en la lista de chats. No afecta a los mensajes patrocinados y no desbloquea nada.</string>
     <string name="MercurygramDeleteForAllByDefault">Eliminar para todos de forma predeterminada</string>
     <string name="MercurygramDeleteForAllByDefaultAbout">Preselecciona «Eliminar para todos» (y «Eliminar también para…» en chats privados) al eliminar mensajes. Aún puedes desmarcarlo antes de confirmar.</string>
     <string name="MercurygramDisableGlobalSearch">Desactivar la búsqueda global</string>
