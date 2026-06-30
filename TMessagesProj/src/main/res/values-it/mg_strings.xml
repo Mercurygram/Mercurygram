@@ -22,6 +22,7 @@
     <string name="MercurygramCheckForUpdatesToast">Ricerca aggiornamenti…</string>
     <string name="MercurygramDisableLivePhotos">Disabilita Live Photos di default</string>
     <string name="MercurygramDisableLivePhotosAbout">Invia solo la foto statica quando selezioni una Google Motion Photo. Puoi comunque abilitare Live Photo per la singola selezione toccando l\'icona movimento nel pannello allegati.</string>
+    <string name="MercurygramDefaultFolder">Cartella di avvio predefinita</string>
     <string name="MercurygramHideStories">Nascondi le storie</string>
     <string name="MercurygramHidePremiumPromo">Nascondi promo Premium</string>
     <string name="MercurygramHidePremiumPromoAbout">Nasconde le voci Telegram Premium, Business e regali nelle Impostazioni e i banner Premium nella lista chat. Non influisce sui messaggi sponsorizzati e non sblocca nulla.</string>
