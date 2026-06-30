@@ -68,6 +68,7 @@ public class UserConfig extends BaseController {
     public boolean rearRoundCamera = false;
     public boolean hideChatKeyboard = false;
     public boolean hideAllTab = false;
+    public int defaultFolderId = 0;
     public boolean messageDetailsMenu = false;
     public boolean disableLivePhotosByDefault = false;
     public boolean savedMessagesHistory = false;
@@ -192,6 +193,7 @@ public class UserConfig extends BaseController {
                     editor.putBoolean("rearRoundCamera", rearRoundCamera);
                     editor.putBoolean("hideChatKeyboard", hideChatKeyboard);
                     editor.putBoolean("hideAllTab", hideAllTab);
+                    editor.putInt("defaultFolderId", defaultFolderId);
                     editor.putBoolean("messageDetailsMenu", messageDetailsMenu);
                     editor.putBoolean("disableLivePhotosByDefault", disableLivePhotosByDefault);
                     editor.putBoolean("savedMessagesHistory", savedMessagesHistory);
@@ -361,6 +363,7 @@ public class UserConfig extends BaseController {
             rearRoundCamera = preferences.getBoolean("rearRoundCamera", false);
             hideChatKeyboard = preferences.getBoolean("hideChatKeyboard", false);
             hideAllTab = preferences.getBoolean("hideAllTab", false);
+            defaultFolderId = preferences.getInt("defaultFolderId", 0);
             messageDetailsMenu = preferences.getBoolean("messageDetailsMenu", false);
             disableLivePhotosByDefault = preferences.getBoolean("disableLivePhotosByDefault", false);
             savedMessagesHistory = preferences.getBoolean("savedMessagesHistory", false);
@@ -551,6 +554,7 @@ public class UserConfig extends BaseController {
         rearRoundCamera = false;
         hideChatKeyboard = false;
         hideAllTab = false;
+        defaultFolderId = 0;
         messageDetailsMenu = false;
         disableLivePhotosByDefault = false;
         savedMessagesHistory = false;
