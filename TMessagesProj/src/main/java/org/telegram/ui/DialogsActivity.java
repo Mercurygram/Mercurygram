@@ -283,6 +283,7 @@ import me.vkryl.android.animator.FactorAnimator;
 import me.vkryl.android.util.ClickHelper;
 
 import it.belloworld.mercurygram.HiddenAccountHelper;
+import it.belloworld.mercurygram.MgDefaultFolder;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider, FactorAnimator.Target, MainTabsActivity.TabFragmentDelegate {
     private final int ADDITIONAL_LIST_HEIGHT_DP = Build.VERSION.SDK_INT >= 31 ? 48 : 0;
@@ -6874,6 +6875,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
+
     private void updateFilterTabs(boolean force, boolean animated) {
         if (filterTabsView == null || inPreviewMode || searchIsShowed || (rightSlidingDialogContainer != null && rightSlidingDialogContainer.hasFragment())) {
             return;
@@ -6882,6 +6884,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterOptions.dismiss();
             filterOptions = null;
         }
+        // Mercurygram: true only on the first build of the tabs after launch, so the
+        // default-launch-folder override below fires once and never yanks the user
+        // back to their default tab on later refreshes.
+        final boolean wasEmpty = filterTabsView.isEmpty();
         final ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
         if (filters.size() > 1) {
             if (force || filterTabsView.getVisibility() != View.VISIBLE) {
@@ -6941,6 +6947,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (currentTabId >= 0 && currentTabId < filters.size()
                             && viewPages[0].selectedType != currentTabId) {
                         viewPages[0].selectedType = currentTabId;
+                        updateCurrentTab = true;
+                    }
+                }
+                // Mercurygram: on the first build after launch, auto-select the chosen
+                // default launch folder instead of "All chats". Match by the server
+                // filter id (stable across launches, unlike localId); skip when the
+                // folder was deleted (scan misses) or is locked. Runs after the
+                // hidden-All-tab sync so an explicit default folder takes precedence.
+                if (wasEmpty) {
+                    final int defaultIdx = MgDefaultFolder.folderIndex(getUserConfig(), getMessagesController());
+                    if (defaultIdx >= 0) {
+                        filterTabsView.selectTabWithStableId(filters.get(defaultIdx).localId);
+                        viewPages[0].selectedType = defaultIdx;
                         updateCurrentTab = true;
                     }
                 }
@@ -7341,8 +7360,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 fragmentSearchField.editText.clearFocus();
             }
             return false;
-        } else if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE && !tabsAnimationInProgress && !filterTabsView.isAnimatingIndicator() && !startedTracking && !filterTabsView.isFirstTabSelected()) {
-            if (invoked && !getUserConfig().mg.hideAllTab) filterTabsView.selectFirstTab();
+        } else if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE && !tabsAnimationInProgress && !filterTabsView.isAnimatingIndicator() && !startedTracking && !MgDefaultFolder.isOnBackLandingTab(getUserConfig(), getMessagesController(), filterTabsView)) {
+            if (invoked && !getUserConfig().mg.hideAllTab) {
+                // Mercurygram: honour the default launch folder on back press instead of "All chats".
+                int mgDefaultStableId = MgDefaultFolder.stableId(getUserConfig(), getMessagesController());
+                if (mgDefaultStableId >= 0) filterTabsView.selectTabByStableId(mgDefaultStableId);
+                else filterTabsView.selectFirstTab();
+            }
             return false;
         } else if (commentView != null && commentView.isPopupShowing()) {
             if (invoked) commentView.hidePopup(true);
