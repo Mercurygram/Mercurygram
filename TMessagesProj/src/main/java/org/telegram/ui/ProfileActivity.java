@@ -10588,7 +10588,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 devicesRow = rowCount++;
                 languageRow = rowCount++;
                 devicesSectionRow = rowCount++;
-                if (!getMessagesController().premiumFeaturesBlocked()) {
+                // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+                if (!getMessagesController().premiumFeaturesBlocked() && !getUserConfig().mg.hidePremiumPromo) {
                     premiumRow = rowCount++;
                 }
                 if (getMessagesController().starsPurchaseAvailable()) {
@@ -10598,10 +10599,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (ApplicationLoader.isBetaBuild() || ApplicationLoader.isStandaloneBuild() || ApplicationLoader.isHuaweiStoreBuild() || (StarsController.getInstance(currentAccount, true).balanceAvailable() && (StarsController.getInstance(currentAccount, true).hasTransactions() || StarsController.getInstance(currentAccount, true).getBalance().positive()))) {
                     tonRow = rowCount++;
                 }
-                if (!getMessagesController().premiumFeaturesBlocked()) {
+                // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+                if (!getMessagesController().premiumFeaturesBlocked() && !getUserConfig().mg.hidePremiumPromo) {
                     businessRow = rowCount++;
                 }
-                if (!getMessagesController().premiumPurchaseBlocked()) {
+                // Mercurygram: hide premium upsell promo (opt-in, UI-only, no gate removed)
+                if (!getMessagesController().premiumPurchaseBlocked() && !getUserConfig().mg.hidePremiumPromo) {
                     premiumGiftingRow = rowCount++;
                 }
                 if (premiumRow >= 0 || starsRow >= 0 || tonRow >= 0 || businessRow >= 0 || premiumGiftingRow >= 0) {
