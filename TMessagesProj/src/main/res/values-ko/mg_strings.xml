@@ -34,6 +34,8 @@
     <string name="MercurygramDisableAiEditorAbout">메시지 및 캡션 편집기에서 AI 버튼을 숨깁니다. AI 편집기는 작성 중인 내용을 다시 쓰거나 교정하거나 문체를 바꾸기 위해 Telegram의 AI 서비스로 보냅니다.</string>
     <string name="MercurygramDisableAiSummary">AI 요약 비활성화</string>
     <string name="MercurygramDisableAiSummaryAbout">메시지의 AI 요약 버튼을 숨깁니다. 요약은 메시지 텍스트를 Telegram의 AI 서비스로 보냅니다.</string>
+    <string name="MercurygramDisableInstantView">링크를 브라우저에서 열기</string>
+    <string name="MercurygramDisableInstantViewAbout">링크를 누르면 인스턴트 뷰 대신 브라우저에서 페이지가 열립니다. 원할 때는 인스턴트 뷰 버튼으로 계속 열 수 있습니다. 인스턴트 뷰는 Telegram 서버에서 렌더링되며, 서버는 링크를 확인하고 AI 요약을 추가합니다.</string>
     <string name="MercurygramDisableLinkPreviews">링크 미리보기 비활성화</string>
     <string name="MercurygramDisableLinkPreviewsAbout">메시지를 작성하는 동안 웹페이지 미리보기를 가져오지 않습니다. 입력하거나 붙여넣은 링크를 텔레그램 서버가 불러오지 못하게 합니다. 모든 채팅에서 미리보기가 꺼진 상태로 유지됩니다.</string>
     <string name="MercurygramPreferSecretChats">새 대화를 비밀 대화로 시작</string>

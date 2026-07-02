@@ -34,6 +34,8 @@
     <string name="MercurygramDisableAiEditorAbout">Приховує кнопку ШІ в редакторах повідомлень і підписів. ШІ-редактор надсилає ваш чорновик до сервісу ШІ Telegram для переписування, виправлення або зміни стилю.</string>
     <string name="MercurygramDisableAiSummary">Вимкнути ШІ-зведення</string>
     <string name="MercurygramDisableAiSummaryAbout">Приховує кнопку «ШІ-зведення» на повідомленнях. Зведення надсилають текст повідомлення до сервісу ШІ Telegram.</string>
+    <string name="MercurygramDisableInstantView">Відкривати посилання у браузері</string>
+    <string name="MercurygramDisableInstantViewAbout">Натискання на посилання відкриває сторінку у браузері замість миттєвого перегляду. Кнопка миттєвого перегляду досі відкриває її за потреби. Миттєвий перегляд формується серверами Telegram, які бачать посилання й додають ШІ-зведення.</string>
     <string name="MercurygramDisableLinkPreviews">Вимкнути попередній перегляд посилань</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Не завантажувати попередній перегляд вебсторінок під час набору. Це не дає серверам Telegram завантажувати посилання, які ви вводите або вставляєте. Попередній перегляд лишається вимкненим у всіх чатах.</string>
     <string name="MercurygramPreferSecretChats">Починати нові чати як секретні</string>

@@ -25,6 +25,7 @@ public class MgAccountConfig {
     public boolean disableGlobalSearch = false;
     public boolean disableAiEditor = false;
     public boolean disableAiSummary = false;
+    public boolean disableInstantView = false;
     public boolean disableLinkPreviews = false;
     public boolean preferSecretChats = false;
     public boolean deleteForAllByDefault = false;
@@ -51,6 +52,7 @@ public class MgAccountConfig {
         editor.putBoolean("disableGlobalSearch", disableGlobalSearch);
         editor.putBoolean("disableAiEditor", disableAiEditor);
         editor.putBoolean("disableAiSummary", disableAiSummary);
+        editor.putBoolean("disableInstantView", disableInstantView);
         editor.putBoolean("disableLinkPreviews", disableLinkPreviews);
         editor.putBoolean("preferSecretChats", preferSecretChats);
         editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
@@ -71,6 +73,7 @@ public class MgAccountConfig {
         disableGlobalSearch = preferences.getBoolean("disableGlobalSearch", false);
         disableAiEditor = preferences.getBoolean("disableAiEditor", false);
         disableAiSummary = preferences.getBoolean("disableAiSummary", false);
+        disableInstantView = preferences.getBoolean("disableInstantView", false);
         disableLinkPreviews = preferences.getBoolean("disableLinkPreviews", false);
         preferSecretChats = preferences.getBoolean("preferSecretChats", false);
         deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
@@ -91,6 +94,7 @@ public class MgAccountConfig {
         disableGlobalSearch = false;
         disableAiEditor = false;
         disableAiSummary = false;
+        disableInstantView = false;
         disableLinkPreviews = false;
         preferSecretChats = false;
         deleteForAllByDefault = false;
