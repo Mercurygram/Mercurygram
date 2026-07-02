@@ -86,6 +86,8 @@
     <string name="MercurygramDisableAiEditorAbout">Hides the AI button in the message and caption editors. The AI editor sends your draft to Telegram\'s AI service to rewrite, proofread or restyle it.</string>
     <string name="MercurygramDisableAiSummary">Disable AI summaries</string>
     <string name="MercurygramDisableAiSummaryAbout">Hides the AI Summary button on messages. Summaries send the message text to Telegram\'s AI service.</string>
+    <string name="MercurygramDisableInstantView">Open links in browser</string>
+    <string name="MercurygramDisableInstantViewAbout">Tapping a link opens the page in your browser instead of Instant View. The Instant View button still opens it when you want. Instant View is rendered by Telegram\'s servers, which see the link and add an AI summary.</string>
     <string name="MercurygramDisableLinkPreviews">Disable link previews</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Don\'t fetch web page previews while composing. This stops Telegram\'s servers from loading links you type or paste. Previews stay off in every chat.</string>
     <string name="MercurygramPreferSecretChats">Start new chats as secret</string>
