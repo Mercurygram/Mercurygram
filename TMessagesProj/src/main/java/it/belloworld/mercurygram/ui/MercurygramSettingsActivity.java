@@ -74,6 +74,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_DISABLE_GLOBAL_SEARCH = 44;
     private static final int ID_DISABLE_AI_EDITOR = 45;
     private static final int ID_DISABLE_AI_SUMMARY = 46;
+    private static final int ID_DISABLE_INSTANT_VIEW = 47;
     private static final int ID_TRANSLATION = 50;
     private static final int ID_TRANSCRIPTION = 51;
     private static final int ID_EMOJI_PACK = 60;
@@ -225,6 +226,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramDisableAiSummary))
                 .setChecked(getUserConfig().disableAiSummary));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableAiSummaryAbout)));
+
+        items.add(UItem.asCheck(ID_DISABLE_INSTANT_VIEW,
+                        LocaleController.getString(R.string.MercurygramDisableInstantView))
+                .setChecked(getUserConfig().disableInstantView));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableInstantViewAbout)));
 
         items.add(UItem.asCheck(ID_DISABLE_LINK_PREVIEWS,
                         LocaleController.getString(R.string.MercurygramDisableLinkPreviews))
@@ -421,6 +427,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_DISABLE_AI_SUMMARY:
                 getUserConfig().disableAiSummary = !getUserConfig().disableAiSummary;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_DISABLE_INSTANT_VIEW:
+                getUserConfig().disableInstantView = !getUserConfig().disableInstantView;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
