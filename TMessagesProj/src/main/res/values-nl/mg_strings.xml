@@ -34,6 +34,8 @@
     <string name="MercurygramDisableAiEditorAbout">Verbergt de AI-knop in de bericht- en bijschrifteditors. De AI-editor stuurt je concept naar de AI-dienst van Telegram om het te herschrijven, corrigeren of herformuleren.</string>
     <string name="MercurygramDisableAiSummary">AI-samenvattingen uitschakelen</string>
     <string name="MercurygramDisableAiSummaryAbout">Verbergt de knop AI-samenvatting bij berichten. Samenvattingen sturen de berichttekst naar de AI-dienst van Telegram.</string>
+    <string name="MercurygramDisableInstantView">Links in browser openen</string>
+    <string name="MercurygramDisableInstantViewAbout">Als je op een link tikt, wordt de pagina in je browser geopend in plaats van in Instant View. De knop Instant View opent hem nog steeds wanneer je wilt. Instant View wordt weergegeven door de servers van Telegram, die de link zien en een AI-samenvatting toevoegen.</string>
     <string name="MercurygramDisableLinkPreviews">Linkvoorbeelden uitschakelen</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Haal tijdens het typen geen webpaginavoorbeelden op. Dit voorkomt dat de servers van Telegram links die je typt of plakt laden. Voorbeelden blijven in elke chat uit.</string>
     <string name="MercurygramPreferSecretChats">Nieuwe chats als geheim starten</string>
