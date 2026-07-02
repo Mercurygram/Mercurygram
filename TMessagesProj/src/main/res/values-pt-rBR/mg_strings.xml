@@ -34,6 +34,8 @@
     <string name="MercurygramDisableAiEditorAbout">Oculta o botão de IA nos editores de mensagem e legenda. O editor de IA envia seu rascunho ao serviço de IA do Telegram para reescrever, revisar ou mudar o estilo.</string>
     <string name="MercurygramDisableAiSummary">Desativar resumos com IA</string>
     <string name="MercurygramDisableAiSummaryAbout">Oculta o botão Resumo com IA nas mensagens. Os resumos enviam o texto da mensagem ao serviço de IA do Telegram.</string>
+    <string name="MercurygramDisableInstantView">Abrir links no navegador</string>
+    <string name="MercurygramDisableInstantViewAbout">Tocar em um link abre a página no seu navegador em vez da Visualização instantânea. O botão Visualização instantânea continua abrindo quando você quiser. A Visualização instantânea é renderizada pelos servidores do Telegram, que veem o link e adicionam um resumo com IA.</string>
     <string name="MercurygramDisableLinkPreviews">Desativar prévias de links</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Não buscar prévias de páginas da web ao redigir. Isto impede que os servidores do Telegram carreguem os links que você digita ou cola. As prévias ficam desativadas em todas as conversas.</string>
     <string name="MercurygramPreferSecretChats">Iniciar novas conversas como secretas</string>
