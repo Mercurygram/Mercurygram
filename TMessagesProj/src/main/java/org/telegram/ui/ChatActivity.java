@@ -36520,7 +36520,7 @@ public class ChatActivity extends BaseFragment implements
                     }
                     forceAlert = true;
                 } else {
-                    if (messageObject != null && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage && messageObject.messageOwner.media.webpage != null && messageObject.messageOwner.media.webpage.cached_page != null) {
+                    if (!getUserConfig().mg.disableInstantView && messageObject != null && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage && messageObject.messageOwner.media.webpage != null && messageObject.messageOwner.media.webpage.cached_page != null) {
                         String lowerUrl = urlFinal.toLowerCase();
                         String lowerUrl2 = messageObject.messageOwner.media.webpage.url.toLowerCase();
                         if ((lowerUrl.contains("telegram.org/blog") || Browser.isTelegraphUrl(lowerUrl, false) || lowerUrl.contains("t.me/iv")) && (lowerUrl.contains(lowerUrl2) || lowerUrl2.contains(lowerUrl))) {
@@ -36538,7 +36538,7 @@ public class ChatActivity extends BaseFragment implements
                 if (Browser.urlMustNotHaveConfirmation(urlFinal)) {
                     forceAlert = false;
                 }
-                processExternalUrl(2, urlFinal, url, cell, forceAlert, false);
+                processExternalUrl(2, urlFinal, url, cell, forceAlert, getUserConfig().mg.disableInstantView);
             }
         }
     }
@@ -40620,9 +40620,9 @@ public class ChatActivity extends BaseFragment implements
                 }
             };
             if (!safe && !Browser.isInternalUri(uri, null)) {
-                AlertsCreator.showOpenUrlAlert(ChatActivity.this, url, true, true, true, !safe, progressDialogCurrent, webpage, themeDelegate);
+                AlertsCreator.showOpenUrlAlert(ChatActivity.this, url, true, !getUserConfig().mg.disableInstantView, true, !safe, progressDialogCurrent, webpage, themeDelegate);
             } else {
-                Browser.openUrl(getContext(), uri, true, true, false, progressDialogCurrent, null, false, true, false);
+                Browser.openUrl(getContext(), uri, true, !getUserConfig().mg.disableInstantView, false, progressDialogCurrent, null, false, true, false);
             }
         }
 
