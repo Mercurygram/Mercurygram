@@ -34,6 +34,8 @@
     <string name="MercurygramDisableAiEditorAbout">يخفي زر الذكاء الاصطناعي في محرري الرسائل والتعليقات. يرسل محرر الذكاء الاصطناعي مسودتك إلى خدمة الذكاء الاصطناعي في تيليجرام لإعادة صياغتها أو تدقيقها أو تغيير أسلوبها.</string>
     <string name="MercurygramDisableAiSummary">تعطيل ملخصات الذكاء الاصطناعي</string>
     <string name="MercurygramDisableAiSummaryAbout">يخفي زر ملخص الذكاء الاصطناعي على الرسائل. ترسل الملخصات نص الرسالة إلى خدمة الذكاء الاصطناعي في تيليجرام.</string>
+    <string name="MercurygramDisableInstantView">فتح الروابط في المتصفح</string>
+    <string name="MercurygramDisableInstantViewAbout">يؤدي النقر على رابط إلى فتح الصفحة في متصفحك بدلاً من العرض الفوري. لا يزال زر العرض الفوري يفتحها عند الرغبة. يُعرض العرض الفوري عبر خوادم تيليجرام التي ترى الرابط وتضيف ملخصًا بالذكاء الاصطناعي.</string>
     <string name="MercurygramDisableLinkPreviews">تعطيل معاينات الروابط</string>
     <string name="MercurygramDisableLinkPreviewsAbout">لا تجلب معاينات صفحات الويب أثناء الكتابة. هذا يمنع خوادم تيليجرام من تحميل الروابط التي تكتبها أو تلصقها. تبقى المعاينات معطّلة في كل المحادثات.</string>
     <string name="MercurygramPreferSecretChats">بدء المحادثات الجديدة كمحادثات سرية</string>
