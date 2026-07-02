@@ -34,6 +34,8 @@
     <string name="MercurygramDisableAiEditorAbout">Blendet die KI-Schaltfläche in den Nachrichten- und Bildunterschrift-Editoren aus. Der KI-Editor sendet deinen Entwurf an den KI-Dienst von Telegram, um ihn umzuschreiben, zu korrigieren oder umzugestalten.</string>
     <string name="MercurygramDisableAiSummary">KI-Zusammenfassungen deaktivieren</string>
     <string name="MercurygramDisableAiSummaryAbout">Blendet die Schaltfläche „KI-Zusammenfassung“ bei Nachrichten aus. Zusammenfassungen senden den Nachrichtentext an den KI-Dienst von Telegram.</string>
+    <string name="MercurygramDisableInstantView">Links im Browser öffnen</string>
+    <string name="MercurygramDisableInstantViewAbout">Beim Tippen auf einen Link wird die Seite im Browser statt in der Sofortansicht geöffnet. Die Schaltfläche „Sofortansicht“ öffnet sie weiterhin bei Bedarf. Die Sofortansicht wird von Telegrams Servern erzeugt, die den Link sehen und eine KI-Zusammenfassung hinzufügen.</string>
     <string name="MercurygramDisableLinkPreviews">Linkvorschauen deaktivieren</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Beim Schreiben keine Webseitenvorschauen abrufen. Das verhindert, dass Telegrams Server von dir eingegebene oder eingefügte Links laden. Vorschauen bleiben in allen Chats aus.</string>
     <string name="MercurygramPreferSecretChats">Neue Chats als geheim starten</string>
