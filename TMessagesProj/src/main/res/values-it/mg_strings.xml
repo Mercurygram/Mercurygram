@@ -34,6 +34,8 @@
     <string name="MercurygramDisableAiEditorAbout">Nasconde il pulsante IA negli editor di messaggi e didascalie. L\'editor IA invia la tua bozza al servizio IA di Telegram per riscriverla, correggerla o riformularla.</string>
     <string name="MercurygramDisableAiSummary">Disattiva riassunti IA</string>
     <string name="MercurygramDisableAiSummaryAbout">Nasconde il pulsante Riassunto IA sui messaggi. I riassunti inviano il testo del messaggio al servizio IA di Telegram.</string>
+    <string name="MercurygramDisableInstantView">Apri i link nel browser</string>
+    <string name="MercurygramDisableInstantViewAbout">Toccando un link la pagina si apre nel browser invece che in Instant View. Il pulsante Instant View continua ad aprirla quando vuoi. Instant View è generata dai server di Telegram, che vedono il link e aggiungono un riassunto IA.</string>
     <string name="MercurygramDisableLinkPreviews">Disabilita le anteprime dei link</string>
     <string name="MercurygramDisableLinkPreviewsAbout">Non recuperare le anteprime delle pagine web durante la scrittura. Questo impedisce ai server di Telegram di caricare i link che digiti o incolli. Le anteprime restano disattivate in tutte le chat.</string>
     <string name="MercurygramPreferSecretChats">Avvia le nuove chat come segrete</string>
