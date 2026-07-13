@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# List Mercurygram-only string keys (Mercurygram*, mg_*) that are missing
-# from each shipped locale relative to the base values/strings.xml.
+# List string keys that are missing from each shipped locale's
+# mg_strings.xml relative to the base values/mg_strings.xml. The whole
+# file is MG-owned (only the 3 branding keys stay in upstream strings.xml),
+# so every key in it is checked, not just Mercurygram*/mg_*-prefixed ones.
 # Exit 0 always — informational only.
 
 set -eu
@@ -11,7 +13,7 @@ if [ ! -f "$base" ]; then
     exit 2
 fi
 
-keys=$(grep -oE 'name="(Mercurygram|mg_)[^"]*"' "$base" | sort -u)
+keys=$(grep -oE 'name="[^"]*"' "$base" | sort -u)
 total=$(printf '%s\n' "$keys" | grep -c . || true)
 missing_total=0
 
@@ -23,7 +25,7 @@ for d in TMessagesProj/src/main/res/values-*/mg_strings.xml; do
     esac
     locale=$(basename "$(dirname "$d")")
     locale=${locale#values-}
-    have=$(grep -oE 'name="(Mercurygram|mg_)[^"]*"' "$d" 2>/dev/null | sort -u || true)
+    have=$(grep -oE 'name="[^"]*"' "$d" 2>/dev/null | sort -u || true)
     missing=$(comm -23 <(printf '%s\n' "$keys") <(printf '%s\n' "$have"))
     if [ -n "$missing" ]; then
         n=$(printf '%s\n' "$missing" | grep -c . || true)
