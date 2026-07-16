@@ -34,7 +34,11 @@ android {
 
     defaultConfig.applicationId = APP_PACKAGE
 
-    sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
+    // Empty for the same reason as :TMessagesProj, see its build.gradle. Here it
+    // was worse than wasteful: merge*JniLibFolders raced the native build and
+    // died on a compiler .d file that vanished mid-walk (NoSuchFileException on
+    // jni/ffmpeg/build_android/.../aacdec_usac.d).
+    sourceSets.main.jniLibs.srcDirs = []
     testBuildType "debug"
 
     // [MG] com.appmattus.fixture pulls libnarcissus-{macos,win}-*.{dylib,dll}
