@@ -65,7 +65,7 @@ public class TLRPC {
     public static final int MESSAGE_FLAG_HAS_BOT_ID         = 0x00000800;
     public static final int MESSAGE_FLAG_EDITED             = 0x00008000;
 
-    public static final int LAYER = 227;
+    public static final int LAYER = 228; // Mercurygram: layer 228 backport (community + linked_community_id) to fix "unsupported message" placeholder
 
     public static abstract class EmailVerifyPurpose extends TLObject {
 
@@ -1005,8 +1005,26 @@ public class TLRPC {
                 case 0x9fd40bd8:
                     result = new TL_notifyPeer();
                     break;
+                case TL_notifyCommunity.constructor: // Mercurygram: layer 228
+                    result = new TL_notifyCommunity();
+                    break;
             }
             return TLdeserialize(NotifyPeer.class, result, stream, constructor, exception);
+        }
+    }
+
+    public static class TL_notifyCommunity extends NotifyPeer { // Mercurygram: layer 228
+        public static final int constructor = 0xbe376999;
+
+        public long community_id;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            community_id = stream.readInt64(exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt64(community_id);
         }
     }
 
@@ -21706,7 +21724,17 @@ public class TLRPC {
         public String description;
 
         public static TL_botCommand TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
-            final TL_botCommand result = TL_botCommand.constructor != constructor ? null : new TL_botCommand();
+            TL_botCommand result;
+            switch (constructor) {
+                case TL_botCommand.constructor:
+                    result = new TL_botCommand();
+                    break;
+                case TL_botCommand_layer228.constructor: // Mercurygram: layer 228 botCommand (server now sends this magic)
+                    result = new TL_botCommand_layer228();
+                    break;
+                default:
+                    result = null;
+            }
             return TLdeserialize(TL_botCommand.class, result, stream, constructor, exception);
         }
 
@@ -21717,6 +21745,31 @@ public class TLRPC {
 
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
+            stream.writeString(command);
+            stream.writeString(description);
+        }
+    }
+
+    // Mercurygram: layer 228 botCommand#9852d6d2 prepends a flags int + ephemeral flag.
+    // Kept as a subclass (base stays the upstream magic/layout, so the round-trip test
+    // stays linked); this only adds deserialize of the new magic the layer-228 server sends.
+    public static class TL_botCommand_layer228 extends TL_botCommand {
+        public static final int constructor = 0x9852d6d2;
+
+        public int flags;
+        public boolean ephemeral;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            ephemeral = hasFlag(flags, FLAG_0);
+            command = stream.readString(exception);
+            description = stream.readString(exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = setFlag(flags, FLAG_0, ephemeral);
+            stream.writeInt32(flags);
             stream.writeString(command);
             stream.writeString(description);
         }
@@ -22205,6 +22258,7 @@ public class TLRPC {
         public boolean bot_can_manage_bots;
         public boolean bot_guestchat;
         public boolean bot_guard;
+        public long linked_community_id; // Mercurygram: layer 228
 
         public long fromMessageDialogId; //custom
         public int fromMessageId; //custom
@@ -22213,6 +22267,7 @@ public class TLRPC {
             User result = null;
             switch (constructor) {
                 case TL_user.constructor:
+                case 0x31774388: // Mercurygram: layer 217-227 user (pre-linked_community_id), DB back-compat
                     result = new TL_user();
                     break;
                 case TL_user_layer216.constructor:
@@ -22405,7 +22460,7 @@ public class TLRPC {
     }
 
     public static class TL_user extends User {
-        public static final int constructor = 0x31774388;
+        public static final int constructor = 0xb1b8cc83; // Mercurygram: layer 228 (was 0x31774388), adds linked_community_id
 
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -22502,6 +22557,9 @@ public class TLRPC {
             }
             if (hasFlag(flags2, FLAG_15)) {
                 send_paid_messages_stars = stream.readInt64(exception);
+            }
+            if (hasFlag(flags2, FLAG_21)) {
+                linked_community_id = stream.readInt64(exception); // Mercurygram: layer 228
             }
         }
 
@@ -22606,6 +22664,9 @@ public class TLRPC {
             }
             if (hasFlag(flags2, FLAG_15)) {
                 stream.writeInt64(send_paid_messages_stars);
+            }
+            if (hasFlag(flags2, FLAG_21)) {
+                stream.writeInt64(linked_community_id); // Mercurygram: layer 228
             }
         }
     }
@@ -25574,6 +25635,8 @@ public class TLRPC {
 
         private static MessageAction fromConstructor(int constructor) {
             switch (constructor) {
+                case TL_messageActionChangeCommunity.constructor: // Mercurygram: layer 228
+                    return new TL_messageActionChangeCommunity();
                 case TL_messageActionSuggestBirthday.constructor:
                     return new TL_messageActionSuggestBirthday();
                 case 0x555555F5:
@@ -25800,6 +25863,27 @@ public class TLRPC {
 
         public static MessageAction TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             return TLdeserialize(MessageAction.class, fromConstructor(constructor), stream, constructor, exception);
+        }
+    }
+
+    public static class TL_messageActionChangeCommunity extends MessageAction { // Mercurygram: layer 228
+        public static final int constructor = 0x5d20bae8;
+
+        public long community_id;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            if (hasFlag(flags, FLAG_0)) {
+                community_id = stream.readInt64(exception);
+            }
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(flags);
+            if (hasFlag(flags, FLAG_0)) {
+                stream.writeInt64(community_id);
+            }
         }
     }
 
@@ -40046,6 +40130,8 @@ public class TLRPC {
         public long bot_verification_icon;
         public long send_paid_messages_stars;
         public long linked_monoforum_id;
+        public long linked_community_id; // Mercurygram: layer 228
+        public boolean collapsed_in_dialogs; // Mercurygram: layer 228
 
         public long fromMessageDialogId; //custom
         public int fromMessageId; //custom
@@ -40072,7 +40158,14 @@ public class TLRPC {
                     result = new TL_channel_layer104();
                     break;
                 case TL_channel.constructor:
+                case 0x1c32b11c: // Mercurygram: layer 217-227 channel (pre-linked_community_id), DB back-compat
                     result = new TL_channel();
+                    break;
+                case TL_community.constructor: // Mercurygram: layer 228
+                    result = new TL_community();
+                    break;
+                case TL_communityForbidden.constructor: // Mercurygram: layer 228
+                    result = new TL_communityForbidden();
                     break;
                 case TL_channel_layer216.constructor:
                     result = new TL_channel_layer216();
@@ -40811,7 +40904,7 @@ public class TLRPC {
     }
 
     public static class TL_channel extends Chat {
-        public static final int constructor = 0x1c32b11c;
+        public static final int constructor = 0xd49f34c6; // Mercurygram: layer 228 (was 0x1c32b11c), adds linked_community_id
 
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -40898,6 +40991,9 @@ public class TLRPC {
             }
             if (hasFlag(flags2, FLAG_18)) {
                 linked_monoforum_id = stream.readInt64(exception);
+            }
+            if (hasFlag(flags2, FLAG_20)) {
+                linked_community_id = stream.readInt64(exception); // Mercurygram: layer 228
             }
         }
 
@@ -40988,6 +41084,81 @@ public class TLRPC {
             if (hasFlag(flags2, FLAG_18)) {
                 stream.writeInt64(linked_monoforum_id);
             }
+            if (hasFlag(flags2, FLAG_20)) {
+                stream.writeInt64(linked_community_id); // Mercurygram: layer 228
+            }
+        }
+    }
+
+    public static class TL_community extends Chat { // Mercurygram: layer 228
+        public static final int constructor = 0x65efe954;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            creator = hasFlag(flags, FLAG_0);
+            left = hasFlag(flags, FLAG_2);
+            min = hasFlag(flags, FLAG_12);
+            flags2 = stream.readInt32(exception);
+            collapsed_in_dialogs = hasFlag(flags2, FLAG_20);
+            id = stream.readInt64(exception);
+            if (hasFlag(flags, FLAG_13)) {
+                access_hash = stream.readInt64(exception);
+            }
+            title = stream.readString(exception);
+            photo = ChatPhoto.TLdeserialize(stream, stream.readInt32(exception), exception);
+            date = stream.readInt32(exception);
+            if (hasFlag(flags, FLAG_14)) {
+                admin_rights = TL_chatAdminRights.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if (hasFlag(flags, FLAG_18)) {
+                default_banned_rights = TL_chatBannedRights.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = setFlag(flags, FLAG_0, creator);
+            flags = setFlag(flags, FLAG_2, left);
+            flags = setFlag(flags, FLAG_12, min);
+            stream.writeInt32(flags);
+            flags2 = setFlag(flags2, FLAG_20, collapsed_in_dialogs);
+            stream.writeInt32(flags2);
+            stream.writeInt64(id);
+            if (hasFlag(flags, FLAG_13)) {
+                stream.writeInt64(access_hash);
+            }
+            stream.writeString(title);
+            photo.serializeToStream(stream);
+            stream.writeInt32(date);
+            if (hasFlag(flags, FLAG_14)) {
+                admin_rights.serializeToStream(stream);
+            }
+            if (hasFlag(flags, FLAG_18)) {
+                default_banned_rights.serializeToStream(stream);
+            }
+        }
+    }
+
+    public static class TL_communityForbidden extends Chat { // Mercurygram: layer 228
+        public static final int constructor = 0xfd3cdab8;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            id = stream.readInt64(exception);
+            if (hasFlag(flags, FLAG_13)) {
+                access_hash = stream.readInt64(exception);
+            }
+            title = stream.readString(exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(flags);
+            stream.writeInt64(id);
+            if (hasFlag(flags, FLAG_13)) {
+                stream.writeInt64(access_hash);
+            }
+            stream.writeString(title);
         }
     }
 
@@ -61355,12 +61526,35 @@ public class TLRPC {
                     TL_dialogFolder d = new TL_dialogFolder();
                     d.isFolder = true;
                     return d;
+                case TL_dialogCommunity.constructor: // Mercurygram: layer 228
+                    return new TL_dialogCommunity();
             }
             return null;
         }
 
         public static Dialog TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             return TLdeserialize(Dialog.class, fromConstructor(constructor), stream, constructor, exception);
+        }
+    }
+
+    public static class TL_dialogCommunity extends Dialog { // Mercurygram: layer 228
+        public static final int constructor = 0xf78a0973;
+
+        public long community_id;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            pinned = hasFlag(flags, FLAG_2);
+            community_id = stream.readInt64(exception);
+            notify_settings = TL_peerNotifySettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = setFlag(flags, FLAG_2, pinned);
+            stream.writeInt32(flags);
+            stream.writeInt64(community_id);
+            notify_settings.serializeToStream(stream);
         }
     }
 

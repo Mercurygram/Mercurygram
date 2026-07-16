@@ -666,6 +666,7 @@ User *User::TLdeserialize(NativeByteBuffer *stream, uint32_t constructor, int32_
             result = new TL_userEmpty();
             break;
         case TL_user::constructor:
+        case 0x31774388: // Mercurygram: layer 217-227 user (pre-linked_community_id)
             result = new TL_user();
             break;
         case TL_user_layer216::constructor:
@@ -776,6 +777,9 @@ void TL_user::readParams(NativeByteBuffer *stream, int32_t instanceNum, bool &er
     if ((flags2 & 32768) != 0) {
         send_paid_messages_stars = stream->readInt64(&error);
     }
+    if ((flags2 & 2097152) != 0) {
+        linked_community_id = stream->readInt64(&error); // Mercurygram: layer 228
+    }
 }
 
 void TL_user::serializeToStream(NativeByteBuffer *stream) {
@@ -849,6 +853,9 @@ void TL_user::serializeToStream(NativeByteBuffer *stream) {
     }
     if ((flags2 & 32768) != 0) {
         stream->writeInt64(send_paid_messages_stars);
+    }
+    if ((flags2 & 2097152) != 0) {
+        stream->writeInt64(linked_community_id); // Mercurygram: layer 228
     }
 }
 
