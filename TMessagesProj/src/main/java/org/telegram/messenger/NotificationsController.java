@@ -4636,6 +4636,14 @@ public class NotificationsController extends BaseController implements Notificat
 
                     }
                 }
+            } else {
+                Object userOrChat = chat != null ? chat : user;
+                if (userOrChat != null) {
+                    Bitmap placeholder = createPlaceholderBitmap(userOrChat);
+                    if (placeholder != null) {
+                        mBuilder.setLargeIcon(placeholder);
+                    }
+                }
             }
 
             int configImportance = 0;
@@ -5126,6 +5134,11 @@ public class NotificationsController extends BaseController implements Notificat
                 Person.Builder personBuilder = new Person.Builder().setName(name);
                 if (avatarFile != null && avatarFile.exists() && Build.VERSION.SDK_INT >= 28) {
                     loadRoundAvatar(dialogId, avatarFile, personBuilder);
+                } else {
+                    Bitmap placeholder = createPlaceholderBitmap(chat);
+                    if (placeholder != null) {
+                        personBuilder.setIcon(IconCompat.createWithBitmap(placeholder));
+                    }
                 }
                 personCache.put(-chat.id, personBuilder.build());
             }
@@ -5361,6 +5374,15 @@ public class NotificationsController extends BaseController implements Notificat
                                 }
                             }
                             loadRoundAvatar(dialogId, avatar, personBuilder);
+                            if (avatar == null) {
+                                Object userOrChat = chat != null ? chat : user;
+                                if (userOrChat != null) {
+                                    Bitmap placeholder = createPlaceholderBitmap(userOrChat);
+                                    if (placeholder != null) {
+                                        personBuilder.setIcon(IconCompat.createWithBitmap(placeholder));
+                                    }
+                                }
+                            }
                         }
                         person = personBuilder.build();
                         personCache.put(uid, person);
@@ -5656,6 +5678,14 @@ public class NotificationsController extends BaseController implements Notificat
             }
             if (avatarBitmap != null) {
                 builder.setLargeIcon(avatarBitmap);
+            } else {
+                Object userOrChat = chat != null ? chat : user;
+                if (userOrChat != null) {
+                    Bitmap placeholder = createPlaceholderBitmap(userOrChat);
+                    if (placeholder != null) {
+                        builder.setLargeIcon(placeholder);
+                    }
+                }
             }
 
             if (!AndroidUtilities.needShowPasscode(false) && !SharedConfig.isWaitingForPasscodeEnter) {
@@ -5805,6 +5835,23 @@ public class NotificationsController extends BaseController implements Notificat
             avatars.clear();
         }
         return new Pair<>(storiesCount, hidden);
+    }
+
+    private static Bitmap createPlaceholderBitmap(Object userOrChat) {
+        Theme.createDialogsResources(ApplicationLoader.applicationContext);
+        AvatarDrawable placeholder;
+        if (userOrChat instanceof TLRPC.User) {
+            placeholder = new AvatarDrawable((TLRPC.User) userOrChat);
+        } else if (userOrChat instanceof TLRPC.Chat) {
+            placeholder = new AvatarDrawable((TLRPC.Chat) userOrChat);
+        } else {
+            return null;
+        }
+        int size = AndroidUtilities.dp(42);
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        placeholder.setBounds(0, 0, size, size);
+        placeholder.draw(new Canvas(bitmap));
+        return bitmap;
     }
 
     public static Person.Builder loadRoundAvatar(long dialogId, File avatar, Person.Builder personBuilder) {
