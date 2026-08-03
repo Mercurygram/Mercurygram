@@ -2,7 +2,7 @@
 # run-tests.sh — run :TMessagesProj_AppTests:api30AfatDebugAndroidTest inside a
 # podman ubuntu:24.04 container. Mirrors .github/workflows/tests.yml: same
 # apt set, JDK 17 temurin, sdkmanager components, gradle invocation, and gate
-# (KNOWN_FAILURES=39).
+# (KNOWN_FAILURES=0).
 #
 # Why: AGP's Gradle Managed Devices emulator boot/snapshot is unreliable on
 # host Fedora. The container provides a known-good ubuntu environment matching
@@ -13,7 +13,7 @@
 #   scripts/run-tests.sh -PMG_BUILD_TAG=12.9.2.1.99
 #   MG_BUILD_TAG=12.9.2.1.99 scripts/run-tests.sh
 #   MG_TESTS_REBUILD=1 scripts/run-tests.sh             # force image rebuild
-#   KNOWN_FAILURES=0 scripts/run-tests.sh               # strict gate
+#   KNOWN_FAILURES=1 scripts/run-tests.sh               # tolerate one failure
 #
 # Persistent caches under ~/.cache/mg-tests:
 #   ./avd     AVD + snapshot (warm second run ~30-60 s vs cold ~3-5 min)
@@ -38,7 +38,7 @@
 set -euo pipefail
 
 IMG="${MG_TESTS_IMAGE:-mg-tests-runner:local}"
-KNOWN_FAILURES="${KNOWN_FAILURES:-39}"
+KNOWN_FAILURES="${KNOWN_FAILURES:-0}"
 
 repo_root=$(git rev-parse --show-toplevel)
 # Worktree support: when scripts/run-tests.sh runs from a git worktree
@@ -373,9 +373,8 @@ run_gradle() {
 
 # ---------------------------------------------------------------------------
 # Gate — verbatim port of .github/workflows/tests.yml `Gate on failure count`.
-# Keeps a single source of truth for the upstream-defect baseline: bump
-# KNOWN_FAILURES here AND in the workflow when a new fixture passes / fails
-# share the same ClassGraph / jvm-driver root cause.
+# Baseline is 0 in both: any failure is a regression. Raise it here AND in the
+# workflow together if a batch of fixtures ever has to be tolerated.
 # ---------------------------------------------------------------------------
 gate() {
     local results_dir="$repo_root/TMessagesProj_AppTests/build/outputs/androidTest-results"
@@ -396,9 +395,6 @@ gate() {
         || die "XMLs present but tests=0 — likely truncated/corrupt reports"
     if [ "$total" -gt "$KNOWN_FAILURES" ]; then
         die "Regression: $total failures > baseline $KNOWN_FAILURES"
-    fi
-    if [ "$total" -lt "$KNOWN_FAILURES" ]; then
-        log "Failures dropped to $total < baseline $KNOWN_FAILURES — lower KNOWN_FAILURES"
     fi
     log "RESULT: PASS (total=$total <= $KNOWN_FAILURES)"
 }
