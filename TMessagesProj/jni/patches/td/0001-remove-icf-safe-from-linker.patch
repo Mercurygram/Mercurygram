@@ -1,0 +1,13 @@
+diff --git a/CMake/TdSetUpCompiler.cmake b/CMake/TdSetUpCompiler.cmake
+index 8e8434360..21bc01401 100644
+--- a/CMake/TdSetUpCompiler.cmake
++++ b/CMake/TdSetUpCompiler.cmake
+@@ -64,7 +64,7 @@ function(td_set_up_compiler)
+       elseif (EMSCRIPTEN)
+         set(TD_LINKER_FLAGS "-Wl,--gc-sections")
+       elseif (ANDROID)
+-        set(TD_LINKER_FLAGS "-Wl,--gc-sections -Wl,--exclude-libs,ALL -Wl,--icf=safe")
++        set(TD_LINKER_FLAGS "-Wl,--gc-sections -Wl,--exclude-libs,ALL")
+         if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+           # Enable 16 KB ELF alignment
+           set(TD_LINKER_FLAGS "${TD_LINKER_FLAGS} -Wl,-z,max-page-size=16384")

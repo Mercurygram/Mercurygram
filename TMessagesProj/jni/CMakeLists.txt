@@ -1,11 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(CMAKE_CXX_FLAGS "-std=c++14 -DANDROID -g")
-set(CMAKE_C_FLAGS "-w -std=c11 -DANDROID -D_LARGEFILE_SOURCE=1 -g -Wno-error=implicit-function-declaration")
+set(CMAKE_CXX_FLAGS "-std=c++17 -DANDROID -Wno-register")
+set(CMAKE_C_FLAGS "-w -std=c11 -DANDROID -D_LARGEFILE_SOURCE=1")
 set(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections -fvisibility=hidden -flto=full")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -flto=full")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto=full -Wl,--gc-sections -Wl,--icf=safe -Wl,-Bsymbolic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
+# Reproducible builds: override __FILE__ with __FILE_NAME__ (filename only, no path)
+# so absolute build paths are not embedded in .rodata. Works with clang 9+ (NDK r21e).
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-builtin-macro-redefined -D__FILE__=__FILE_NAME__")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-builtin-macro-redefined -D__FILE__=__FILE_NAME__")
+# Upstream hides non-JNI symbols with jni/exports.map (--version-script), so no
+# --exclude-libs list is needed here. --build-id=none and --hash-style=gnu keep
+# the link output independent of the build host; --icf=safe and -flto=full are
+# dropped because both reorder sections in a way that is not byte-stable across
+# builds of identical sources.
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--build-id=none -Wl,--hash-style=gnu -Wl,-Bsymbolic -Wl,--gc-sections")
 
 if (${ANDROID_ABI} STREQUAL "armeabi-v7a" OR ${ANDROID_ABI} STREQUAL "arm64-v8a")
     enable_language(ASM)
@@ -35,10 +44,10 @@ add_library(swscale STATIC IMPORTED)
 set_target_properties(swscale PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/ffmpeg/${ANDROID_ABI}/libswscale.a)
 
 add_library(crypto STATIC IMPORTED)
-set_target_properties(crypto PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/boringssl/lib/${ANDROID_ABI}/libcrypto.a)
+set_target_properties(crypto PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/boringssl/build/${ANDROID_ABI}/crypto/libcrypto.a)
 
 add_library(ssl STATIC IMPORTED)
-set_target_properties(ssl PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/boringssl/lib/${ANDROID_ABI}/libssl.a)
+set_target_properties(ssl PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/boringssl/build/${ANDROID_ABI}/ssl/libssl.a)
 
 add_library(libvpx STATIC IMPORTED)
 set_target_properties(libvpx PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/ffmpeg/${ANDROID_ABI}/libvpx.a)
@@ -50,10 +59,10 @@ add_library(libopus STATIC IMPORTED)
 set_target_properties(libopus PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/ffmpeg/${ANDROID_ABI}/libopus.a)
 
 add_library(tde2e STATIC IMPORTED)
-set_target_properties(tde2e PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/tde2e/${ANDROID_ABI}/libtde2e.a)
+set_target_properties(tde2e PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/td/build/${ANDROID_ABI}/tde2e/libtde2e.a)
 
 add_library(tdutils STATIC IMPORTED)
-set_target_properties(tdutils PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/tde2e/${ANDROID_ABI}/libtdutils.a)
+set_target_properties(tdutils PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/td/build/${ANDROID_ABI}/tdutils/libtdutils.a)
 
 #tgnet
 add_library(tgnet STATIC
@@ -134,7 +143,12 @@ target_include_directories(breakpad PUBLIC
 
 
 #voip
+set(_cxx_flags_before_voip "${CMAKE_CXX_FLAGS}")
 include(${CMAKE_HOME_DIRECTORY}/voip/CMakeLists.txt)
+set(CMAKE_CXX_FLAGS "${_cxx_flags_before_voip}")
+unset(_cxx_flags_before_voip)
+
+option(QUIET_BUILD "Suppress compiler warnings for CI log reduction" OFF)
 
 set(NATIVE_LIB "tmessages.49")
 
@@ -231,6 +245,20 @@ target_link_libraries(${NATIVE_LIB}
 #            -Wl,--whole-archive vpxasm -Wl,--no-whole-archive
 #            c)
 #endif()
+
+if(QUIET_BUILD)
+    foreach(_tgt tgnet tgvoip openh264 rnnoise tgcalls voipandroid ${NATIVE_LIB})
+        if(TARGET ${_tgt})
+            # Upstream turns libraries into prebuilt IMPORTED targets from time to
+            # time (openh264 in 12.10.1). CMake rejects PRIVATE options on those,
+            # and there is nothing to silence anyway since they are not compiled.
+            get_target_property(_tgt_imported ${_tgt} IMPORTED)
+            if(NOT _tgt_imported)
+                target_compile_options(${_tgt} PRIVATE -w)
+            endif()
+        endif()
+    endforeach()
+endif()
 
 include(AndroidNdkModules)
 android_ndk_import_module_cpufeatures()

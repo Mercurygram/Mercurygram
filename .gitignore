@@ -13,4 +13,21 @@ TMessagesProj_App/afat/
 TMessagesProj_AppHockeyApp/afat/
 TMessagesProj_AppStandalone/afat/
 TMessagesProj_AppHuawei/afat/
-TMessagesProj/jni/ffmpeg/build_android
+TMessagesProj/jni/ffmpeg/build/
+# libvpx/dav1d/ffmpeg archives + headers. Upstream commits these; we build them
+# from the jni/third_party submodules instead, so everything the packaging step
+# of build_ffmpeg_libvpx_dav1d_android_ndk27_merged.sh writes is generated.
+TMessagesProj/jni/ffmpeg/include/
+TMessagesProj/jni/ffmpeg/arm64-v8a/
+TMessagesProj/jni/ffmpeg/armeabi-v7a/
+TMessagesProj/jni/ffmpeg/x86/
+TMessagesProj/jni/ffmpeg/x86_64/
+TMessagesProj/jni/ffmpeg/.ndk-*
+# jni/prebuild: upstream commits the cargo-built libtlottie.a and the
+# Makefile-built libopenh264.a here. We build both from the jni/tlottie and
+# jni/third_party/openh264 submodules instead, with jni/prebuild/build_tlottie.sh
+# and upstream's own jni/prebuild/build_openh264.sh.
+TMessagesProj/jni/prebuild/*/libtlottie.a
+TMessagesProj/jni/prebuild/*/libopenh264.a
+TMessagesProj/jni/prebuild/build/
+TMessagesProj/jni/prebuild/build_openh264/

@@ -1,30 +1,58 @@
 [submodule "TMessagesProj/jni/third_party/libvpx"]
 	path = TMessagesProj/jni/third_party/libvpx
 	url = https://github.com/webmproject/libvpx.git
+	shallow = true
 [submodule "TMessagesProj/jni/third_party/dav1d"]
 	path = TMessagesProj/jni/third_party/dav1d
 	url = https://github.com/videolan/dav1d.git
+	shallow = true
 [submodule "TMessagesProj/jni/third_party/ffmpeg"]
 	path = TMessagesProj/jni/third_party/ffmpeg
 	url = https://github.com/FFmpeg/FFmpeg.git
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj/jni/third_party/xiph/ogg"]
 	path = TMessagesProj/jni/third_party/xiph/ogg
 	url = https://github.com/xiph/ogg.git
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj/jni/third_party/xiph/opus"]
 	path = TMessagesProj/jni/third_party/xiph/opus
 	url = https://github.com/xiph/opus.git
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj/jni/third_party/xiph/opusfile"]
 	path = TMessagesProj/jni/third_party/xiph/opusfile
 	url = https://github.com/xiph/opusfile.git
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj/lib/jlatexmath"]
 	path = TMessagesProj/lib/jlatexmath
 	url = https://github.com/dkaraush/jlatexmath-android.git
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj/jni/tlottie"]
 	path = TMessagesProj/jni/tlottie
 	url = https://github.com/dkaraush/tlottie.git
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj/jni/third_party/openh264"]
 	path = TMessagesProj/jni/third_party/openh264
 	url = https://github.com/cisco/openh264.git
+	shallow = true
+	ignore = all
 [submodule "TMessagesProj/jni/third_party/libyuv"]
 	path = TMessagesProj/jni/third_party/libyuv
 	url = https://chromium.googlesource.com/libyuv/libyuv
+	shallow = true
+	ignore = all
+[submodule "TMessagesProj/jni/boringssl"]
+	path = TMessagesProj/jni/boringssl
+	url = https://github.com/google/boringssl
+	shallow = true
+	ignore = all
+[submodule "TMessagesProj/jni/td"]
+	path = TMessagesProj/jni/td
+	url = https://github.com/tdlib/td
+	shallow = true
+	ignore = all

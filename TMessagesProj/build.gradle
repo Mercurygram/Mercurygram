@@ -136,7 +136,11 @@ android {
         externalNativeBuild {
             cmake {
                 version '3.22.1'
-                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21' //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                def cmakeArgs = ['-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'] //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                if (getProps('QUIET_NATIVE_BUILD')) {
+                    cmakeArgs += '-DQUIET_BUILD=ON'
+                }
+                arguments(*cmakeArgs)
                 targets 'tmessages.49'
             }
         }
@@ -254,26 +258,293 @@ def getProps(String propName) {
         return "";
     }
 }
-apply plugin: 'com.google.gms.google-services'
 
-task checkVisibility {
-    doFirst {
-        def isPrivateBuild = project.gradle.startParameter.taskNames.find {
-            it.contains("HA_private") || it.contains("HA_hardcore") || it.contains("Debug") || it.contains("Release")
-        }
-        def isPublicAllowed = !project.hasProperty("IS_PRIVATE") || !project.property("IS_PRIVATE").toBoolean()
-        if (!isPrivateBuild && !isPublicAllowed) {
-            throw new GradleException("Building public version of private code!")
-        }
-    }
+// Shared first step: init submodules and apply source-tree patches (idempotent).
+// All per-ABI tasks depend on this so patches are applied exactly once.
+task patchNativeSources {
+    description = 'Init native submodules and apply source patches.'
     doLast {
-        if (project.gradle.startParameter.taskNames.find { it.contains("HA_public") }) {
-            def privateBuild = file("${projectDir}_AppHockeyApp/afat/HA_private/Telegram-Beta.apk")
-            if (privateBuild.exists()) {
-                privateBuild.delete()
+        exec {
+            workingDir rootDir
+            commandLine 'git', 'submodule', 'update', '--init',
+                'TMessagesProj/jni/third_party/libvpx',
+                'TMessagesProj/jni/third_party/ffmpeg',
+                'TMessagesProj/jni/third_party/dav1d',
+                'TMessagesProj/jni/third_party/xiph/ogg',
+                'TMessagesProj/jni/third_party/xiph/opus',
+                'TMessagesProj/jni/third_party/xiph/opusfile',
+                'TMessagesProj/jni/third_party/openh264',
+                'TMessagesProj/jni/third_party/libyuv',
+                'TMessagesProj/jni/tlottie',
+                'TMessagesProj/jni/boringssl',
+                'TMessagesProj/jni/td'
+        }
+        // ffbuild/version.sh bakes FFMPEG_VERSION into libavutil, preferring a
+        // VERSION file in the source root over `git describe`. Left to git the
+        // string depends on whether the clone carries tags and on git's
+        // auto-scaled abbreviation length, so the same pin can produce
+        // "n8.1.2-30-g45f1910444" or "45f1910444" depending on how the
+        // submodule was fetched. Pinning it to the full submodule SHA makes the
+        // archives byte-identical across shallow and full checkouts, which
+        // F-Droid reproducibility needs. Upstream never hit this: it builds
+        // from a checkout that has tags.
+        def ffmpegDir = file("${projectDir}/jni/third_party/ffmpeg")
+        def ffmpegSha = providers.exec {
+            commandLine 'git', '-C', ffmpegDir.toString(), 'rev-parse', 'HEAD'
+        }.standardOutput.asText.get().trim()
+        new File(ffmpegDir, 'VERSION').text = ffmpegSha + '\n'
+
+        def ndkDir = android.ndkDirectory.toString()
+        def ninjaPath = System.getenv('NINJA_PATH') ?: 'ninja'
+        for (script in ['patch_boringssl.sh', 'patch_dav1d.sh', 'patch_td.sh']) {
+            exec {
+                workingDir "${projectDir}/jni"
+                environment 'NDK', ndkDir
+                environment 'NINJA_PATH', ninjaPath
+                commandLine 'bash', script
             }
         }
     }
 }
 
-preBuild.dependsOn checkVisibility
+// Upstream's own libvpx + dav1d + ffmpeg builder. It reads the
+// jni/third_party/* submodules and packages into jni/ffmpeg/<abi>/*.a +
+// jni/ffmpeg/include/, i.e. exactly the layout upstream ships prebuilt and
+// CMakeLists.txt expects. Building it here instead of committing the archives
+// is the whole point of the [TF] patch; reusing upstream's script instead of
+// our own keeps the ffmpeg version in lockstep with the JNI code that calls it.
+def mediaBuildScript = 'build_ffmpeg_libvpx_dav1d_android_ndk27_merged.sh'
+
+// libvpx records its full configure command line and compiles it into the
+// archive (vpx_codec_build_config(), which survives --gc-sections into
+// libtmessages.so); ffmpeg does the same in FFMPEG_CONFIGURATION. Those strings
+// are literal text, so upstream's -ffile-prefix-map flags cannot sanitize the
+// absolute paths inside them, and an APK built from /home/you/src would never
+// match one F-Droid built from its own build root. The old build_libvpx_clang.sh
+// dodged this with a relative --prefix; upstream's script is absolute
+// throughout. So run it through fixed literal paths instead: a symlink to jni/
+// and a symlink to the NDK. Every path the configure line records is then the
+// same string on a dev box, in CI, and on the F-Droid buildserver.
+//
+// BUILD_ROOT is deliberately left at its default under jni/ffmpeg, reached
+// through the same symlink: libvpx's out-of-tree build resolves generated
+// headers relative to the source tree and fails ("./vpx_config.h file not
+// found") when the build dir shares no useful ancestor with it. Everything the
+// configure line records derives from SCRIPT_DIR anyway, so routing through the
+// symlink normalizes --prefix, -I, -L, --log and the prefix-maps alike.
+//
+// The names are fixed on purpose, so one machine can only build one checkout at
+// a time. Per-checkout names would put the checkout path back in the string.
+def mediaJniLink   = '/var/tmp/mg-jni'
+def mediaNdkLink   = '/var/tmp/mg-ndk'
+
+// Pinned rustc for jni/prebuild/build_tlottie.sh, installed by jni/setup_rust.sh
+// into fixed literal homes for the same reason the media build runs through
+// /var/tmp/mg-jni: rustc records the crate-registry path in its output, so a
+// per-machine CARGO_HOME would make libtlottie.a differ between our build and
+// F-Droid's.
+def rustToolchain  = '1.97.1'
+def rustupHome     = '/var/tmp/mg-rustup'
+def cargoHome      = '/var/tmp/mg-cargo'
+
+def pointSymlink = { String linkPath, String target ->
+    def link = new File(linkPath).toPath()
+    if (java.nio.file.Files.isSymbolicLink(link)) {
+        java.nio.file.Files.delete(link)
+    } else if (java.nio.file.Files.exists(link)) {
+        throw new GradleException("$linkPath exists and is not a symlink; " +
+            "remove it, the media build needs that exact path")
+    }
+    java.nio.file.Files.createSymbolicLink(link, new File(target).toPath())
+}
+
+// Register one build task per ABI. Each task compiles only for its ABI. All
+// three scripts take Android ABI names.
+['buildNativeLibsArm64'  : 'arm64-v8a',
+ 'buildNativeLibsArm32'  : 'armeabi-v7a',
+ 'buildNativeLibsX86_64' : 'x86_64',
+ 'buildNativeLibsX86'    : 'x86',
+].each { taskName, abi ->
+    tasks.register(taskName) {
+        description = "Build native libraries for ${abi}."
+        dependsOn patchNativeSources
+        doLast {
+            def ndkDir = android.ndkDirectory.toString()
+            def ninjaPath = System.getenv('NINJA_PATH') ?: 'ninja'
+            def quietBuild = getProps('QUIET_NATIVE_BUILD') ? '1' : '0'
+
+            // The media script has no incremental mode (CLEAN defaults to 1), so
+            // gate it here the way build_boringssl.sh gates itself: the sentinel
+            // ties the packaged archives to the NDK that produced them.
+            // Its packaging step rewrites jni/ffmpeg/include/ from the ABIs of
+            // the current run. That is safe only because ffmpeg's installed
+            // headers are identical across our four ABIs today (upstream ships a
+            // single include/ tree, no per-ABI dispatchers). If the script ever
+            // starts emitting <stem>.<abi>.h shims, packaging has to move to one
+            // all-ABI run instead of these per-ABI tasks.
+            //
+            // The shared include/ tree is part of the same packaging step, and
+            // that step starts by wiping it. Check it too: a run interrupted
+            // after the wipe leaves every other ABI's sentinel intact, and a
+            // per-ABI-only gate would then skip forever while CMake fails on
+            // missing ffmpeg headers.
+            def sentinel = file("${projectDir}/jni/ffmpeg/.ndk-${android.ndkVersion}-${abi}")
+            if (!(sentinel.exists()
+                    && file("${projectDir}/jni/ffmpeg/${abi}/libavcodec.a").exists()
+                    && file("${projectDir}/jni/ffmpeg/${abi}/libopus.a").exists()
+                    && file("${projectDir}/jni/ffmpeg/include/libavcodec/avcodec.h").exists())) {
+                pointSymlink(mediaJniLink, "${projectDir}/jni")
+                pointSymlink(mediaNdkLink, ndkDir)
+                // Since 12.10.0 the media script consumes a prebuilt libopus:
+                // it aborts with "Missing prebuilt opus" unless build_opus.sh
+                // has already produced ffmpeg/build/opus/<abi>/libopus.a, which
+                // it then packages into ffmpeg/<abi>/. build_opus.sh has no ABI
+                // filter and builds all four in one run, so the existence check
+                // below makes it run once per checkout rather than once per ABI
+                // task. It also carries none of the media script's determinism
+                // flags, hence the environment block; the archive member names
+                // it bakes in come from the absolute source and build paths,
+                // which the /var/tmp/mg-jni symlink already normalizes.
+                if (!file("${projectDir}/jni/ffmpeg/build/opus/${abi}/libopus.a").exists()) {
+                    exec {
+                        workingDir "${mediaJniLink}/ffmpeg"
+                        environment 'ANDROID_NDK_HOME', mediaNdkLink
+                        environment 'SOURCE_DATE_EPOCH', '946684800'
+                        environment 'TZ', 'UTC'
+                        environment 'LC_ALL', 'C'
+                        environment 'LANG', 'C'
+                        environment 'ZERO_AR_DATE', '1'
+                        commandLine 'bash', "${mediaJniLink}/ffmpeg/build_opus.sh"
+                    }
+                }
+                exec {
+                    workingDir "${mediaJniLink}/ffmpeg"
+                    environment 'ANDROID_NDK_HOME', mediaNdkLink
+                    environment 'ABIS', abi
+                    commandLine 'bash', "${mediaJniLink}/ffmpeg/${mediaBuildScript}"
+                }
+                sentinel.text = ndkDir + '\n'
+            }
+
+            // tlottie replaced rlottie in 12.10.0. Upstream commits the four
+            // cargo-built archives; F-Droid cannot ship binaries it did not
+            // build, so run upstream's own builder here for the same reason the
+            // media libraries are built above.
+            //
+            // Reproducibility: rustc bakes the source path and the crate
+            // registry path into its output. The source side is already fixed
+            // by the /var/tmp/mg-jni symlink; the registry side is fixed by
+            // pinning CARGO_HOME / RUSTUP_HOME to literals too, which is why
+            // setup_rust.sh installs the toolchain there instead of into the
+            // caller's home directory. Incremental compilation embeds absolute
+            // session paths of its own and is off for the same reason, and the
+            // toolchain version is pinned because a different rustc emits
+            // different code for identical sources.
+            if (!file("${projectDir}/jni/prebuild/${abi}/libtlottie.a").exists()) {
+                pointSymlink(mediaJniLink, "${projectDir}/jni")
+                // build_tlottie.sh refuses to run unless the output directory
+                // exists, and it builds ALL FOUR ABIs in one pass, so all four
+                // have to be there, not just this task's. Upstream keeps them
+                // populated by committing the archives; with those gitignored,
+                // git no longer creates them.
+                ['arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86'].each {
+                    file("${projectDir}/jni/prebuild/${it}").mkdirs()
+                }
+                def rustEnv = [
+                    RUSTUP_HOME      : rustupHome,
+                    CARGO_HOME       : cargoHome,
+                    PATH             : "${cargoHome}/bin:" + System.getenv('PATH'),
+                    CARGO_INCREMENTAL: '0',
+                    SOURCE_DATE_EPOCH: '946684800',
+                    TZ               : 'UTC',
+                    LC_ALL           : 'C',
+                    LANG             : 'C',
+                    RUSTFLAGS        : '-Cdebuginfo=0',
+                ]
+                exec {
+                    workingDir "${projectDir}/jni"
+                    environment rustEnv
+                    commandLine 'bash', 'setup_rust.sh', rustToolchain
+                }
+                exec {
+                    workingDir "${mediaJniLink}/prebuild"
+                    environment rustEnv
+                    environment 'TLOTTIE_SOURCE_DIR', "${mediaJniLink}/tlottie"
+                    environment 'TLOTTIE_RUST_TOOLCHAIN', rustToolchain
+                    environment 'CARGO_TARGET_DIR', "${mediaJniLink}/prebuild/build"
+                    commandLine 'bash', "${mediaJniLink}/prebuild/build_tlottie.sh"
+                }
+            }
+
+            // openh264: 12.10.1 stopped compiling it from source in
+            // voip/CMakeLists.txt and imports a committed prebuild/<abi>/
+            // libopenh264.a instead. Same F-Droid rule as the media libraries,
+            // so run upstream's own builder over the jni/third_party/openh264
+            // submodule. It drives openh264's Makefile, which bakes the object
+            // paths of its build tree into the archive member names, so it goes
+            // through the /var/tmp/mg-jni symlink like everything else here.
+            // x86/x86_64 additionally need nasm on PATH.
+            if (!file("${projectDir}/jni/prebuild/${abi}/libopenh264.a").exists()) {
+                pointSymlink(mediaJniLink, "${projectDir}/jni")
+                pointSymlink(mediaNdkLink, ndkDir)
+                exec {
+                    workingDir "${mediaJniLink}/prebuild"
+                    environment 'ANDROID_NDK_HOME', mediaNdkLink
+                    environment 'ABIS', abi
+                    environment 'SOURCE_DATE_EPOCH', '946684800'
+                    environment 'TZ', 'UTC'
+                    environment 'LC_ALL', 'C'
+                    environment 'LANG', 'C'
+                    environment 'ZERO_AR_DATE', '1'
+                    commandLine 'bash', "${mediaJniLink}/prebuild/build_openh264.sh"
+                }
+            }
+
+            for (script in ['build_boringssl.sh', 'build_tde2e.sh']) {
+                exec {
+                    workingDir "${projectDir}/jni"
+                    environment 'NDK', ndkDir
+                    environment 'NINJA_PATH', ninjaPath
+                    environment 'QUIET_BUILD', quietBuild
+                    commandLine 'bash', script, abi
+                }
+            }
+        }
+    }
+}
+
+// Ensure sequential execution when all 4 per-ABI tasks run together (fat builds),
+// avoiding races in patch scripts that write shared source files.
+tasks.named('buildNativeLibsArm32').configure  { mustRunAfter 'buildNativeLibsArm64'  }
+tasks.named('buildNativeLibsX86_64').configure { mustRunAfter 'buildNativeLibsArm32'  }
+tasks.named('buildNativeLibsX86').configure    { mustRunAfter 'buildNativeLibsX86_64' }
+
+// Combined task for fat/bundle builds (all 4 ABIs).
+task buildNativeLibs(description: 'Build native libraries for all ABIs.') {
+    dependsOn 'buildNativeLibsArm64', 'buildNativeLibsArm32',
+              'buildNativeLibsX86_64', 'buildNativeLibsX86'
+}
+
+// Wire each CMake/JniLibFolders task to the matching per-ABI native build task.
+// CMake task names include the ABI in brackets, e.g. configureCMakeRelease[arm64-v8a].
+// merge*JniLibFolders tasks don't include the ABI but snapshot jni/; they depend on
+// the full buildNativeLibs to ensure all .so/.a files are present before snapshotting.
+afterEvaluate {
+    def abiToTask = [
+        'arm64-v8a'   : 'buildNativeLibsArm64',
+        'armeabi-v7a' : 'buildNativeLibsArm32',
+        'x86_64'      : 'buildNativeLibsX86_64',
+        'x86'         : 'buildNativeLibsX86',
+    ]
+    tasks.matching {
+        it.name.matches('configureCMake.*') ||
+            it.name.matches('buildCMake.*') ||
+            it.name.matches('externalNativeBuild.*')
+    }.configureEach { task ->
+        def matched = abiToTask.find { abi, _ -> task.name.contains(abi) }
+        dependsOn tasks.named(matched ? matched.value : 'buildNativeLibs')
+    }
+    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach {
+        dependsOn tasks.named('buildNativeLibs')
+    }
+}
