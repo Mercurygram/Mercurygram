@@ -417,6 +417,13 @@ public class TLRPC {
     public static class TL_draftMessageEmpty_layer81 extends TL_draftMessageEmpty {
         public static final int constructor = 0xba4baec5;
 
+        // draftMessageEmpty#ba4baec5 = DraftMessage; carries no fields, matching
+        // serializeToStream below. Without this override the class inherits
+        // TL_draftMessageEmpty.readParams, which reads a flags int plus the
+        // flag-gated date and walks up to 8 bytes past the end of the payload.
+        public void readParams(InputSerializedData stream, boolean exception) {
+        }
+
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
         }
