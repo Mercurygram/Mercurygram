@@ -14,3 +14,12 @@ TMessagesProj_AppHockeyApp/afat/
 TMessagesProj_AppStandalone/afat/
 TMessagesProj_AppHuawei/afat/
 TMessagesProj/jni/ffmpeg/build_android
+# libvpx/dav1d/ffmpeg archives + headers. Upstream commits these; we build them
+# from the jni/third_party submodules instead, so everything the packaging step
+# of build_ffmpeg_libvpx_dav1d_android_ndk27_merged.sh writes is generated.
+TMessagesProj/jni/ffmpeg/include/
+TMessagesProj/jni/ffmpeg/arm64-v8a/
+TMessagesProj/jni/ffmpeg/armeabi-v7a/
+TMessagesProj/jni/ffmpeg/x86/
+TMessagesProj/jni/ffmpeg/x86_64/
+TMessagesProj/jni/ffmpeg/.ndk-*
