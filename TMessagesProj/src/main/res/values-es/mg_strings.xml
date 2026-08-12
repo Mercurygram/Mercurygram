@@ -7,6 +7,9 @@
     <string name="MercurygramSettingsUpdates">Actualizaciones</string>
     <string name="MercurygramSettingsNotifications">Notificaciones</string>
     <string name="MercurygramSettingsPrivacy">Privacidad</string>
+    <string name="MercurygramScopeAllAccounts">Se aplica a todas las cuentas</string>
+    <string name="MercurygramScopeAllAccountsFooter">Estas opciones se aplican a todas las cuentas de este dispositivo.</string>
+    <string name="MercurygramScopeDefaultFooter">Salvo que se indique lo contrario, estas opciones se aplican solo a la cuenta actual.</string>
     <string name="MercurygramMessageDetailsMenu">Mostrar \"Detalles del mensaje\"</string>
     <string name="MercurygramDisableAutoUpdate">Desactivar actualizador interno</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram dejará de comprobar actualizaciones en GitHub al iniciar. Aún puedes iniciar una comprobación manual con el botón de abajo.</string>
