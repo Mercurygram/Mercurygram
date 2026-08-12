@@ -36,7 +36,7 @@ public class MercurygramEmojiSettingsActivity extends UniversalFragment {
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
-        items.add(UItem.asCheck(ID_ENABLE, LocaleController.getString(R.string.MercurygramEmojiEnable))
+        items.add(MgSettingsScope.globalCheck(ID_ENABLE, LocaleController.getString(R.string.MercurygramEmojiEnable))
                 .setChecked(SharedConfig.mg_useCustomEmojiPack));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramEmojiEnableInfo)));
 
@@ -61,7 +61,8 @@ public class MercurygramEmojiSettingsActivity extends UniversalFragment {
             }
         }
 
-        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramEmojiAbout)));
+        items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                LocaleController.getString(R.string.MercurygramEmojiAbout))));
     }
 
     @Override
