@@ -58,7 +58,7 @@ public class MercurygramTranscriptionSettingsActivity extends UniversalFragment 
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
-        items.add(UItem.asCheck(ID_ENABLE,
+        items.add(MgSettingsScope.globalCheck(ID_ENABLE,
                         LocaleController.getString(R.string.MercurygramTranscriptionEnable))
                 .setChecked(SharedConfig.mg_transcribeOffline));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranscriptionEnableInfo)));
@@ -92,12 +92,18 @@ public class MercurygramTranscriptionSettingsActivity extends UniversalFragment 
                     LocaleController.getString(R.string.MercurygramTranscriptionImport), ""));
         }
 
+        // The model lives on disk once for the whole device; the language below
+        // is per account, so split the two with the scope note.
+        if (MgSettingsScope.multiAccount()) {
+            items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramScopeAllAccountsFooter)));
+        }
+
         items.add(UItem.asButton(ID_LANGUAGE,
                 LocaleController.getString(R.string.MercurygramTranscriptionLanguage),
                 languageLabel()));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranscriptionLanguageInfo)));
 
-        items.add(UItem.asCheck(ID_VAD,
+        items.add(MgSettingsScope.globalCheck(ID_VAD,
                         LocaleController.getString(R.string.MercurygramTranscriptionVad))
                 .setChecked(SharedConfig.mg_transcribeVad));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranscriptionVadInfo)));
