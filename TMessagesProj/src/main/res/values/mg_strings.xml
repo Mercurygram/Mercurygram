@@ -64,6 +64,9 @@
     <string name="MercurygramSettingsUpdates">Updates</string>
     <string name="MercurygramSettingsNotifications">Notifications</string>
     <string name="MercurygramSettingsPrivacy">Privacy</string>
+    <string name="MercurygramScopeAllAccounts">Applies to all accounts</string>
+    <string name="MercurygramScopeAllAccountsFooter">These options apply to all accounts on this device.</string>
+    <string name="MercurygramScopeDefaultFooter">Unless marked otherwise, these options apply only to the current account.</string>
     <string name="MercurygramMessageDetailsMenu">Show \"Message Details\"</string>
     <string name="MercurygramDisableAutoUpdate">Disable in-app updater</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram will no longer check for updates on GitHub at startup. You can still trigger a manual check from the button below.</string>
