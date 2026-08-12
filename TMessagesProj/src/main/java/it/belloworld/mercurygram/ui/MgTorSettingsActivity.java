@@ -52,7 +52,7 @@ public class MgTorSettingsActivity extends UniversalFragment {
         // hide their row there, so this is only a backstop against ever
         // rendering a toggle that could not work.
         if (it.belloworld.mercurygram.tor.MgTorClient.isFdroidPreS()) return;
-        items.add(UItem.asCheck(ID_USE_TOR, LocaleController.getString(R.string.MercurygramTor))
+        items.add(MgSettingsScope.globalCheck(ID_USE_TOR, LocaleController.getString(R.string.MercurygramTor))
                 .setChecked(SharedConfig.mg_useTor));
         if (SharedConfig.mg_useTor) {
             items.add(UItem.asButton(ID_TOR_TRANSPORT,
@@ -97,7 +97,7 @@ public class MgTorSettingsActivity extends UniversalFragment {
         if (!SharedConfig.mg_useTor && !it.belloworld.mercurygram.tor.MgTorClient.isPluginInstalled()) {
             torAbout = torAbout + "\n\n" + LocaleController.getString(R.string.MercurygramTorPluginMissing);
         }
-        items.add(UItem.asShadow(torAbout));
+        items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(torAbout)));
     }
 
     @Override
