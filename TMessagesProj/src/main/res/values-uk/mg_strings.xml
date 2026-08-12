@@ -7,6 +7,9 @@
     <string name="MercurygramSettingsUpdates">Оновлення</string>
     <string name="MercurygramSettingsNotifications">Сповіщення</string>
     <string name="MercurygramSettingsPrivacy">Конфіденційність</string>
+    <string name="MercurygramScopeAllAccounts">Застосовується до всіх облікових записів</string>
+    <string name="MercurygramScopeAllAccountsFooter">Ці налаштування застосовуються до всіх облікових записів на цьому пристрої.</string>
+    <string name="MercurygramScopeDefaultFooter">Якщо не вказано інше, ці налаштування застосовуються лише до поточного облікового запису.</string>
     <string name="MercurygramMessageDetailsMenu">Показати «Деталі повідомлення»</string>
     <string name="MercurygramDisableAutoUpdate">Вимкнути вбудований оновлювач</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram більше не перевірятиме оновлення на GitHub під час запуску. Ручну перевірку можна запустити кнопкою нижче.</string>

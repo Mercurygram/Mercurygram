@@ -45,7 +45,8 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
         items.add(UItem.asButton(ID_MODE,
                 LocaleController.getString(R.string.MercurygramTranslationMode),
                 modeLabel(SharedConfig.mg_translateMode)));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranslationAbout)));
+        items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                LocaleController.getString(R.string.MercurygramTranslationAbout))));
 
         if (SharedConfig.MG_TRANSLATE_MODE_OFFLINE.equals(SharedConfig.mg_translateMode)) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramTranslationOfflineSection)));
@@ -58,7 +59,7 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
                 items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranslationOfflineProviderReady)));
             }
 
-            items.add(UItem.asCheck(ID_AUTO_FALLBACK,
+            items.add(MgSettingsScope.globalCheck(ID_AUTO_FALLBACK,
                             LocaleController.getString(R.string.MercurygramTranslationAutoFallback))
                     .setChecked(SharedConfig.mg_translateAutoFallback));
             items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranslationAutoFallbackAbout)));
@@ -77,7 +78,8 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
             items.add(UItem.asButton(ID_ALT_INSTANCE,
                     LocaleController.getString(R.string.MercurygramTranslationAlternativeInstance),
                     instanceLabel()));
-            items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranslationAlternativeOperatorDisclosure)));
+            items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                    LocaleController.getString(R.string.MercurygramTranslationAlternativeOperatorDisclosure))));
         }
     }
 
