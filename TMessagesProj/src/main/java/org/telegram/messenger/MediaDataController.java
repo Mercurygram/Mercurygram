@@ -207,6 +207,7 @@ public class MediaDataController extends BaseController {
         loadRepliesOfDraftReplies(replyMessageOwners);
 
         loadStickersByEmojiOrName(AndroidUtilities.STICKERS_PLACEHOLDER_PACK_NAME, false, true);
+        loadStickersByEmojiOrName(it.belloworld.mercurygram.emoji.MgLegacyEmojiAnimations.PACK, false, true);
         loadEmojiThemes();
         loadRecentAndTopReactions(false);
         loadAvatarConstructor(false);
@@ -1743,7 +1744,8 @@ public class MediaDataController extends BaseController {
                 }
             }
         }
-        return null;
+        // Mercurygram: fall back to our own pack for the big emoji the server dropped.
+        return it.belloworld.mercurygram.emoji.MgLegacyEmojiAnimations.legacyDocument(currentAccount, emoji);
     }
 
     public boolean canAddStickerToFavorites() {
