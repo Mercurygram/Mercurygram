@@ -7,6 +7,9 @@
     <string name="MercurygramSettingsUpdates">Обновления</string>
     <string name="MercurygramSettingsNotifications">Уведомления</string>
     <string name="MercurygramSettingsPrivacy">Конфиденциальность</string>
+    <string name="MercurygramScopeAllAccounts">Применяется ко всем аккаунтам</string>
+    <string name="MercurygramScopeAllAccountsFooter">Эти настройки применяются ко всем аккаунтам на этом устройстве.</string>
+    <string name="MercurygramScopeDefaultFooter">Если не указано иное, эти настройки применяются только к текущему аккаунту.</string>
     <string name="MercurygramMessageDetailsMenu">Показать «Подробности сообщения»</string>
     <string name="MercurygramDisableAutoUpdate">Отключить встроенное обновление</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram больше не будет проверять обновления на GitHub при запуске. Вручную проверить можно с помощью кнопки ниже.</string>
