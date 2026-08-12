@@ -55,9 +55,10 @@ public class MgUnifiedPushSettingsActivity extends UniversalFragment {
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         Context context = ApplicationLoader.applicationContext;
-        items.add(UItem.asCheck(ID_DISABLE, LocaleController.getString(R.string.MercurygramDisableUnifiedPush))
+        items.add(MgSettingsScope.globalCheck(ID_DISABLE, LocaleController.getString(R.string.MercurygramDisableUnifiedPush))
                 .setChecked(SharedConfig.disableUnifiedPush));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableUnifiedPushAbout)));
+        items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                LocaleController.getString(R.string.MercurygramDisableUnifiedPushAbout))));
         if (SharedConfig.disableUnifiedPush) {
             return;
         }
