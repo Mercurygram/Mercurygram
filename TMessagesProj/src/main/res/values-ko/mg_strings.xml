@@ -7,6 +7,9 @@
     <string name="MercurygramSettingsUpdates">업데이트</string>
     <string name="MercurygramSettingsNotifications">알림</string>
     <string name="MercurygramSettingsPrivacy">개인 정보 보호</string>
+    <string name="MercurygramScopeAllAccounts">모든 계정에 적용</string>
+    <string name="MercurygramScopeAllAccountsFooter">이 옵션은 이 기기의 모든 계정에 적용됩니다.</string>
+    <string name="MercurygramScopeDefaultFooter">별도 표시가 없으면 이 옵션은 현재 계정에만 적용됩니다.</string>
     <string name="MercurygramMessageDetailsMenu">\"메시지 세부정보\" 표시</string>
     <string name="MercurygramDisableAutoUpdate">인앱 업데이터 사용 안 함</string>
     <string name="MercurygramDisableAutoUpdateAbout">Mercurygram이 시작 시 GitHub에서 업데이트를 더 이상 확인하지 않습니다. 아래 버튼에서 수동으로 확인할 수 있습니다.</string>
