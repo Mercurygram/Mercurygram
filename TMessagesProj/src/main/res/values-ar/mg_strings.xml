@@ -7,6 +7,9 @@
     <string name="MercurygramSettingsUpdates">التحديثات</string>
     <string name="MercurygramSettingsNotifications">الإشعارات</string>
     <string name="MercurygramSettingsPrivacy">الخصوصية</string>
+    <string name="MercurygramScopeAllAccounts">ينطبق على جميع الحسابات</string>
+    <string name="MercurygramScopeAllAccountsFooter">تنطبق هذه الخيارات على جميع الحسابات على هذا الجهاز.</string>
+    <string name="MercurygramScopeDefaultFooter">ما لم يُذكر خلاف ذلك، تنطبق هذه الخيارات على الحساب الحالي فقط.</string>
     <string name="MercurygramMessageDetailsMenu">إظهار \"تفاصيل الرسالة\"</string>
     <string name="MercurygramDisableAutoUpdate">تعطيل المُحدِّث داخل التطبيق</string>
     <string name="MercurygramDisableAutoUpdateAbout">لن يتحقق Mercurygram بعد الآن من التحديثات على GitHub عند بدء التشغيل. لا يزال بإمكانك تشغيل فحص يدوي من الزر أدناه.</string>
