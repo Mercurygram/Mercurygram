@@ -1,8 +1,10 @@
 package it.belloworld.mercurygram.ui;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +18,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Cells.RadioColorCell;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalFragment;
@@ -23,6 +26,7 @@ import org.telegram.ui.Components.UniversalFragment;
 import org.unifiedpush.android.connector.UnifiedPush;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 import it.belloworld.mercurygram.HiddenAccountHelper;
 import it.belloworld.mercurygram.MgMessageHistory;
@@ -80,6 +84,12 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             items.add(UItem.asShadow(null));
         }
 
+        // With several accounts logged in, state the default scope once; rows
+        // backed by global SharedConfig carry their own "all accounts" label.
+        if (MgSettingsScope.multiAccount()) {
+            items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramScopeDefaultFooter)));
+        }
+
         items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsGeneral)));
         items.add(UItem.asCheck(ID_MESSAGE_DETAILS_MENU, LocaleController.getString(R.string.MercurygramMessageDetailsMenu))
                 .setChecked(getUserConfig().mg.messageDetailsMenu));
@@ -94,14 +104,15 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_HIDE_PREMIUM_PROMO, LocaleController.getString(R.string.MercurygramHidePremiumPromo))
                 .setChecked(getUserConfig().mg.hidePremiumPromo));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramHidePremiumPromoAbout)));
-        items.add(UItem.asCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
+        items.add(MgSettingsScope.globalCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
                 .setChecked(SharedConfig.useSystemFont));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramUseSystemFontAbout)));
 
         items.add(UItem.asButton(ID_EMOJI_PACK,
                 LocaleController.getString(R.string.MercurygramEmojiTitle),
                 emojiPackShortLabel()));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramEmojiRowAbout)));
+        items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                LocaleController.getString(R.string.MercurygramEmojiRowAbout))));
 
         items.add(UItem.asCheck(ID_DELETE_FOR_ALL_DEFAULT,
                         LocaleController.getString(R.string.MercurygramDeleteForAllByDefault))
@@ -123,7 +134,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableLivePhotosAbout)));
 
         items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsPrivacy)));
-        items.add(UItem.asCheck(ID_REDUCE_TRACKING_FINGERPRINT,
+        items.add(MgSettingsScope.globalCheck(ID_REDUCE_TRACKING_FINGERPRINT,
                         LocaleController.getString(R.string.MercurygramReduceTrackingFingerprint))
                 .setChecked(SharedConfig.reduceTrackingFingerprint));
         String reduceAbout = LocaleController.getString(R.string.MercurygramReduceTrackingFingerprintAbout);
@@ -147,7 +158,8 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                     LocaleController.getString(R.string.MercurygramTor),
                     LocaleController.getString(SharedConfig.mg_useTor
                             ? R.string.NotificationsOn : R.string.NotificationsOff)));
-            items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTorAbout)));
+            items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                    LocaleController.getString(R.string.MercurygramTorAbout))));
         }
 
         items.add(UItem.asCheck(ID_DISABLE_GLOBAL_SEARCH,
@@ -183,23 +195,25 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asButton(ID_TRANSLATION,
                 LocaleController.getString(R.string.MercurygramTranslationSettings),
                 translationModeShortLabel()));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranslationRowAbout)));
+        items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                LocaleController.getString(R.string.MercurygramTranslationRowAbout))));
 
         items.add(UItem.asButton(ID_TRANSCRIPTION,
                 LocaleController.getString(R.string.MercurygramTranscriptionTitle),
                 transcriptionShortLabel()));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramTranscriptionEnableInfo)));
+        items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
+                LocaleController.getString(R.string.MercurygramTranscriptionEnableInfo))));
 
         if (!MgUpdateChecker.isFdroidBuild()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
-            items.add(UItem.asCheck(ID_DISABLE_AUTO_UPDATE, LocaleController.getString(R.string.MercurygramDisableAutoUpdate))
+            items.add(MgSettingsScope.globalCheck(ID_DISABLE_AUTO_UPDATE, LocaleController.getString(R.string.MercurygramDisableAutoUpdate))
                     .setChecked(SharedConfig.disableAutoUpdate));
             items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableAutoUpdateAbout)));
 
             // Hidden on the .beta package — that channel already follows
             // /releases unconditionally, so the toggle would be meaningless.
             if (!MgUpdateChecker.isBetaChannel()) {
-                items.add(UItem.asCheck(ID_ACCEPT_PRERELEASES,
+                items.add(MgSettingsScope.globalCheck(ID_ACCEPT_PRERELEASES,
                                 LocaleController.getString(R.string.MercurygramAcceptPreReleaseUpdates))
                         .setChecked(SharedConfig.acceptPreReleaseUpdates));
                 items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramAcceptPreReleaseUpdatesAbout)));
