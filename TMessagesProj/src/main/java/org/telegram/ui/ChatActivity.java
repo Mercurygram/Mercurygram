@@ -3360,6 +3360,11 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        // the comments load may still be in flight, its observer holds this fragment
+        if (commentsMessagesObserver != null) {
+            getNotificationCenter().removeObserver(commentsMessagesObserver, NotificationCenter.messagesDidLoad);
+            commentsMessagesObserver = null;
+        }
         if (messageMetricsView != null) {
             messageMetricsView.finish();
         }
@@ -35822,6 +35827,7 @@ public class ChatActivity extends BaseFragment implements
     private int commentMessagesRequestId;
     private int commentLoadingMessageId;
     private boolean hideCommentLoading;
+    private NotificationCenter.NotificationCenterDelegate commentsMessagesObserver;
     private long commentLoadingStartedAt;
     private TLRPC.TL_messages_discussionMessage savedDiscussionMessage;
     private TLRPC.messages_Messages savedHistory;
@@ -35919,9 +35925,13 @@ public class ChatActivity extends BaseFragment implements
                                     chatActivity.didReceivedNotification(id, account, args);
                                 }, 50);
                                 NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.messagesDidLoad);
+                                if (commentsMessagesObserver == this) {
+                                    commentsMessagesObserver = null;
+                                }
                             }
                         }
                     };
+                    commentsMessagesObserver = observer;
                     NotificationCenter.getInstance(currentAccount).addObserver(observer, NotificationCenter.messagesDidLoad);
                     Utilities.stageQueue.postRunnable(() -> {
                         getMessagesController().processLoadedMessages(historyFinal, historyFinal.messages.size(), dialogId, 0, 30, (highlightMsgId > 0 ? highlightMsgId : maxReadId), 0, false, commentsClassGuid, fnidFinal, 0, 0, 0, (highlightMsgId > 0 ? 3 : 2), true, 0, arrayList.get(arrayList.size() - 1).getId(), 1, false, 0, true, isTopic, null);
