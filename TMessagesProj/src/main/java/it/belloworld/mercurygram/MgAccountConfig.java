@@ -1,8 +1,10 @@
 package it.belloworld.mercurygram;
 
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 
 import org.telegram.messenger.SharedConfig;
+import org.telegram.tgnet.TLRPC;
 
 /**
  * Mercurygram per-account settings. Lives in the same per-account
@@ -30,6 +32,28 @@ public class MgAccountConfig {
     public boolean preferSecretChats = false;
     public boolean deleteForAllByDefault = false;
     public boolean stripTrackingParams = false;
+    public boolean disableCloudDrafts = false;
+
+    /**
+     * Whether {@code draftMessage} may go to the server. An empty draft carries no
+     * content, so let the clear reach the server even with cloud drafts off:
+     * otherwise a draft stored before the toggle was enabled stays on the server
+     * forever and gets pushed back into the composer on the next sync.
+     *
+     * <p>The emptiness test enumerates TL fields that change on every layer bump, so
+     * it lives here rather than inline in MediaDataController.
+     */
+    public boolean allowsCloudSync(TLRPC.DraftMessage draftMessage) {
+        if (!disableCloudDrafts) {
+            return true;
+        }
+        return TextUtils.isEmpty(draftMessage.message)
+            && (draftMessage.reply_to == null || draftMessage.reply_to.reply_to_msg_id == 0)
+            && draftMessage.effect == 0
+            && draftMessage.rich_message == null
+            && draftMessage.suggested_post == null;
+    }
+
     // MG: the reduced temp-key TTL ladder (1h→6h→24h) exhausted on this
     // account — server kept rejecting bindTempAuthKey, so native reduced
     // mode was force-disabled here while the global SharedConfig toggle
@@ -58,6 +82,7 @@ public class MgAccountConfig {
         editor.putBoolean("preferSecretChats", preferSecretChats);
         editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
         editor.putBoolean("stripTrackingParams", stripTrackingParams);
+        editor.putBoolean("disableCloudDrafts", disableCloudDrafts);
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -80,6 +105,7 @@ public class MgAccountConfig {
         preferSecretChats = preferences.getBoolean("preferSecretChats", false);
         deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
         stripTrackingParams = preferences.getBoolean("stripTrackingParams", false);
+        disableCloudDrafts = preferences.getBoolean("disableCloudDrafts", false);
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -102,6 +128,7 @@ public class MgAccountConfig {
         preferSecretChats = false;
         deleteForAllByDefault = false;
         stripTrackingParams = false;
+        disableCloudDrafts = false;
         mgReducedTrackingExhausted = false;
     }
 }
