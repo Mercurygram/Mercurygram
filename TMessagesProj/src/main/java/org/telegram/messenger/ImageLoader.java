@@ -137,8 +137,6 @@ public class ImageLoader {
     private static ThreadLocal<byte[]> bytesLocal = new ThreadLocal<>();
     private static ThreadLocal<byte[]> bytesThumbLocal = new ThreadLocal<>();
     private static final int MAX_REUSABLE_BYTE_ARRAY_SIZE = 16 * 1024 * 1024;
-    private static byte[] header = new byte[12];
-    private static byte[] headerThumb = new byte[12];
     private int currentHttpTasksCount = 0;
     private int currentArtworkTasksCount = 0;
     private boolean canForce8888;
@@ -186,11 +184,22 @@ public class ImageLoader {
         return data;
     }
 
+    private static final android.util.LruCache<String, Bitmap> strippedCache = new android.util.LruCache<>(64);
+
     public static Drawable createStripedBitmap(ArrayList<TLRPC.PhotoSize> thumbs) {
         for (int i = 0; i < thumbs.size(); i++) {
             if (thumbs.get(i) instanceof TLRPC.TL_photoStrippedSize) {
                 TLRPC.TL_photoStrippedSize size = (TLRPC.TL_photoStrippedSize) thumbs.get(i);
-                return new BitmapDrawable(ApplicationLoader.applicationContext.getResources(), getStrippedPhotoBitmap(size.bytes, "b"));
+                String key = new String(size.bytes, java.nio.charset.StandardCharsets.ISO_8859_1);
+                Bitmap bitmap = strippedCache.get(key);
+                if (bitmap == null) {
+                    bitmap = getStrippedPhotoBitmap(size.bytes, "b");
+                    if (bitmap == null) {
+                        return null;
+                    }
+                    strippedCache.put(key, bitmap);
+                }
+                return new BitmapDrawable(ApplicationLoader.applicationContext.getResources(), bitmap);
             }
         }
         return null;
@@ -868,6 +877,8 @@ public class ImageLoader {
     private class CacheOutTask implements Runnable {
         private Thread runningThread;
         private final Object sync = new Object();
+        private byte[] header = new byte[12];
+        private byte[] headerThumb = new byte[12];
 
         private CacheImage cacheImage;
         private boolean isCancelled;
@@ -2057,14 +2068,14 @@ public class ImageLoader {
         int memoryClass = ((ActivityManager) ApplicationLoader.applicationContext.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryClass();
         int maxSize;
         if (canForce8888 = memoryClass >= 192) {
-            maxSize = 30;
+            maxSize = 80;
         } else {
-            maxSize = 15;
+            maxSize = 30;
         }
-        int cacheSize = DEBUG_MODE ? 1 : Math.min(maxSize, memoryClass / 7) * 1024 * 1024;
+        int cacheSize = DEBUG_MODE ? 1 : Math.min(maxSize, memoryClass / 6) * 1024 * 1024;
 
-        int commonCacheSize =  DEBUG_MODE ? 1 : (int) (cacheSize * 0.8f);
-        int smallImagesCacheSize =   DEBUG_MODE ? 1 : (int) (cacheSize * 0.2f);
+        int commonCacheSize =  DEBUG_MODE ? 1 : (int) (cacheSize * 0.7f);
+        int smallImagesCacheSize =   DEBUG_MODE ? 1 : (int) (cacheSize * 0.3f);
 
         memCache = new LruCache<BitmapDrawable>(commonCacheSize) {
             @Override
@@ -2768,6 +2779,7 @@ public class ImageLoader {
         smallImagesMemCache.evictAll();
         memCache.evictAll();
         lottieMemCache.evictAll();
+        strippedCache.evictAll();
     }
 
     private void removeFromWaitingForThumb(int TAG, ImageReceiver imageReceiver) {
