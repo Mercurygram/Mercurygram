@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DispatchQueuePriority {
 
-    ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new PriorityBlockingQueue<>(10, new Comparator<Runnable>() {
+    ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(2, 2, 60, TimeUnit.SECONDS, new PriorityBlockingQueue<>(10, new Comparator<Runnable>() {
 
         @Override
         public int compare(Runnable o1, Runnable o2) {
@@ -41,7 +41,9 @@ public class DispatchQueuePriority {
     private volatile CountDownLatch pauseLatch;
 
     public DispatchQueuePriority(String threadName) {
-
+        // both threads are core threads, so without this the keep-alive never applies and
+        // they stay parked for the process lifetime after a single decode
+        threadPoolExecutor.allowCoreThreadTimeOut(true);
     }
 
     public static Runnable wrap(Runnable runnable, int priority) {
