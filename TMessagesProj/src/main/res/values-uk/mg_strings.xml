@@ -235,4 +235,6 @@
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Коди розблокування не збігаються.</string>
     <string name="MercurygramStripTrackingParams">Видаляти параметри стеження</string>
     <string name="MercurygramStripTrackingParamsAbout">Видаляє параметри стеження за переходами (utm_*, fbclid, gclid, si та подібні) з посилань, які ви відкриваєте, і з посилань, які ви вставляєте в поле повідомлення. Решта адреси лишається без змін.</string>
+    <string name="MercurygramDisableCloudDrafts">Зберігати чернетки лише на пристрої</string>
+    <string name="MercurygramDisableCloudDraftsAbout">Не завантажувати ненадіслані чернетки до Telegram. Чернетки залишаються на цьому пристрої й більше не з\'являються на інших ваших пристроях.</string>
 </resources>

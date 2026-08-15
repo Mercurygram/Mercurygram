@@ -235,4 +235,6 @@
     <string name="HiddenAccountsUnlockCodesDoNotMatch">رموز الفتح غير متطابقة.</string>
     <string name="MercurygramStripTrackingParams">إزالة معاملات التتبع</string>
     <string name="MercurygramStripTrackingParamsAbout">يزيل معاملات تتبع النقرات (‏utm_*‎ و‏fbclid و‏gclid و‏si وما شابهها) من الروابط التي تفتحها ومن الروابط التي تلصقها في حقل الرسالة. يبقى باقي العنوان كما هو.</string>
+    <string name="MercurygramDisableCloudDrafts">إبقاء المسودات على هذا الجهاز</string>
+    <string name="MercurygramDisableCloudDraftsAbout">عدم رفع المسودات غير المُرسلة إلى تيليجرام. تبقى المسودات على هذا الجهاز ولا تظهر بعد الآن على أجهزتك الأخرى.</string>
 </resources>

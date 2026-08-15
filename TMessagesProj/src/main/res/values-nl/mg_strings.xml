@@ -235,4 +235,6 @@
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Ontgrendelcodes komen niet overeen.</string>
     <string name="MercurygramStripTrackingParams">Trackingparameters verwijderen</string>
     <string name="MercurygramStripTrackingParamsAbout">Verwijdert klik-trackingparameters (utm_*, fbclid, gclid, si en vergelijkbare) uit links die je opent en uit links die je in het berichtveld plakt. De rest van het adres blijft ongewijzigd.</string>
+    <string name="MercurygramDisableCloudDrafts">Concepten op dit apparaat houden</string>
+    <string name="MercurygramDisableCloudDraftsAbout">Niet-verzonden concepten niet naar Telegram uploaden. Concepten blijven op dit apparaat en verschijnen niet meer op je andere apparaten.</string>
 </resources>

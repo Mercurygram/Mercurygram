@@ -235,4 +235,6 @@
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Los códigos de desbloqueo no coinciden.</string>
     <string name="MercurygramStripTrackingParams">Quitar parámetros de rastreo</string>
     <string name="MercurygramStripTrackingParamsAbout">Quita los parámetros de rastreo de clics (utm_*, fbclid, gclid, si y similares) de los enlaces que abres y de los que pegas en el campo de mensaje. El resto de la dirección no se toca.</string>
+    <string name="MercurygramDisableCloudDrafts">Mantener los borradores en este dispositivo</string>
+    <string name="MercurygramDisableCloudDraftsAbout">No subir a Telegram los borradores sin enviar. Los borradores se quedan en este dispositivo y dejan de aparecer en tus otros dispositivos.</string>
 </resources>
