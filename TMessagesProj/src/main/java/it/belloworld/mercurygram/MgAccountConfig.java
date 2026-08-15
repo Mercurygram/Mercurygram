@@ -34,6 +34,7 @@ public class MgAccountConfig {
     public boolean stripTrackingParams = false;
     public boolean disableCloudDrafts = false;
     public boolean confirmInternalLinks = false;
+    public boolean showCharCounter = false;
 
     /**
      * Whether {@code draftMessage} may go to the server. An empty draft carries no
@@ -85,6 +86,7 @@ public class MgAccountConfig {
         editor.putBoolean("stripTrackingParams", stripTrackingParams);
         editor.putBoolean("disableCloudDrafts", disableCloudDrafts);
         editor.putBoolean("confirmInternalLinks", confirmInternalLinks);
+        editor.putBoolean("showCharCounter", showCharCounter);
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -109,6 +111,7 @@ public class MgAccountConfig {
         stripTrackingParams = preferences.getBoolean("stripTrackingParams", false);
         disableCloudDrafts = preferences.getBoolean("disableCloudDrafts", false);
         confirmInternalLinks = preferences.getBoolean("confirmInternalLinks", false);
+        showCharCounter = preferences.getBoolean("showCharCounter", false);
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -133,6 +136,7 @@ public class MgAccountConfig {
         stripTrackingParams = false;
         disableCloudDrafts = false;
         confirmInternalLinks = false;
+        showCharCounter = false;
         mgReducedTrackingExhausted = false;
     }
 }
