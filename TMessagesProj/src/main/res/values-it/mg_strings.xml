@@ -240,4 +240,6 @@
     <string name="HiddenAccountsIncorrectCurrentUnlockCode">Codice di sblocco attuale non corretto.</string>
     <string name="HiddenAccountsUnlockCodeMatchesAppPasscode">Questo codice di sblocco coincide con il codice di accesso dell\'app. Usa un codice diverso.</string>
     <string name="HiddenAccountsUnlockCodesDoNotMatch">I codici di sblocco non corrispondono.</string>
+    <string name="MercurygramStripTrackingParams">Rimuovi i parametri di tracciamento</string>
+    <string name="MercurygramStripTrackingParamsAbout">Rimuove i parametri di tracciamento dei clic (utm_*, fbclid, gclid, igsh e simili) dai link che apri, da quelli che incolli nel campo del messaggio e da quelli che condividi con Mercurygram da un\'altra app. Rimuove anche quelli specifici di un sito, su YouTube, Instagram, TikTok, X, Amazon e altri. Il resto dell\'indirizzo resta invariato.</string>
 </resources>
