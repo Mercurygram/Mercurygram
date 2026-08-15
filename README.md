@@ -105,6 +105,7 @@ Fixes for bugs that exist in stock Telegram for Android. Several are backported 
 - Fix a set of upstream crashes: opening a profile of a deleted user with a story privacy badge, transferring channel ownership, picking a community in the forward list, a video cover frame that fails to decode, sticker segmentation on a recycled bitmap, and three list-adapter crashes
 - Fix a set of upstream memory leaks that kept whole chat screens alive after closing them: chat avatar and wallpaper, attach and caption mention adapters, photo viewer, video ads, reaction overlays, and a dozen notification observers that were never unregistered
 - Fix upstream slowdowns on large accounts: an admin-list request that non-admin communities re-fired forever, a chat stuck on stale cached history because the server fetch was skipped, phantom dialog rows for channels only peeked at through a comment link, and a full dialog list rebuild and folder badge recount on every deleted message
+- Reduce media I/O and decode overhead: downloads no longer flush file metadata synchronously on every write, images decode on two threads instead of one, stripped thumbnails are cached instead of decoded again on every bind, and the bitmap memory cache is larger
 
 ### TF-originated de-googling patches
 
