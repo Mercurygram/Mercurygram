@@ -237,4 +237,6 @@
     <string name="MercurygramStripTrackingParamsAbout">Quita los parámetros de rastreo de clics (utm_*, fbclid, gclid, si y similares) de los enlaces que abres y de los que pegas en el campo de mensaje. El resto de la dirección no se toca.</string>
     <string name="MercurygramDisableCloudDrafts">Mantener los borradores en este dispositivo</string>
     <string name="MercurygramDisableCloudDraftsAbout">No subir a Telegram los borradores sin enviar. Los borradores se quedan en este dispositivo y dejan de aparecer en tus otros dispositivos.</string>
+    <string name="MercurygramConfirmInternalLinks">Confirmar los enlaces de Telegram</string>
+    <string name="MercurygramConfirmInternalLinksAbout">Pide confirmación antes de abrir enlaces t.me y tg://, mostrando primero la dirección. Útil contra los enlaces que se unen a un canal o abren un bot sin avisar.</string>
 </resources>
