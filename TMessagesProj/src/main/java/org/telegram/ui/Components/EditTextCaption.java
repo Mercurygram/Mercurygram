@@ -1155,6 +1155,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                 try {
                     String html = clipData.getItemAt(0).getHtmlText();
                     SpannableStringBuilder pasted = new SpannableStringBuilder(CopyUtilities.fromHTML(html));
+                    it.belloworld.mercurygram.MgUrlCleaner.clean(pasted);
                     Emoji.replaceEmoji(pasted, getPaint().getFontMetricsInt(), false, null);
                     AnimatedEmojiSpan[] spans = pasted.getSpans(0, pasted.length(), AnimatedEmojiSpan.class);
                     if (spans != null) {
@@ -1180,6 +1181,9 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
+            }
+            if (it.belloworld.mercurygram.MgUrlCleaner.handlePaste(this, clipData)) {
+                return true;
             }
         } else if (id == android.R.id.copy) {
             int start = Math.max(0, getSelectionStart());
