@@ -238,4 +238,6 @@
     <string name="MercurygramStripTrackingParamsAbout">Rimuove i parametri di tracciamento dei clic (utm_*, fbclid, gclid, igsh e simili) dai link che apri, da quelli che incolli nel campo del messaggio e da quelli che condividi con Mercurygram da un\'altra app. Rimuove anche quelli specifici di un sito, su YouTube, Instagram, TikTok, X, Amazon e altri. Il resto dell\'indirizzo resta invariato.</string>
     <string name="MercurygramDisableCloudDrafts">Tieni le bozze su questo dispositivo</string>
     <string name="MercurygramDisableCloudDraftsAbout">Non caricare su Telegram le bozze non inviate. Le bozze restano su questo dispositivo e non compaiono più sugli altri.</string>
+    <string name="MercurygramConfirmInternalLinks">Conferma i link di Telegram</string>
+    <string name="MercurygramConfirmInternalLinksAbout">Chiede conferma prima di aprire i link t.me e tg://, mostrando prima l\'indirizzo. Utile contro i link che iscrivono a un canale o aprono un bot senza avvisare.</string>
 </resources>
