@@ -96,6 +96,10 @@ public class EditCoverButton extends View {
 
         Utilities.globalQueue.postRunnable(() -> {
             final Bitmap frame = BitmapFactory.decodeFile(path);
+            if (frame == null) {
+                AndroidUtilities.runOnUIThread(() -> setImage((Bitmap) null));
+                return;
+            }
             final Bitmap bitmap = Bitmap.createBitmap(dp(26), dp(26), Bitmap.Config.ARGB_8888);
             final Canvas canvas = new Canvas(bitmap);
             final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
