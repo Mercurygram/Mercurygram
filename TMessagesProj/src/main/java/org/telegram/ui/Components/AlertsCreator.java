@@ -1746,7 +1746,7 @@ public class AlertsCreator {
     public static void showOpenUrlAlert(Context context, String url, boolean punycode, boolean tryTelegraph, boolean ask, boolean forceNotInternalForApps, long inlineReturn, Browser.Progress progress, @Nullable TLRPC.WebPage webPage, Theme.ResourcesProvider resourcesProvider) {
         if (!AndroidUtilities.isContextSafe(context)) return;
         final String scheme = url == null ? null : Uri.parse(url).getScheme();
-        if (Browser.isInternalUrl(url, null) || !ask || "mailto".equalsIgnoreCase(scheme)) {
+        if (Browser.isInternalUrl(url, null) && !UserConfig.getInstance(UserConfig.selectedAccount).mg.confirmInternalLinks || !ask || "mailto".equalsIgnoreCase(scheme)) {
             Browser.openUrl(context, Uri.parse(url), inlineReturn == 0, tryTelegraph, forceNotInternalForApps && checkInternalBotApp(url), progress, null, false, true, false);
             return;
         }
@@ -1764,7 +1764,9 @@ public class AlertsCreator {
             urlFinal = url;
         }
 
-        final Runnable open = () -> Browser.openUrl(context, Uri.parse(url), inlineReturn == 0, tryTelegraph, progress);
+        // same call as the no-confirmation path above: internal links reach the dialog once the
+        // "Confirm Telegram links" toggle is on, and they still need forceNotInternalForApps
+        final Runnable open = () -> Browser.openUrl(context, Uri.parse(url), inlineReturn == 0, tryTelegraph, forceNotInternalForApps && checkInternalBotApp(url), progress, null, false, true, false);
         final AlertDialog[] dialog = new AlertDialog[1];
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(context, resourcesProvider);
