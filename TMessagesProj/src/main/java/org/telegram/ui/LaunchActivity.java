@@ -1757,6 +1757,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         } else if (!TextUtils.isEmpty(subject)) {
                             sendingText = subject;
                         }
+                        sendingText = it.belloworld.mercurygram.MgUrlCleaner.cleanText(sendingText);
 
                         Parcelable parcelable = intent.getParcelableExtra(Intent.EXTRA_STREAM);
                         if (parcelable != null) {
