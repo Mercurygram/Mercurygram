@@ -9961,7 +9961,7 @@ public class MessagesStorage extends BaseController {
                 runnable.run();
             };
         } else {*/
-        int finalMessagesCount = scheduled ? res.messages.size() : messagesCount;
+        int finalMessagesCount = scheduled || processMessages ? res.messages.size() : messagesCount;
         return () -> getMessagesController().processLoadedMessages(res, finalMessagesCount, dialogId, mergeDialogId, countQueryFinal, maxIdOverrideFinal, offset_date, true, classGuid, minUnreadIdFinal, lastMessageIdFinal, countUnreadFinal, maxUnreadDateFinal, load_type, isEndFinal, mode, threadMessageId, loadIndex, queryFromServerFinal, mentionsUnreadFinal, processMessages, isTopic, loaderLogger);
         //}
     }
