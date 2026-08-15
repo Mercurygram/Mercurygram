@@ -248,4 +248,6 @@
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Freischaltcodes stimmen nicht überein.</string>
     <string name="MercurygramStripTrackingParams">Tracking-Parameter entfernen</string>
     <string name="MercurygramStripTrackingParamsAbout">Entfernt Klick-Tracking-Parameter (utm_*, fbclid, gclid, igsh und ähnliche) aus Links, die du öffnest, aus Links, die du in das Nachrichtenfeld einfügst, und aus Links, die du aus einer anderen App an Mercurygram weitergibst. Auch seitenspezifische Parameter werden entfernt, etwa bei YouTube, Instagram, TikTok, X und Amazon. Der Rest der Adresse bleibt unverändert.</string>
+    <string name="MercurygramDisableCloudDrafts">Entwürfe auf diesem Gerät behalten</string>
+    <string name="MercurygramDisableCloudDraftsAbout">Nicht gesendete Entwürfe nicht zu Telegram hochladen. Entwürfe bleiben auf diesem Gerät und erscheinen nicht mehr auf deinen anderen Geräten.</string>
 </resources>
