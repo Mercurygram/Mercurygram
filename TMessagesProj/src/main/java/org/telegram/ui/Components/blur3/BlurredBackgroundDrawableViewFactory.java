@@ -41,6 +41,12 @@ public class BlurredBackgroundDrawableViewFactory {
         this.linkedViews = linkedViews;
     }
 
+    public void unsubscribe(@Nullable View view) {
+        if (viewPositionWatcher != null && view != null) {
+            viewPositionWatcher.unsubscribe(view);
+        }
+    }
+
     public void setLinkedDrawablesRef(@Nullable ReferenceList<BlurredBackgroundDrawable> linkedDrawables) {
         this.linkedDrawables = linkedDrawables;
     }
