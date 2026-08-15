@@ -233,4 +233,6 @@
     <string name="HiddenAccountsIncorrectCurrentUnlockCode">현재 잠금 해제 코드가 올바르지 않습니다.</string>
     <string name="HiddenAccountsUnlockCodeMatchesAppPasscode">이 잠금 해제 코드가 앱 암호와 일치합니다. 다른 코드를 사용하세요.</string>
     <string name="HiddenAccountsUnlockCodesDoNotMatch">잠금 해제 코드가 일치하지 않습니다.</string>
+    <string name="MercurygramStripTrackingParams">추적 매개변수 제거</string>
+    <string name="MercurygramStripTrackingParamsAbout">여는 링크와 메시지 입력란에 붙여넣는 링크에서 클릭 추적 매개변수(utm_*, fbclid, gclid, si 등)를 제거합니다. 주소의 나머지 부분은 그대로 둡니다.</string>
 </resources>

@@ -233,4 +233,6 @@
     <string name="HiddenAccountsIncorrectCurrentUnlockCode">Onjuiste huidige ontgrendelcode.</string>
     <string name="HiddenAccountsUnlockCodeMatchesAppPasscode">Deze ontgrendelcode komt overeen met de app-toegangscode. Gebruik een andere code.</string>
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Ontgrendelcodes komen niet overeen.</string>
+    <string name="MercurygramStripTrackingParams">Trackingparameters verwijderen</string>
+    <string name="MercurygramStripTrackingParamsAbout">Verwijdert klik-trackingparameters (utm_*, fbclid, gclid, si en vergelijkbare) uit links die je opent en uit links die je in het berichtveld plakt. De rest van het adres blijft ongewijzigd.</string>
 </resources>
