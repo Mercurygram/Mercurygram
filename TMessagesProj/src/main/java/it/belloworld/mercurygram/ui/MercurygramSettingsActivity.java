@@ -65,6 +65,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_TRANSCRIPTION = 51;
     private static final int ID_EMOJI_PACK = 60;
     private static final int ID_STRIP_TRACKING_PARAMS = 61;
+    private static final int ID_DISABLE_CLOUD_DRAFTS = 62;
 
     @Override
     protected CharSequence getTitle() {
@@ -192,6 +193,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramStripTrackingParams))
                 .setChecked(getUserConfig().mg.stripTrackingParams));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramStripTrackingParamsAbout)));
+
+        items.add(UItem.asCheck(ID_DISABLE_CLOUD_DRAFTS,
+                        LocaleController.getString(R.string.MercurygramDisableCloudDrafts))
+                .setChecked(getUserConfig().mg.disableCloudDrafts));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableCloudDraftsAbout)));
 
         items.add(UItem.asCheck(ID_PREFER_SECRET_CHATS,
                         LocaleController.getString(R.string.MercurygramPreferSecretChats))
@@ -363,6 +369,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_STRIP_TRACKING_PARAMS:
                 getUserConfig().mg.stripTrackingParams = !getUserConfig().mg.stripTrackingParams;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_DISABLE_CLOUD_DRAFTS:
+                getUserConfig().mg.disableCloudDrafts = !getUserConfig().mg.disableCloudDrafts;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
