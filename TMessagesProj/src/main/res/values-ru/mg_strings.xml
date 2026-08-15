@@ -235,4 +235,6 @@
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Коды разблокировки не совпадают.</string>
     <string name="MercurygramStripTrackingParams">Удалять параметры отслеживания</string>
     <string name="MercurygramStripTrackingParamsAbout">Удаляет параметры отслеживания переходов (utm_*, fbclid, gclid, si и подобные) из ссылок, которые вы открываете, и из ссылок, которые вы вставляете в поле сообщения. Остальная часть адреса не меняется.</string>
+    <string name="MercurygramDisableCloudDrafts">Хранить черновики только на устройстве</string>
+    <string name="MercurygramDisableCloudDraftsAbout">Не загружать неотправленные черновики в Telegram. Черновики остаются на этом устройстве и больше не появляются на других ваших устройствах.</string>
 </resources>
