@@ -106,6 +106,8 @@ public class MessagesStorage extends BaseController {
     private int archiveUnreadCount;
     private volatile int pendingMainUnreadCount;
     private volatile int pendingArchiveUnreadCount;
+    // Mercurygram: guards the delayed folder badge re-sync, storage queue only.
+    private boolean pendingUnreadCountersResync;
     private boolean databaseCreated;
 
     private final CountDownLatch openSync = new CountDownLatch(1);
@@ -3135,9 +3137,9 @@ public class MessagesStorage extends BaseController {
                         }
                     }
                     filter.pendingUnreadCount = unreadCount;
-                    /*if (BuildVars.DEBUG_VERSION) {
-                        FileLog.d("filter " + filter.name + " flags = " + filter.flags + " unread count = " + filter.pendingUnreadCount);
-                    }*/
+                    if (BuildVars.LOGS_ENABLED) {
+                        FileLog.d("filter " + filter.id + " " + filter.name + " flags = " + filter.flags + " unread count = " + filter.pendingUnreadCount);
+                    }
                     if (apply) {
                         filter.unreadCount = unreadCount;
                     }
@@ -6072,6 +6074,14 @@ public class MessagesStorage extends BaseController {
                 }
                 long did = array.keyAt(a);
                 if (read) {
+                    // Mercurygram: subtract a dialog only when it still counts towards the
+                    // badges. A read event for an already read dialog arrives more than once
+                    // (resetForumBadgeIfNeed reports every forum with no unread topic on every
+                    // batch of deleted messages), and subtracting it again each time walked the
+                    // folder badges down to zero, where they stay until the next full recount.
+                    if ((b == 0 ? dialogsWithUnread : dialogsWithMentions).indexOfKey(did) < 0) {
+                        continue;
+                    }
                     if (b == 0) {
                         dialogsWithUnread.remove(did);
                         /*if (BuildVars.DEBUG_VERSION) {
@@ -9961,7 +9971,7 @@ public class MessagesStorage extends BaseController {
                 runnable.run();
             };
         } else {*/
-        int finalMessagesCount = scheduled ? res.messages.size() : messagesCount;
+        int finalMessagesCount = scheduled || processMessages ? res.messages.size() : messagesCount;
         return () -> getMessagesController().processLoadedMessages(res, finalMessagesCount, dialogId, mergeDialogId, countQueryFinal, maxIdOverrideFinal, offset_date, true, classGuid, minUnreadIdFinal, lastMessageIdFinal, countUnreadFinal, maxUnreadDateFinal, load_type, isEndFinal, mode, threadMessageId, loadIndex, queryFromServerFinal, mentionsUnreadFinal, processMessages, isTopic, loaderLogger);
         //}
     }
@@ -14765,6 +14775,10 @@ public class MessagesStorage extends BaseController {
                 AndroidUtilities.runOnUIThread(() -> getFileLoader().cancelLoadFiles(namesToDelete));
                 getFileLoader().deleteFiles(filesToDelete, 0);
 
+                // Mercurygram: new counters of the dialogs whose value changed, so the folder
+                // badges can be adjusted incrementally below instead of recomputed from scratch.
+                LongSparseIntArray newUnreadCounts = new LongSparseIntArray();
+                LongSparseIntArray newMentionsCounts = new LongSparseIntArray();
                 for (int a = 0; a < dialogsToUpdate.size(); a++) {
                     long did = dialogsToUpdate.keyAt(a);
                     Integer[] counts = dialogsToUpdate.valueAt(a);
@@ -14779,11 +14793,27 @@ public class MessagesStorage extends BaseController {
                     cursor.dispose();
                     cursor = null;
 
+                    int new_unread_count = Math.max(0, old_unread_count - counts[0]);
+                    int new_mentions_count = Math.max(0, old_mentions_count - counts[1]);
+                    // Mercurygram: a forum reaches a folder badge through its topics, never
+                    // through dialogs.unread_count (calcUnreadCounters, putMessagesInternal do
+                    // the same), and resetForumBadgeIfNeed below already drops the badge when
+                    // the last topic is read. Counting the dialog-level number here too would
+                    // subtract the same forum twice on every deletion.
+                    if (!isForum(did, FORUM_TYPE_CHAT | FORUM_TYPE_BOT | FORUM_TYPE_DIRECT)) {
+                        if (new_unread_count != old_unread_count) {
+                            newUnreadCounts.put(did, new_unread_count);
+                        }
+                        if (new_mentions_count != old_mentions_count) {
+                            newMentionsCounts.put(did, new_mentions_count);
+                        }
+                    }
+
                     dialogsIds.add(did);
                     state = database.executeFast("UPDATE dialogs SET unread_count = ?, unread_count_i = ? WHERE did = ?");
                     state.requery();
-                    state.bindInteger(1, Math.max(0, old_unread_count - counts[0]));
-                    state.bindInteger(2, Math.max(0, old_mentions_count - counts[1]));
+                    state.bindInteger(1, new_unread_count);
+                    state.bindInteger(2, new_mentions_count);
                     state.bindLong(3, did);
                     state.step();
                     state.dispose();
@@ -15061,8 +15091,27 @@ public class MessagesStorage extends BaseController {
                 }
                 getMediaDataController().clearBotKeyboard(null, messages);
 
-                if (dialogsToUpdate.size() != 0) {
-                    resetAllUnreadCounters(false);
+                // Mercurygram: resetAllUnreadCounters() reloaded every dialog with unread or
+                // flags (hundreds of chats deserialised) on every batch of deleted incoming
+                // messages; with server-side auto-delete that ran several times per second and
+                // saturated the storage queue. Folder badges count dialogs, so only a counter
+                // that dropped to zero can change one: the incremental path used for reads.
+                if (newUnreadCounts.size() != 0 || newMentionsCounts.size() != 0) {
+                    updateFiltersReadCounter(newUnreadCounts, newMentionsCounts, true);
+                    AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_READ_DIALOG_MESSAGE));
+                }
+                // Mercurygram: the adjustment above is an approximation, and a badge that reads
+                // too low is clamped at zero and can only come back when a chat goes from read
+                // to unread, so on an account where deletions never stop the badges slide to
+                // zero and stay there. Recompute them for real, at most once every 30 seconds.
+                // A throttle, not a debounce: a runnable cancelled and reposted on every batch
+                // would never get to run here.
+                if (dialogsToUpdate.size() != 0 && !pendingUnreadCountersResync) {
+                    pendingUnreadCountersResync = true;
+                    storageQueue.postRunnable(() -> {
+                        pendingUnreadCountersResync = false;
+                        resetAllUnreadCounters(false);
+                    }, 30000);
                 }
                 updateWidgets(dialogsIds);
 
@@ -15100,8 +15149,23 @@ public class MessagesStorage extends BaseController {
         try {
             ArrayList<Long> dialogsToUpdate = new ArrayList<>();
             if (!messages.isEmpty()) {
+                // Mercurygram: a dialog only needs its row recomputed and reloaded when its last
+                // message is among the deleted ones; the branch for originalDialogId == 0 below
+                // already filters that way. Reloading unconditionally rebuilt and re-sorted the
+                // whole dialog list on the UI thread for every single deleted message, hundreds
+                // of times per second on a large account. A deleted sibling of the last
+                // message's album is not detected (the rows are already gone from messages_v2
+                // at this point), so the album preview can stay stale until the next message.
+                if (channelId != 0 || originalDialogId != 0) {
+                    long did = channelId != 0 ? -channelId : originalDialogId;
+                    cursor = database.queryFinalized(String.format(Locale.US, "SELECT did FROM dialogs WHERE did = %d AND last_mid IN(%s)", did, TextUtils.join(",", messages)));
+                    if (cursor.next()) {
+                        dialogsToUpdate.add(did);
+                    }
+                    cursor.dispose();
+                    cursor = null;
+                }
                 if (channelId != 0) {
-                    dialogsToUpdate.add(-channelId);
                     state = database.executeFast("UPDATE dialogs SET (last_mid, last_mid_group) = (SELECT mid, group_id FROM messages_v2 WHERE uid = ? AND date = (SELECT MAX(date) FROM messages_v2 WHERE uid = ?)) WHERE did = ?");
                 } else {
                     if (originalDialogId == 0) {
@@ -15112,8 +15176,6 @@ public class MessagesStorage extends BaseController {
                         }
                         cursor.dispose();
                         cursor = null;
-                    } else {
-                        dialogsToUpdate.add(originalDialogId);
                     }
                     state = database.executeFast("UPDATE dialogs SET (last_mid, last_mid_group) = (SELECT mid, group_id FROM messages_v2 WHERE uid = ? AND date = (SELECT MAX(date) FROM messages_v2 WHERE uid = ? AND date != 0)) WHERE did = ?");
                 }
@@ -15139,6 +15201,10 @@ public class MessagesStorage extends BaseController {
                         dialogsToUpdate.add(did);
                     }
                 }
+            }
+            if (dialogsToUpdate.isEmpty()) {
+                getMessagesController().getTopicsController().updateTopicsWithDeletedMessages(originalDialogId, messages);
+                return;
             }
             String ids = TextUtils.join(",", dialogsToUpdate);
 
