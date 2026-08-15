@@ -237,4 +237,6 @@
     <string name="MercurygramStripTrackingParamsAbout">여는 링크와 메시지 입력란에 붙여넣는 링크에서 클릭 추적 매개변수(utm_*, fbclid, gclid, si 등)를 제거합니다. 주소의 나머지 부분은 그대로 둡니다.</string>
     <string name="MercurygramDisableCloudDrafts">임시 보관 메시지를 이 기기에만 보관</string>
     <string name="MercurygramDisableCloudDraftsAbout">보내지 않은 임시 보관 메시지를 텔레그램에 올리지 않습니다. 임시 보관 메시지는 이 기기에만 남고 다른 기기에는 더 이상 나타나지 않습니다.</string>
+    <string name="MercurygramConfirmInternalLinks">텔레그램 링크 확인</string>
+    <string name="MercurygramConfirmInternalLinksAbout">t.me 및 tg:// 링크를 열기 전에 주소를 먼저 보여 주고 확인을 받습니다. 조용히 채널에 가입시키거나 봇을 여는 링크를 막는 데 유용합니다.</string>
 </resources>
