@@ -7617,6 +7617,11 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void loadChannelAdmins(long chatId, boolean cache) {
+        // server rejects channelParticipantsAdmins with COMMUNITY_FILTER_INVALID for non-admins of a community
+        final TLRPC.Chat adminsChat = getChat(chatId);
+        if (ChatObject.isCommunity(adminsChat) && !ChatObject.hasAdminRights(adminsChat)) {
+            return;
+        }
         int loadTime = loadingChannelAdmins.get(chatId);
         if ((SystemClock.elapsedRealtime() / 1000) - loadTime < 60) {
             return;
@@ -8270,7 +8275,15 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void didAddedNewTask(int minDate, long dialogId, SparseArray<ArrayList<Integer>> mids) {
         Utilities.stageQueue.postRunnable(() -> {
-            if (currentDeletingTaskMids == null && currentDeletingTaskMediaMids == null && !gettingNewDeleteTask || currentDeletingTaskTime != 0 && minDate < currentDeletingTaskTime) {
+            // Mercurygram: the flag also covers the "earlier task arrived" branch. A
+            // lookup already in flight either runs after the insert and sees the new
+            // row, or reports back before this runnable runs and clears the flag again.
+            // Without it every message stored with a ttl while a lookup is pending
+            // started one more independent delete loop, each re-processing the same
+            // batch (hundreds of loops after half an hour on an auto-delete account).
+            final boolean idle = currentDeletingTaskMids == null && currentDeletingTaskMediaMids == null;
+            final boolean earlier = currentDeletingTaskTime != 0 && minDate < currentDeletingTaskTime;
+            if (!gettingNewDeleteTask && (idle || earlier)) {
                 getNewDeleteTask(null, null);
             }
         });
@@ -8280,8 +8293,11 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void getNewDeleteTask(LongSparseArray<ArrayList<Integer>> oldTask, LongSparseArray<ArrayList<Integer>> oldTaskMedia) {
+        // Mercurygram: every caller is already on the stage queue, so set the flag
+        // here rather than inside the runnable, closing the window in which
+        // didAddedNewTask saw no task and no pending lookup and spawned a second loop.
+        gettingNewDeleteTask = true;
         Utilities.stageQueue.postRunnable(() -> {
-            gettingNewDeleteTask = true;
             getMessagesStorage().getNewTask(oldTask, oldTaskMedia);
         });
     }
@@ -11768,7 +11784,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             if (!res.dialogs.isEmpty()) {
                                 TLRPC.Dialog dialog = res.dialogs.get(0);
 
-                                if (dialog.top_message != 0) {
+                                if (dialog.top_message != 0 && (chat == null || !ChatObject.isNotInChat(chat))) {
                                     TLRPC.TL_messages_dialogs dialogs = new TLRPC.TL_messages_dialogs();
                                     dialogs.chats = res.chats;
                                     dialogs.users = res.users;
@@ -16389,9 +16405,8 @@ public class MessagesController extends BaseController implements NotificationCe
             } else if (updateState == 1) {
                 long updatesStartWaitTime = updatesStartWaitTimeChannels.get(channelId);
                 if (updatesStartWaitTime != 0 && (anyProceed || Math.abs(System.currentTimeMillis() - updatesStartWaitTime) <= 1500)) {
-                    if (BuildVars.LOGS_ENABLED) {
-                        FileLog.d("HOLE IN CHANNEL " + channelId + " UPDATES QUEUE - will wait more time");
-                    }
+                    // Mercurygram: no "will wait more time" log line here; with server-side
+                    // auto-delete it was a quarter of the whole log.
                     if (anyProceed) {
                         updatesStartWaitTimeChannels.put(channelId, System.currentTimeMillis());
                     }
