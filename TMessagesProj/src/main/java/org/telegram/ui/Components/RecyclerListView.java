@@ -332,6 +332,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         private int count;
 
         private ArrayList<Integer> hashes = new ArrayList<>();
+        private boolean hashesComputed;
 
         public void cleanupCache() {
             if (sectionCache == null) {
@@ -449,9 +450,12 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 
         public void update(boolean diff) {
             ArrayList<Integer> oldHashes = new ArrayList<>(hashes);
+            // on the first update there is nothing to diff against, the empty old list would
+            // make DiffUtil report inserts for sections the adapter has not counted yet
+            boolean hadHashes = hashesComputed;
             updateHashes();
 
-            if (diff) {
+            if (diff && hadHashes) {
                 DiffUtil.calculateDiff(new DiffUtil.Callback() {
                     @Override
                     public int getOldListSize() {
@@ -481,6 +485,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         public void updateHashes() {
             cleanupCache();
 
+            hashesComputed = true;
             hashes.clear();
 
             for (int i = 0, N = internalGetSectionCount(); i < N; i++) {
