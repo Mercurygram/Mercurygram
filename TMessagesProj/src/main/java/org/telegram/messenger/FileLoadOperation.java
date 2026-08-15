@@ -658,6 +658,8 @@ public class FileLoadOperation {
                             writingToFilePartsStream = false;
                             if (closeFilePartsStreamOnWriteEnd) {
                                 try {
+                                    // the stream is unbuffered ("rw"), so flush the parts index once here
+                                    filePartsStream.getFD().sync();
                                     filePartsStream.getChannel().close();
                                 } catch (Exception e) {
                                     FileLog.e(e);
@@ -1187,7 +1189,7 @@ public class FileLoadOperation {
                     cacheFileParts.delete();
                 }
                 try {
-                    filePartsStream = new RandomAccessFile(cacheFileParts, "rws");
+                    filePartsStream = new RandomAccessFile(cacheFileParts, "rw");
                     long len = filePartsStream.length();
                     if (len % 8 == 4) {
                         len -= 4;
@@ -1253,7 +1255,7 @@ public class FileLoadOperation {
             if (fileNameIv != null) {
                 cacheIvTemp = new File(tempPath, fileNameIv);
                 try {
-                    fiv = new RandomAccessFile(cacheIvTemp, "rws");
+                    fiv = new RandomAccessFile(cacheIvTemp, "rwd");
                     if (downloadedBytes != 0 && !newKeyGenerated) {
                         long len = cacheIvTemp.length();
                         if (len > 0 && len % 64 == 0) {
@@ -1280,7 +1282,7 @@ public class FileLoadOperation {
             }
             updateProgress();
             try {
-                fileOutputStream = new RandomAccessFile(cacheFileTemp, "rws");
+                fileOutputStream = new RandomAccessFile(cacheFileTemp, "rwd");
                 if (downloadedBytes != 0) {
                     fileOutputStream.seek(downloadedBytes);
                 }
@@ -1546,6 +1548,8 @@ public class FileLoadOperation {
                 synchronized (FileLoadOperation.this) {
                     if (!writingToFilePartsStream) {
                         try {
+                            // the stream is unbuffered ("rw"), so flush the parts index once here
+                            filePartsStream.getFD().sync();
                             filePartsStream.getChannel().close();
                         } catch (Exception e) {
                             FileLog.e(e);
