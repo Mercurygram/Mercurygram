@@ -237,4 +237,6 @@
     <string name="MercurygramStripTrackingParamsAbout">Видаляє параметри стеження за переходами (utm_*, fbclid, gclid, si та подібні) з посилань, які ви відкриваєте, і з посилань, які ви вставляєте в поле повідомлення. Решта адреси лишається без змін.</string>
     <string name="MercurygramDisableCloudDrafts">Зберігати чернетки лише на пристрої</string>
     <string name="MercurygramDisableCloudDraftsAbout">Не завантажувати ненадіслані чернетки до Telegram. Чернетки залишаються на цьому пристрої й більше не з\'являються на інших ваших пристроях.</string>
+    <string name="MercurygramConfirmInternalLinks">Підтверджувати посилання Telegram</string>
+    <string name="MercurygramConfirmInternalLinksAbout">Запитувати підтвердження перед відкриттям посилань t.me і tg://, показуючи спершу адресу. Корисно проти посилань, які непомітно підписують на канал або відкривають бота.</string>
 </resources>
