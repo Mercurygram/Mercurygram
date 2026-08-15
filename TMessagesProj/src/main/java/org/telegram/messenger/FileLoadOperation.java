@@ -218,6 +218,7 @@ public class FileLoadOperation {
     private WebFile webFile;
     private volatile int state = stateIdle;
     private volatile boolean paused;
+    public volatile long mgLastChunkAt;
     private long downloadedBytes;
     public long totalBytesCount;
     private long bytesCountPadding;
@@ -1887,6 +1888,7 @@ public class FileLoadOperation {
                     return false;
                 }
                 int currentBytesSize = bytes.limit();
+                mgLastChunkAt = SystemClock.elapsedRealtime();
                 if (isCdn) {
                     long cdnCheckPart = requestInfo.offset / cdnChunkCheckSize;
                     long fileOffset = cdnCheckPart * cdnChunkCheckSize;

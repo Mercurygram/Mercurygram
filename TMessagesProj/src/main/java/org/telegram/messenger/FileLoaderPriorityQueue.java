@@ -23,6 +23,7 @@ public class FileLoaderPriorityQueue {
 
     boolean checkOperationsScheduled = false;
     private final Runnable checkVisibleStoryRunnable = () -> checkLoadingOperations();
+    private final it.belloworld.mercurygram.MgDownloadStall mgStall = new it.belloworld.mercurygram.MgDownloadStall(() -> checkLoadingOperations());
 
     Runnable checkOperationsRunnable = () -> {
         checkLoadingOperationInternal();
@@ -142,11 +143,12 @@ public class FileLoaderPriorityQueue {
                     operation.pause();
                 }
             }
-            lastPriority = operation.getPriority();
+            if (mgStall.blocksLowPriority(operation)) lastPriority = operation.getPriority();
         }
         for (int i = 0; i < tmpListOperations.size(); i++) {
             tmpListOperations.get(i).start();
         }
+        mgStall.scheduleRecheck(workerQueue, allOperations);
     }
 
     public boolean remove(FileLoadOperation operation) {
