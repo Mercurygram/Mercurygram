@@ -233,4 +233,6 @@
     <string name="MercurygramSendMediaPermissionGames">Games</string>
     <string name="MercurygramSendMediaPermissionInline">Inline Bots</string>
     <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
+    <string name="MercurygramStripTrackingParams">Strip tracking parameters</string>
+    <string name="MercurygramStripTrackingParamsAbout">Remove click-tracking parameters (utm_*, fbclid, gclid, si and similar) from links you open and from links you paste into the message field. The rest of the address is left untouched.</string>
 </resources>

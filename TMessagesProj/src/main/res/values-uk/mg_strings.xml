@@ -233,4 +233,6 @@
     <string name="HiddenAccountsIncorrectCurrentUnlockCode">Неправильний поточний код розблокування.</string>
     <string name="HiddenAccountsUnlockCodeMatchesAppPasscode">Цей код розблокування збігається з кодом доступу застосунку. Використайте інший код.</string>
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Коди розблокування не збігаються.</string>
+    <string name="MercurygramStripTrackingParams">Видаляти параметри стеження</string>
+    <string name="MercurygramStripTrackingParamsAbout">Видаляє параметри стеження за переходами (utm_*, fbclid, gclid, si та подібні) з посилань, які ви відкриваєте, і з посилань, які ви вставляєте в поле повідомлення. Решта адреси лишається без змін.</string>
 </resources>
