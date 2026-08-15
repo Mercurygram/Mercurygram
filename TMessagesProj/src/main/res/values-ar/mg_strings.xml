@@ -237,4 +237,6 @@
     <string name="MercurygramStripTrackingParamsAbout">يزيل معاملات تتبع النقرات (‏utm_*‎ و‏fbclid و‏gclid و‏si وما شابهها) من الروابط التي تفتحها ومن الروابط التي تلصقها في حقل الرسالة. يبقى باقي العنوان كما هو.</string>
     <string name="MercurygramDisableCloudDrafts">إبقاء المسودات على هذا الجهاز</string>
     <string name="MercurygramDisableCloudDraftsAbout">عدم رفع المسودات غير المُرسلة إلى تيليجرام. تبقى المسودات على هذا الجهاز ولا تظهر بعد الآن على أجهزتك الأخرى.</string>
+    <string name="MercurygramConfirmInternalLinks">تأكيد روابط تيليجرام</string>
+    <string name="MercurygramConfirmInternalLinksAbout">يطلب التأكيد قبل فتح روابط ‏t.me و‏tg://‎، مع عرض العنوان أولاً. مفيد ضد الروابط التي تنضم إلى قناة أو تفتح بوتًا دون إشعارك.</string>
 </resources>

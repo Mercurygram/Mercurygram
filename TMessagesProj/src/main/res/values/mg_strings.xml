@@ -237,4 +237,6 @@
     <string name="MercurygramStripTrackingParamsAbout">Remove click-tracking parameters (utm_*, fbclid, gclid, si and similar) from links you open and from links you paste into the message field. The rest of the address is left untouched.</string>
     <string name="MercurygramDisableCloudDrafts">Keep drafts on this device</string>
     <string name="MercurygramDisableCloudDraftsAbout">Don\'t upload unsent drafts to Telegram. Drafts stay on this device and stop appearing on your other devices.</string>
+    <string name="MercurygramConfirmInternalLinks">Confirm Telegram links</string>
+    <string name="MercurygramConfirmInternalLinksAbout">Ask for confirmation before opening t.me and tg:// links, showing the address first. Useful against links that quietly join a channel or open a bot.</string>
 </resources>

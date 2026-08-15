@@ -237,4 +237,6 @@
     <string name="MercurygramStripTrackingParamsAbout">Verwijdert klik-trackingparameters (utm_*, fbclid, gclid, si en vergelijkbare) uit links die je opent en uit links die je in het berichtveld plakt. De rest van het adres blijft ongewijzigd.</string>
     <string name="MercurygramDisableCloudDrafts">Concepten op dit apparaat houden</string>
     <string name="MercurygramDisableCloudDraftsAbout">Niet-verzonden concepten niet naar Telegram uploaden. Concepten blijven op dit apparaat en verschijnen niet meer op je andere apparaten.</string>
+    <string name="MercurygramConfirmInternalLinks">Telegram-links bevestigen</string>
+    <string name="MercurygramConfirmInternalLinksAbout">Vraagt om bevestiging voordat t.me- en tg://-links worden geopend, met eerst het adres. Handig tegen links die ongemerkt een kanaal joinen of een bot openen.</string>
 </resources>
