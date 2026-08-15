@@ -45,6 +45,8 @@
     <string name="MercurygramPreferSecretChatsAbout">Wanneer je op de opstelknop tikt om een nieuw gesprek te beginnen, wordt er een eind-tot-eind versleutelde geheime chat aangemaakt in plaats van een gewone. Geheime chats blijven alleen op dit apparaat en worden niet tussen je apparaten gesynchroniseerd. Bestaande chats en andere manieren om een chat te openen blijven ongewijzigd.</string>
     <string name="MercurygramUseSystemFont">Systeemlettertype gebruiken</string>
     <string name="MercurygramUseSystemFontAbout">Vervangt de meegeleverde Roboto-lettertypen door de systeemlettertypen van het apparaat. Reeds geopende schermen moeten mogelijk opnieuw worden geopend om de wijziging volledig toe te passen.</string>
+    <string name="MercurygramShowCharCounter">Tekenteller tonen</string>
+    <string name="MercurygramShowCharCounterAbout">Toont hoeveel tekens het bericht bevat dat je typt. Handig in groepen waar een bot berichten boven een lengtelimiet verwijdert. De teller is verborgen zolang Telegram zijn eigen teller van resterende tekens toont.</string>
     <string name="MercurygramSavedMessagesHistory">Verwijderde &amp; bewerkte berichten opslaan</string>
     <string name="MercurygramSavedMessagesHistoryAbout">Verwijderde berichten blijven in de chat staan, grijs gemaakt en niet te beantwoorden; bewerkte berichten behouden hun vorige versies, toegankelijk via het berichtmenu. Wordt los van de Telegram-cache opgeslagen. Zelfvernietigende berichten en geheime chats worden nooit opgeslagen.</string>
     <string name="MercurygramSavedMessagesDeleted">verwijderd</string>
