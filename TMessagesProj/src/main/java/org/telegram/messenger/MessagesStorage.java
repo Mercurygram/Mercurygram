@@ -2799,7 +2799,10 @@ public class MessagesStorage extends BaseController {
                 /*if (BuildVars.DEBUG_VERSION) {
                     FileLog.d("unread chat " + did + " counters = " + unread + " and " + mentions);
                 }*/
-                dialogsByFolders.put(did, folderId);
+                // a dialog storage only knows from a message has folder_id -1 until the
+                // dialog itself is fetched; count it in the main list rather than index the
+                // counter arrays with -1, the way updateFiltersReadCounter already does
+                dialogsByFolders.put(did, folderId < 0 || folderId > 1 ? 0 : folderId);
                 if (DialogObject.isEncryptedDialog(did)) {
                     int encryptedChatId = DialogObject.getEncryptedChatId(did);
                     if (!encryptedToLoad.contains(encryptedChatId)) {
