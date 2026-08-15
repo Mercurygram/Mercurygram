@@ -1491,7 +1491,8 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                 return -1;
             }
             if (lhs instanceof TLRPC.ChannelParticipant && rhs instanceof TLRPC.ChannelParticipant) {
-                return (int) (MessageObject.getPeerId(((TLRPC.ChannelParticipant) lhs).peer) - MessageObject.getPeerId(((TLRPC.ChannelParticipant) rhs).peer));
+                // the long difference overflows int and breaks the comparator contract
+                return Long.compare(MessageObject.getPeerId(((TLRPC.ChannelParticipant) lhs).peer), MessageObject.getPeerId(((TLRPC.ChannelParticipant) rhs).peer));
             }
             return 0;
         });

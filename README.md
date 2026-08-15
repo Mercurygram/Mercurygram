@@ -101,6 +101,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 Fixes for bugs that exist in stock Telegram for Android. Several are backported from [Inugram](https://github.com/teidesu/inugram) (MIT).
 
 - Fix the heads-up notification on Android 16 listing every unread chat instead of the chat the new message came from ([#123](https://github.com/Mercurygram/Mercurygram/issues/123)). The notification that alerts is now the one for the newest chat, carrying that chat's own sound and importance, and the group summary stays silent
+- Fix a set of upstream crashes: opening a profile of a deleted user with a story privacy badge, transferring channel ownership, picking a community in the forward list, a video cover frame that fails to decode, sticker segmentation on a recycled bitmap, and three list-adapter crashes
 
 ### TF-originated de-googling patches
 
