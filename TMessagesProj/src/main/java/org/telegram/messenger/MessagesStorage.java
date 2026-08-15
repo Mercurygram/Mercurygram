@@ -9961,7 +9961,7 @@ public class MessagesStorage extends BaseController {
                 runnable.run();
             };
         } else {*/
-        int finalMessagesCount = scheduled ? res.messages.size() : messagesCount;
+        int finalMessagesCount = scheduled || processMessages ? res.messages.size() : messagesCount;
         return () -> getMessagesController().processLoadedMessages(res, finalMessagesCount, dialogId, mergeDialogId, countQueryFinal, maxIdOverrideFinal, offset_date, true, classGuid, minUnreadIdFinal, lastMessageIdFinal, countUnreadFinal, maxUnreadDateFinal, load_type, isEndFinal, mode, threadMessageId, loadIndex, queryFromServerFinal, mentionsUnreadFinal, processMessages, isTopic, loaderLogger);
         //}
     }
@@ -15100,8 +15100,21 @@ public class MessagesStorage extends BaseController {
         try {
             ArrayList<Long> dialogsToUpdate = new ArrayList<>();
             if (!messages.isEmpty()) {
+                // Mercurygram: a dialog only needs its row recomputed and reloaded when its last
+                // message (or the album it belongs to) is among the deleted ones; the branch for
+                // originalDialogId == 0 below already filters that way. Reloading unconditionally
+                // rebuilt and re-sorted the whole dialog list on the UI thread for every single
+                // deleted message, hundreds of times per second on a large account.
+                if (channelId != 0 || originalDialogId != 0) {
+                    long did = channelId != 0 ? -channelId : originalDialogId;
+                    cursor = database.queryFinalized(String.format(Locale.US, "SELECT did FROM dialogs WHERE did = %d AND (last_mid IN(%s) OR last_mid_group IS NOT NULL)", did, TextUtils.join(",", messages)));
+                    if (cursor.next()) {
+                        dialogsToUpdate.add(did);
+                    }
+                    cursor.dispose();
+                    cursor = null;
+                }
                 if (channelId != 0) {
-                    dialogsToUpdate.add(-channelId);
                     state = database.executeFast("UPDATE dialogs SET (last_mid, last_mid_group) = (SELECT mid, group_id FROM messages_v2 WHERE uid = ? AND date = (SELECT MAX(date) FROM messages_v2 WHERE uid = ?)) WHERE did = ?");
                 } else {
                     if (originalDialogId == 0) {
@@ -15112,8 +15125,6 @@ public class MessagesStorage extends BaseController {
                         }
                         cursor.dispose();
                         cursor = null;
-                    } else {
-                        dialogsToUpdate.add(originalDialogId);
                     }
                     state = database.executeFast("UPDATE dialogs SET (last_mid, last_mid_group) = (SELECT mid, group_id FROM messages_v2 WHERE uid = ? AND date = (SELECT MAX(date) FROM messages_v2 WHERE uid = ? AND date != 0)) WHERE did = ?");
                 }
@@ -15139,6 +15150,10 @@ public class MessagesStorage extends BaseController {
                         dialogsToUpdate.add(did);
                     }
                 }
+            }
+            if (dialogsToUpdate.isEmpty()) {
+                getMessagesController().getTopicsController().updateTopicsWithDeletedMessages(originalDialogId, messages);
+                return;
             }
             String ids = TextUtils.join(",", dialogsToUpdate);
 
