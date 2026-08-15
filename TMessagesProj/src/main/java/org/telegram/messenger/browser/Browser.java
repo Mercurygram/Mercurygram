@@ -369,6 +369,7 @@ public class Browser {
         if (!keepWebAuthTokens) {
             uri = withoutWebAuthTokens(uri);
         }
+        uri = it.belloworld.mercurygram.MgUrlCleaner.clean(uri);
         final int currentAccount = UserConfig.selectedAccount;
         boolean[] forceBrowser = new boolean[]{false};
         boolean internalUri = isInternalUri(uri, forceBrowser);

@@ -3671,6 +3671,7 @@ public class AndroidUtilities {
     }
 
     public static boolean addToClipboard(CharSequence plain, String html) {
+        if (it.belloworld.mercurygram.MgUrlCleaner.handleCopy(plain)) return true;
         if (html == null) return addToClipboard(plain);
         try {
             android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -3684,6 +3685,7 @@ public class AndroidUtilities {
     }
 
     public static boolean addToClipboard(CharSequence str) {
+        if (it.belloworld.mercurygram.MgUrlCleaner.handleCopy(str)) return true;
         try {
             android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
 
