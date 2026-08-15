@@ -235,4 +235,6 @@
     <string name="HiddenAccountsUnlockCodesDoNotMatch">I codici di sblocco non corrispondono.</string>
     <string name="MercurygramStripTrackingParams">Rimuovi i parametri di tracciamento</string>
     <string name="MercurygramStripTrackingParamsAbout">Rimuove i parametri di tracciamento dei clic (utm_*, fbclid, gclid, si e simili) dai link che apri e da quelli che incolli nel campo del messaggio. Il resto dell\'indirizzo resta invariato.</string>
+    <string name="MercurygramDisableCloudDrafts">Tieni le bozze su questo dispositivo</string>
+    <string name="MercurygramDisableCloudDraftsAbout">Non caricare su Telegram le bozze non inviate. Le bozze restano su questo dispositivo e non compaiono più sugli altri.</string>
 </resources>
