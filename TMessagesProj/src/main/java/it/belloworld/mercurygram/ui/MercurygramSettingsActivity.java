@@ -64,6 +64,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_TRANSLATION = 50;
     private static final int ID_TRANSCRIPTION = 51;
     private static final int ID_EMOJI_PACK = 60;
+    private static final int ID_STRIP_TRACKING_PARAMS = 61;
 
     @Override
     protected CharSequence getTitle() {
@@ -186,6 +187,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramDisableLinkPreviews))
                 .setChecked(getUserConfig().mg.disableLinkPreviews));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableLinkPreviewsAbout)));
+
+        items.add(UItem.asCheck(ID_STRIP_TRACKING_PARAMS,
+                        LocaleController.getString(R.string.MercurygramStripTrackingParams))
+                .setChecked(getUserConfig().mg.stripTrackingParams));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramStripTrackingParamsAbout)));
 
         items.add(UItem.asCheck(ID_PREFER_SECRET_CHATS,
                         LocaleController.getString(R.string.MercurygramPreferSecretChats))
@@ -352,6 +358,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_DISABLE_LINK_PREVIEWS:
                 getUserConfig().mg.disableLinkPreviews = !getUserConfig().mg.disableLinkPreviews;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_STRIP_TRACKING_PARAMS:
+                getUserConfig().mg.stripTrackingParams = !getUserConfig().mg.stripTrackingParams;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
