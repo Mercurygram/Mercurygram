@@ -5548,6 +5548,9 @@ public class AndroidUtilities {
 
     public static boolean shouldShowUrlInAlert(String url) {
         try {
+            if (UserConfig.getInstance(UserConfig.selectedAccount).mg.confirmInternalLinks && Browser.isInternalUrl(url, null)) {
+                return true;
+            }
             Uri uri = Uri.parse(url);
             url = uri.getHost();
             return checkHostForPunycode(url);
