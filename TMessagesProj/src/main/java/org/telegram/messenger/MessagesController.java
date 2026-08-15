@@ -23098,7 +23098,12 @@ public class MessagesController extends BaseController implements NotificationCe
             loadMessagesInternal(dialogId, 0, true, count, finalMessageId, 0, true, 0, classGuid, 2, 0, 0, 0, -1, 0, 0, 0, false, 0, true, false, false, null, 0L);
         }
 
-        return () -> getConnectionsManager().cancelRequestsForGuid(classGuid);
+        return () -> {
+            // cancelling the request alone left the delegate registered forever
+            getNotificationCenter().removeObserver(delegate, NotificationCenter.messagesDidLoadWithoutProcess);
+            getNotificationCenter().removeObserver(delegate, NotificationCenter.loadingMessagesFailed);
+            getConnectionsManager().cancelRequestsForGuid(classGuid);
+        };
     }
 
     public int getChatPendingRequestsOnClosed(long chatId) {
