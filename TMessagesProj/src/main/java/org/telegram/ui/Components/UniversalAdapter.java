@@ -1103,8 +1103,10 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
         final int viewType = holder.getItemViewType();
         if (viewType >= UItem.factoryViewTypeStartsWith) {
             UItem.UItemFactory<?> factory = UItem.findFactory(viewType);
-            if (factory != null) {
-                factory.attachedView(listView, holder.itemView, getItem(holder.getAdapterPosition()));
+            // a cached holder can be attached while its adapter position is already gone
+            final UItem item = getItem(holder.getAdapterPosition());
+            if (factory != null && item != null) {
+                factory.attachedView(listView, holder.itemView, item);
             }
         } else {
             switch (viewType) {
