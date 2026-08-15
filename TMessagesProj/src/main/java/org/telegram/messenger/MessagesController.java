@@ -7617,6 +7617,11 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void loadChannelAdmins(long chatId, boolean cache) {
+        // server rejects channelParticipantsAdmins with COMMUNITY_FILTER_INVALID for non-admins of a community
+        final TLRPC.Chat adminsChat = getChat(chatId);
+        if (ChatObject.isCommunity(adminsChat) && !ChatObject.hasAdminRights(adminsChat)) {
+            return;
+        }
         int loadTime = loadingChannelAdmins.get(chatId);
         if ((SystemClock.elapsedRealtime() / 1000) - loadTime < 60) {
             return;
@@ -11768,7 +11773,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             if (!res.dialogs.isEmpty()) {
                                 TLRPC.Dialog dialog = res.dialogs.get(0);
 
-                                if (dialog.top_message != 0) {
+                                if (dialog.top_message != 0 && (chat == null || !ChatObject.isNotInChat(chat))) {
                                     TLRPC.TL_messages_dialogs dialogs = new TLRPC.TL_messages_dialogs();
                                     dialogs.chats = res.chats;
                                     dialogs.users = res.users;
