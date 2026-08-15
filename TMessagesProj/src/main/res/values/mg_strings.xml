@@ -101,6 +101,8 @@
     <string name="MercurygramPreferSecretChatsAbout">When you tap the compose button to start a new conversation, create an end-to-end encrypted secret chat instead of a regular one. Secret chats live only on this device and don\'t sync across your devices. Existing chats and other ways to open a chat are unaffected.</string>
     <string name="MercurygramUseSystemFont">Use system font</string>
     <string name="MercurygramUseSystemFontAbout">Replace the bundled Roboto fonts with the device system fonts. Existing screens may need to be reopened for the change to fully apply.</string>
+    <string name="MercurygramShowCharCounter">Show character counter</string>
+    <string name="MercurygramShowCharCounterAbout">Show how many characters the message you are typing contains. Useful in groups where a bot deletes messages longer than a limit. It is hidden while Telegram shows its own remaining-characters counter.</string>
     <string name="MercurygramSavedMessagesHistory">Save deleted &amp; edited messages</string>
     <string name="MercurygramSavedMessagesHistoryAbout">Deleted messages stay in the chat, grayed out and non-replyable; edited messages keep their previous versions accessible from the message menu. Stored separately from the Telegram cache. Self-destructing messages and secret chats are never saved.</string>
     <string name="MercurygramSavedMessagesDeleted">deleted</string>
