@@ -45,6 +45,8 @@
     <string name="MercurygramPreferSecretChatsAbout">Quando tocchi il pulsante di composizione per iniziare una nuova conversazione, crea una chat segreta cifrata end-to-end invece di una normale. Le chat segrete restano solo su questo dispositivo e non si sincronizzano tra i tuoi dispositivi. Le chat esistenti e gli altri modi per aprire una chat non sono interessati.</string>
     <string name="MercurygramUseSystemFont">Usa il font di sistema</string>
     <string name="MercurygramUseSystemFontAbout">Sostituisce i font Roboto inclusi con i font di sistema del dispositivo. Le schermate già aperte potrebbero dover essere riaperte perché la modifica abbia pieno effetto.</string>
+    <string name="MercurygramShowCharCounter">Mostra il contatore dei caratteri</string>
+    <string name="MercurygramShowCharCounterAbout">Mostra quanti caratteri contiene il messaggio che stai scrivendo. Utile nei gruppi in cui un bot elimina i messaggi più lunghi di un limite. È nascosto mentre Telegram mostra il proprio contatore dei caratteri rimanenti.</string>
     <string name="MercurygramSavedMessagesHistory">Salva messaggi eliminati e modificati</string>
     <string name="MercurygramSavedMessagesHistoryAbout">I messaggi eliminati restano nella chat, in grigio e non rispondibili; i messaggi modificati conservano le versioni precedenti, accessibili dal menu del messaggio. Memorizzati separatamente dalla cache di Telegram. I messaggi ad autodistruzione e le chat segrete non vengono mai salvati.</string>
     <string name="MercurygramSavedMessagesDeleted">eliminato</string>

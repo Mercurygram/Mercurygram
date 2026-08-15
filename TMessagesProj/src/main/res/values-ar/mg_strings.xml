@@ -45,6 +45,8 @@
     <string name="MercurygramPreferSecretChatsAbout">عند الضغط على زر الإنشاء لبدء محادثة جديدة، يتم إنشاء محادثة سرية مشفّرة من طرف إلى طرف بدلاً من محادثة عادية. تبقى المحادثات السرية على هذا الجهاز فقط ولا تتم مزامنتها بين أجهزتك. لا تتأثر المحادثات الحالية والطرق الأخرى لفتح محادثة.</string>
     <string name="MercurygramUseSystemFont">استخدام خط النظام</string>
     <string name="MercurygramUseSystemFontAbout">يستبدل خطوط Roboto المضمنة بخطوط النظام في الجهاز. قد تحتاج إلى إعادة فتح الشاشات المفتوحة بالفعل لتطبيق التغيير بالكامل.</string>
+    <string name="MercurygramShowCharCounter">إظهار عدّاد الأحرف</string>
+    <string name="MercurygramShowCharCounterAbout">يعرض عدد الأحرف في الرسالة التي تكتبها. مفيد في المجموعات التي يحذف فيها بوت الرسائل التي تتجاوز حدًا معيّنًا للطول. يختفي العدّاد أثناء عرض تيليجرام لعدّاد الأحرف المتبقية الخاص به.</string>
     <string name="MercurygramSavedMessagesHistory">حفظ الرسائل المحذوفة والمعدّلة</string>
     <string name="MercurygramSavedMessagesHistoryAbout">تبقى الرسائل المحذوفة في المحادثة باللون الرمادي ولا يمكن الرد عليها، بينما تحتفظ الرسائل المعدّلة بنسخها السابقة المتاحة من قائمة الرسالة. تُخزَّن بشكل منفصل عن ذاكرة تيليجرام المؤقتة. لا يتم حفظ الرسائل ذاتية التدمير والمحادثات السرية أبدًا.</string>
     <string name="MercurygramSavedMessagesDeleted">محذوفة</string>

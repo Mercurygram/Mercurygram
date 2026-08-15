@@ -67,6 +67,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_STRIP_TRACKING_PARAMS = 61;
     private static final int ID_DISABLE_CLOUD_DRAFTS = 62;
     private static final int ID_CONFIRM_INTERNAL_LINKS = 63;
+    private static final int ID_SHOW_CHAR_COUNTER = 64;
 
     @Override
     protected CharSequence getTitle() {
@@ -110,6 +111,10 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(MgSettingsScope.globalCheck(ID_USE_SYSTEM_FONT, LocaleController.getString(R.string.MercurygramUseSystemFont))
                 .setChecked(SharedConfig.useSystemFont));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramUseSystemFontAbout)));
+
+        items.add(UItem.asCheck(ID_SHOW_CHAR_COUNTER, LocaleController.getString(R.string.MercurygramShowCharCounter))
+                .setChecked(getUserConfig().mg.showCharCounter));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramShowCharCounterAbout)));
 
         items.add(UItem.asButton(ID_EMOJI_PACK,
                 LocaleController.getString(R.string.MercurygramEmojiTitle),
@@ -277,6 +282,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_HIDE_CHAT_KEYBOARD:
                 getUserConfig().mg.hideChatKeyboard = !getUserConfig().mg.hideChatKeyboard;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_SHOW_CHAR_COUNTER:
+                getUserConfig().mg.showCharCounter = !getUserConfig().mg.showCharCounter;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
