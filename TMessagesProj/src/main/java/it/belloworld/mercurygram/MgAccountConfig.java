@@ -29,6 +29,7 @@ public class MgAccountConfig {
     public boolean disableLinkPreviews = false;
     public boolean preferSecretChats = false;
     public boolean deleteForAllByDefault = false;
+    public boolean stripTrackingParams = false;
     // MG: the reduced temp-key TTL ladder (1h→6h→24h) exhausted on this
     // account — server kept rejecting bindTempAuthKey, so native reduced
     // mode was force-disabled here while the global SharedConfig toggle
@@ -56,6 +57,7 @@ public class MgAccountConfig {
         editor.putBoolean("disableLinkPreviews", disableLinkPreviews);
         editor.putBoolean("preferSecretChats", preferSecretChats);
         editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
+        editor.putBoolean("stripTrackingParams", stripTrackingParams);
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -77,6 +79,7 @@ public class MgAccountConfig {
         disableLinkPreviews = preferences.getBoolean("disableLinkPreviews", false);
         preferSecretChats = preferences.getBoolean("preferSecretChats", false);
         deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
+        stripTrackingParams = preferences.getBoolean("stripTrackingParams", false);
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -98,6 +101,7 @@ public class MgAccountConfig {
         disableLinkPreviews = false;
         preferSecretChats = false;
         deleteForAllByDefault = false;
+        stripTrackingParams = false;
         mgReducedTrackingExhausted = false;
     }
 }
