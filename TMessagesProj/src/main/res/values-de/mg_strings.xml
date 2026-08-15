@@ -242,4 +242,6 @@
     <string name="HiddenAccountsIncorrectCurrentUnlockCode">Falscher aktueller Freischaltcode.</string>
     <string name="HiddenAccountsUnlockCodeMatchesAppPasscode">Dieser Freischaltcode stimmt mit dem App-Sperrcode überein. Verwende einen anderen Code.</string>
     <string name="HiddenAccountsUnlockCodesDoNotMatch">Freischaltcodes stimmen nicht überein.</string>
+    <string name="MercurygramStripTrackingParams">Tracking-Parameter entfernen</string>
+    <string name="MercurygramStripTrackingParamsAbout">Entfernt Klick-Tracking-Parameter (utm_*, fbclid, gclid, igsh und ähnliche) aus Links, die du öffnest, aus Links, die du in das Nachrichtenfeld einfügst, und aus Links, die du aus einer anderen App an Mercurygram weitergibst. Auch seitenspezifische Parameter werden entfernt, etwa bei YouTube, Instagram, TikTok, X und Amazon. Der Rest der Adresse bleibt unverändert.</string>
 </resources>
