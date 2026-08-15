@@ -777,7 +777,7 @@ public class StickerMakerView extends FrameLayout implements NotificationCenter.
 
     private Bitmap createSmoothEdgesSegmentedImage(int x, int y, Bitmap inputBitmap, boolean full) {
         Bitmap srcBitmap = getSourceBitmap();
-        if (inputBitmap == null || inputBitmap.isRecycled() || srcBitmap == null) {
+        if (inputBitmap == null || inputBitmap.isRecycled() || srcBitmap == null || srcBitmap.isRecycled()) {
             return null;
         }
         Paint bitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
@@ -823,7 +823,7 @@ public class StickerMakerView extends FrameLayout implements NotificationCenter.
             final ArrayList<SegmentedObject> finalObjects = new ArrayList<>();
 
             Utilities.themeQueue.postRunnable(() -> {
-                if (sourceBitmap == null || segmentingLoaded) return;
+                if (sourceBitmap == null || sourceBitmap.isRecycled() || segmentingLoaded) return;
                 Matrix matrix = new Matrix();
                 matrix.postScale(1f / sourceBitmap.getWidth(), 1f / sourceBitmap.getHeight());
                 matrix.postTranslate(-.5f, -.5f);
