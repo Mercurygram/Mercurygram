@@ -492,6 +492,8 @@ public abstract class BaseFragment {
 
     @CallSuper
     public void onFragmentDestroy() {
+        // a reaction overlay still running holds this fragment alive through its cell
+        org.telegram.ui.Components.Reactions.ReactionsEffectOverlay.dismissByFragment(this);
         getConnectionsManager().cancelRequestsForGuid(classGuid);
         getMessagesStorage().cancelTasksForGuid(classGuid);
         isFinished = true;
