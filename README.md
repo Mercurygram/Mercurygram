@@ -96,6 +96,12 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Restore the animated 🍑 emoji Telegram removed server-side in 2022-2023: sending it alone plays the large animation again, and tapping it replays it. The animation is not bundled in the APK, it is fetched once from a Telegram sticker pack and then cached on-device
 - Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
 
+### Upstream bug fixes
+
+Fixes for bugs that exist in stock Telegram for Android. Several are backported from [Inugram](https://github.com/teidesu/inugram) (MIT).
+
+- Fix the heads-up notification on Android 16 listing every unread chat instead of the chat the new message came from ([#123](https://github.com/Mercurygram/Mercurygram/issues/123)). The notification that alerts is now the one for the newest chat, carrying that chat's own sound and importance, and the group summary stays silent
+
 ### TF-originated de-googling patches
 
 These patches were originally derived from the Telegram-FOSS effort, but Mercurygram now forward-ports and rebases them directly onto upstream Telegram.
