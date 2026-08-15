@@ -45,6 +45,8 @@
     <string name="MercurygramPreferSecretChatsAbout">Wenn du auf die Schaltfläche zum Verfassen tippst, um eine neue Unterhaltung zu beginnen, wird ein Ende-zu-Ende-verschlüsselter geheimer Chat statt eines normalen erstellt. Geheime Chats bleiben nur auf diesem Gerät und werden nicht zwischen deinen Geräten synchronisiert. Bestehende Chats und andere Wege, einen Chat zu öffnen, sind nicht betroffen.</string>
     <string name="MercurygramUseSystemFont">Systemschriftart verwenden</string>
     <string name="MercurygramUseSystemFontAbout">Ersetzt die mitgelieferten Roboto-Schriftarten durch die Systemschriftarten des Geräts. Bereits geöffnete Bildschirme müssen ggf. neu geöffnet werden, damit die Änderung vollständig wirksam wird.</string>
+    <string name="MercurygramShowCharCounter">Zeichenzähler anzeigen</string>
+    <string name="MercurygramShowCharCounterAbout">Zeigt an, wie viele Zeichen die Nachricht enthält, die du gerade schreibst. Nützlich in Gruppen, in denen ein Bot Nachrichten über einer Längenbegrenzung löscht. Er wird ausgeblendet, solange Telegram seinen eigenen Zähler der verbleibenden Zeichen anzeigt.</string>
     <string name="MercurygramSavedMessagesHistory">Gelöschte &amp; bearbeitete Nachrichten speichern</string>
     <string name="MercurygramSavedMessagesHistoryAbout">Gelöschte Nachrichten bleiben im Chat sichtbar, ausgegraut und nicht beantwortbar; bearbeitete Nachrichten behalten ihre früheren Versionen, abrufbar über das Nachrichtenmenü. Wird getrennt vom Telegram-Cache gespeichert. Selbstzerstörende Nachrichten und geheime Chats werden nie gespeichert.</string>
     <string name="MercurygramSavedMessagesDeleted">gelöscht</string>
