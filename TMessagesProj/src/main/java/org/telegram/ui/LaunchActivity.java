@@ -6939,7 +6939,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((OnBackInvokedCallback) onBackInvokedCallback);
             }
         }
-        Bulletin.removeDelegate(frameLayout);
+        // onDestroy can run before the layout was ever created
+        if (frameLayout != null) {
+            Bulletin.removeDelegate(frameLayout);
+        }
         VideoAds.dropCache();
 
         clearFragments();

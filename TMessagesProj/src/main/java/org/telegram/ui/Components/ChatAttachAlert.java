@@ -6123,6 +6123,10 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         if (topCommentTextView != null) {
             topCommentTextView.onDestroy();
         }
+        // the mentions adapter holds the chat fragment through its observers
+        if (mentionContainer != null && mentionContainer.getAdapter() != null) {
+            mentionContainer.getAdapter().onDestroy();
+        }
     }
 
     @Override
