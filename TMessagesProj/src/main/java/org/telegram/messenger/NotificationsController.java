@@ -4917,6 +4917,7 @@ public class NotificationsController extends BaseController implements Notificat
         FileLog.d("showExtraNotifications: passcode="+passcode+" waitingForPasscode=" + waitingForPasscode + " selfUserId=" + selfUserId + " useSummaryNotification=" + useSummaryNotification);
 
         int maxCount = 7;
+        boolean anyChildAlerts = false;
         LongSparseArray<Person> personCache = new LongSparseArray<>();
         for (int b = 0, size = sortedDialogs.size(); b < size; b++) {
             if (holders.size() >= maxCount) {
@@ -5692,7 +5693,28 @@ public class NotificationsController extends BaseController implements Notificat
             }
 
             if (Build.VERSION.SDK_INT >= 26) {
-                setNotificationChannel(mainNotification, builder, useSummaryNotification);
+                // Mercurygram: when a summary is used, every child sits on the silent
+                // OTHER_NOTIFICATIONS_CHANNEL and only the summary may alert, so the heads-up
+                // is the summary and lists every unread chat. Alert on the newest chat's own
+                // notification (which already carries that chat's channel) instead.
+                // Other children keep OTHER_NOTIFICATIONS_CHANNEL, as before; they never
+                // alert, so their per-chat sound settings are moot. Give each child its own
+                // channel only if the system per-notification settings ever need to be exact.
+                final boolean alerts = useSummaryNotification && !isSilent && (dialogKey.story
+                        ? chatType == TYPE_STORIES
+                        : chatType != TYPE_STORIES && dialogId == lastDialogId && topicId == lastTopicId);
+                if (alerts) {
+                    builder.setChannelId(mainNotification.getChannelId());
+                    builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+                    anyChildAlerts = true;
+                } else {
+                    setNotificationChannel(mainNotification, builder, useSummaryNotification);
+                    if (useSummaryNotification) {
+                        // without a summary this child IS the alerting notification, so it must keep
+                        // alerting on every new message in the chat
+                        builder.setOnlyAlertOnce(true);
+                    }
+                }
             }
             FileLog.d("showExtraNotifications: holders.add " + dialogId);
             holders.add(new NotificationHolder(internalId, dialogId, dialogKey.story, topicId, name, user, chat, builder));
@@ -5702,6 +5724,14 @@ public class NotificationsController extends BaseController implements Notificat
         if (useSummaryNotification) {
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("show summary with id " + notificationId);
+            }
+            // Mercurygram: silence the summary only when a child took over the alert; the newest
+            // chat can be dropped from the holder loop (unknown user, maxCount), and then the
+            // summary is the only notification left that may make a sound.
+            if (Build.VERSION.SDK_INT >= 26 && anyChildAlerts) {
+                notificationBuilder.setChannelId(OTHER_NOTIFICATIONS_CHANNEL);
+                notificationBuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+                mainNotification = notificationBuilder.build();
             }
             try {
                 notificationManager.notify(notificationId, mainNotification);
