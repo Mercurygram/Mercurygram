@@ -66,6 +66,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_EMOJI_PACK = 60;
     private static final int ID_STRIP_TRACKING_PARAMS = 61;
     private static final int ID_DISABLE_CLOUD_DRAFTS = 62;
+    private static final int ID_CONFIRM_INTERNAL_LINKS = 63;
 
     @Override
     protected CharSequence getTitle() {
@@ -198,6 +199,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramDisableCloudDrafts))
                 .setChecked(getUserConfig().mg.disableCloudDrafts));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableCloudDraftsAbout)));
+
+        items.add(UItem.asCheck(ID_CONFIRM_INTERNAL_LINKS,
+                        LocaleController.getString(R.string.MercurygramConfirmInternalLinks))
+                .setChecked(getUserConfig().mg.confirmInternalLinks));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramConfirmInternalLinksAbout)));
 
         items.add(UItem.asCheck(ID_PREFER_SECRET_CHATS,
                         LocaleController.getString(R.string.MercurygramPreferSecretChats))
@@ -374,6 +380,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_DISABLE_CLOUD_DRAFTS:
                 getUserConfig().mg.disableCloudDrafts = !getUserConfig().mg.disableCloudDrafts;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_CONFIRM_INTERNAL_LINKS:
+                getUserConfig().mg.confirmInternalLinks = !getUserConfig().mg.confirmInternalLinks;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
