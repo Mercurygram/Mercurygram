@@ -45,6 +45,10 @@ public class MusicBrowserService extends MediaBrowserService {
         if (clientPackageName == null) {
             return null;
         }
+        // answering the recents query leaves a media session hanging around after playback
+        if (rootHints != null && rootHints.getBoolean(BrowserRoot.EXTRA_RECENT, false)) {
+            return null;
+        }
         boolean isSelf = Process.SYSTEM_UID == clientUid || Process.myUid() == clientUid;
         if (!isSelf && !PackageValidator.isKnownCaller(this, clientPackageName, clientUid)) {
             return null;
