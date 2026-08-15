@@ -233,4 +233,6 @@
     <string name="HiddenAccountsIncorrectCurrentUnlockCode">رمز الفتح الحالي غير صحيح.</string>
     <string name="HiddenAccountsUnlockCodeMatchesAppPasscode">رمز الفتح هذا يطابق رمز مرور التطبيق. استخدم رمزًا مختلفًا.</string>
     <string name="HiddenAccountsUnlockCodesDoNotMatch">رموز الفتح غير متطابقة.</string>
+    <string name="MercurygramStripTrackingParams">إزالة معاملات التتبع</string>
+    <string name="MercurygramStripTrackingParamsAbout">يزيل معاملات تتبع النقرات (‏utm_*‎ و‏fbclid و‏gclid و‏si وما شابهها) من الروابط التي تفتحها ومن الروابط التي تلصقها في حقل الرسالة. يبقى باقي العنوان كما هو.</string>
 </resources>
