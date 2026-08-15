@@ -235,4 +235,6 @@
     <string name="MercurygramMapPreviewProviderOpenStreetMap">OpenStreetMap</string>
     <string name="MercurygramStripTrackingParams">Strip tracking parameters</string>
     <string name="MercurygramStripTrackingParamsAbout">Remove click-tracking parameters (utm_*, fbclid, gclid, si and similar) from links you open and from links you paste into the message field. The rest of the address is left untouched.</string>
+    <string name="MercurygramDisableCloudDrafts">Keep drafts on this device</string>
+    <string name="MercurygramDisableCloudDraftsAbout">Don\'t upload unsent drafts to Telegram. Drafts stay on this device and stop appearing on your other devices.</string>
 </resources>
