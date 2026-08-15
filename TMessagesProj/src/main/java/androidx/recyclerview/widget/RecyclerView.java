@@ -8913,7 +8913,21 @@ public class RecyclerView extends ViewGroup implements ScrollingView,
          */
         public void removeAndRecycleViewAt(int index, @NonNull Recycler recycler) {
             final View view = getChildAt(index);
+            if (view == null) {
+                // index already out of range, removeViewAt would throw
+                return;
+            }
             ViewHolder holder = getChildViewHolderInt(view);
+            // a stale child can outlive its holder, drop it without recycling. A child with no
+            // holder means something detached a view behind the recycler's back, so log the
+            // symptom rather than hiding it outright
+            if (holder == null) {
+                if (org.telegram.messenger.BuildVars.LOGS_ENABLED) {
+                    org.telegram.messenger.FileLog.e("RecyclerView: child at " + index + " has no holder, " + view);
+                }
+                removeViewAt(index);
+                return;
+            }
             if (holder.shouldIgnore()) {
                 return;
             }
