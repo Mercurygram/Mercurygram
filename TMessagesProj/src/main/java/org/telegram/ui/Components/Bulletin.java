@@ -1848,16 +1848,23 @@ public class Bulletin {
             reactionsContainerLayout.setMessage(null, null, true);
         }
 
+        // the account can change while attached, and then the observer is removed from the wrong one
+        private int savedMessagesForwardedAccount = -1;
+
         @Override
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
-            NotificationCenter.getInstance(UserConfig.selectedAccount).addObserver(this, NotificationCenter.savedMessagesForwarded);
+            savedMessagesForwardedAccount = UserConfig.selectedAccount;
+            NotificationCenter.getInstance(savedMessagesForwardedAccount).addObserver(this, NotificationCenter.savedMessagesForwarded);
         }
 
         @Override
         protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
-            NotificationCenter.getInstance(UserConfig.selectedAccount).removeObserver(this, NotificationCenter.savedMessagesForwarded);
+            if (savedMessagesForwardedAccount >= 0) {
+                NotificationCenter.getInstance(savedMessagesForwardedAccount).removeObserver(this, NotificationCenter.savedMessagesForwarded);
+                savedMessagesForwardedAccount = -1;
+            }
         }
 
         public void hideReactionsDialog() {
