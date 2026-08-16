@@ -5597,6 +5597,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setRightDrawableOutside(a == 0);
             avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 109, -6, (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0));
         }
+        // Mercurygram: long-tap the profile title to copy the chat/user name
+        nameTextView[1].setOnLongClickListener(v -> {
+            CharSequence text = nameTextView[1].getText();
+            if (TextUtils.isEmpty(text)) {
+                return false;
+            }
+            AndroidUtilities.addToClipboard(text);
+            BulletinFactory.of(ProfileActivity.this).createCopyBulletin(getString(R.string.TextCopied)).show();
+            return true;
+        });
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {
                 onlineTextView[a] = new LinkSpanDrawable.ClickableSmallTextView(context) {
