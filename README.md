@@ -66,6 +66,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 ## Features
 
 - Add ID in Profile Info
+- Copy the name of a chat, group, channel or user by long-pressing the title in its profile (tapping the ID row still copies the ID)
 - Add a menu in Notifications and Sounds in order to set the UnifiedPush distributor. The same menu may be long-clicked to inspect recent UnifiedPush notification/decryption stats
 - Add a menu in Notifications and Sounds in order to set the [UnifiedPush WebPush gateway](#unifiedpush-webpush-gateway)
 - Offer a built-in "Google FCM" entry in the distributor menu, for devices that have Play Services and no distributor app installed. It carries no Google library and needs no Firebase project (see [Google FCM without Google libraries](#google-fcm-without-google-libraries)). It is never selected automatically, and picking it warns about what Google gets to see
