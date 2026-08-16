@@ -3381,6 +3381,9 @@ public class LocaleController {
         if (src == null) {
             return null;
         }
+        if (!onlyEnglish) { // Mercurygram: fold decorated Unicode "fonts" to ASCII before transliterating; onlyEnglish is the case-preserving Passport path, not search
+            src = it.belloworld.mercurygram.MgUnicodeFold.fold(src);
+        }
 
         if (ruTranslitChars == null) {
             ruTranslitChars = new HashMap<>(33);
