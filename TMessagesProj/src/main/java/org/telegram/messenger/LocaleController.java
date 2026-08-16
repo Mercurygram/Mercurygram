@@ -3381,6 +3381,7 @@ public class LocaleController {
         if (src == null) {
             return null;
         }
+        src = it.belloworld.mercurygram.MgUnicodeFold.fold(src); // Mercurygram: fold decorated Unicode "fonts" to ASCII before transliterating
 
         if (ruTranslitChars == null) {
             ruTranslitChars = new HashMap<>(33);
