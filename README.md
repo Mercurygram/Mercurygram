@@ -66,6 +66,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 ## Features
 
 - Add ID in Profile Info
+- Copy the name of a chat, group, channel or user by long-pressing the title in its profile (tapping the ID row still copies the ID)
 - Add a UnifiedPush screen (*Settings → Mercurygram → Notifications → UnifiedPush*) listing the installed distributors, with the registration state shown under the list until the chosen distributor answers with an endpoint. A distributor may be long-pressed to inspect recent UnifiedPush notification/decryption stats
 - Set the [UnifiedPush WebPush gateway](#unifiedpush-webpush-gateway) on the same screen
 - Offer a built-in "Google FCM" entry in the distributor list, for devices that have Play Services and no distributor app installed. It carries no Google library and needs no Firebase project (see [Google FCM without Google libraries](#google-fcm-without-google-libraries)). It is never selected automatically, and picking it warns about what Google gets to see
