@@ -66,6 +66,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 ## Features
 
 - Add ID in Profile Info
+- Copy the name of a chat, group, channel or user by long-pressing the title in its profile (tapping the ID row still copies the ID)
 - Add a menu in Notifications and Sounds in order to set the UnifiedPush distributor. The same menu may be long-clicked to inspect recent UnifiedPush notification/decryption stats
 - Add a menu in Notifications and Sounds in order to set the [UnifiedPush WebPush gateway](#unifiedpush-webpush-gateway)
 - Add toggle setting in Chat Settings to start video messages with rear-facing camera
