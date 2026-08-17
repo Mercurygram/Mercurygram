@@ -5357,7 +5357,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                             return false;
                         }
                     }
-                    if (inputContentInfo.getDescription().hasMimeType("image/gif") || SendMessagesHelper.shouldSendWebPAsSticker(null, inputContentInfo.getContentUri())) {
+                    boolean isGboardSticker = inputContentInfo.getDescription().getExtras() != null && inputContentInfo.getDescription().getExtras().getBoolean("com.google.android.inputmethod.content.IS_STICKER");
+                    if (inputContentInfo.getDescription().hasMimeType("image/gif") || isGboardSticker || (inputContentInfo.getDescription().hasMimeType("image/webp") && SendMessagesHelper.shouldSendWebPAsSticker(null, inputContentInfo.getContentUri()))) {
                         if (isInScheduleMode()) {
                             AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (notify, scheduleDate, scheduleRepeatPeriod) -> send(inputContentInfo, notify, scheduleDate, scheduleRepeatPeriod), resourcesProvider);
                         } else {
