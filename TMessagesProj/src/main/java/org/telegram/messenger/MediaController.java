@@ -782,16 +782,19 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         public void rebuildPhoto(boolean highQuality) {
             final Pair<Integer, Integer> orientation = AndroidUtilities.getImageOrientation(filterPath != null ? filterPath : path);
             final Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.JPEG;
-            final Bitmap bitmap = StoryEntry.getScaledBitmap(opts -> BitmapFactory.decodeFile(filterPath != null ? filterPath : path, opts), AndroidUtilities.getPhotoSize(highQuality), AndroidUtilities.getPhotoSize(highQuality), false, true);
+            // Mercurygram: cut the crop out of the source at full resolution. Downscaling first
+            // and cropping after shrinks the result by the crop ratio, and nothing downstream can
+            // get those pixels back.
+            Bitmap b = fullPaintPath != null ? null : it.belloworld.mercurygram.MgPhotoCrop.renderHighQualityCrop(this, AndroidUtilities.getPhotoSize(highQuality));
+            final Bitmap bitmap = b != null ? null : StoryEntry.getScaledBitmap(opts -> BitmapFactory.decodeFile(filterPath != null ? filterPath : path, opts), AndroidUtilities.getPhotoSize(highQuality), AndroidUtilities.getPhotoSize(highQuality), false, true);
             if (imagePath != null) {
                 new File(imagePath).delete(); imagePath = null;
             }
 
-            Bitmap b;
-            if (cropState != null) {
+            if (b == null && cropState != null) {
                 b = PhotoViewer.createCroppedBitmap(bitmap, cropState, new int[] { orientation.first, orientation.second }, true);
                 bitmap.recycle();
-            } else {
+            } else if (b == null) {
                 if (orientation.first != 0) {
                     Matrix matrix = new Matrix();
                     matrix.postRotate(orientation.first);
