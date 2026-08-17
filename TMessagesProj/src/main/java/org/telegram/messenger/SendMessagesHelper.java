@@ -11315,6 +11315,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             //prepareSendingDocumentInternal(accountInstance, info.path, info.path, null, null, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, editingMessageObject, null, false, forceDocument, notify, scheduleDate, null);
                         }
                     } else {
+                        // Mercurygram: same repair the grouped branch does above. The editor bakes
+                        // its result at the normal send size, so without re-baking from the source
+                        // a high quality send uploads that smaller intermediate.
+                        if (info.originalPhotoEntry != null && info.highQuality) {
+                            info.originalPhotoEntry.rebuildPhoto(true);
+                            if (info.originalPhotoEntry.imagePath != null) {
+                                info.path = info.originalPhotoEntry.imagePath;
+                            }
+                        }
                         String originalPath = info.path;
                         String tempPath = info.path;
                         if (tempPath == null && info.uri != null) {
@@ -11440,7 +11449,11 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                     ensureMediaThumbExists(accountInstance, isEncrypted, photo, info.path, info.uri, 0);
                                 }
                                 if (photo == null) {
-                                    photo = accountInstance.getSendMessagesHelper().generatePhotoSizes(info.path, info.uri);
+                                    // Mercurygram: honour the high quality flag here too. The grouped
+                                    // branch passes it; this one dropped it, so an ungrouped high
+                                    // quality send was encoded at the normal size and quality while
+                                    // still being cached under the high quality key.
+                                    photo = accountInstance.getSendMessagesHelper().generatePhotoSizes(null, info.path, info.uri, info.highQuality);
                                     if (isEncrypted && info.canDeleteAfter) {
                                         new File(info.path).delete();
                                     }
