@@ -7,6 +7,7 @@ import android.util.Pair;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MediaController;
 import org.telegram.ui.PhotoViewer;
+import org.telegram.ui.Stories.recorder.StoryEntry;
 
 import java.io.File;
 
@@ -60,21 +61,27 @@ public class MgPhotoCrop {
 
         final BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inSampleSize = sample;
-        opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
         Bitmap bitmap;
         try {
             bitmap = BitmapFactory.decodeFile(path, opts);
         } catch (OutOfMemoryError e) {
             bitmap = null;
         }
-        if (bitmap == null) {
-            return null;
+        return cropAndRecycle(bitmap, cropState, orientation);
+    }
+
+    /**
+     * Bakes the crop for the viewer, cheapest source first: the source on disk at full
+     * resolution, then the viewer's own bitmap, then the source on disk at the send
+     * size. {@code viewerBitmap} may be null - it is trimmed under memory pressure.
+     * @return null when nothing readable is left to cut the crop out of.
+     */
+    public static Bitmap bakeCropForViewer(MediaController.MediaEditState entry, Bitmap viewerBitmap, int[] viewerOrientation, int targetSize) {
+        Bitmap cropped = renderHighQualityCrop(entry, targetSize);
+        if (cropped == null && viewerBitmap != null) {
+            cropped = PhotoViewer.createCroppedBitmap(viewerBitmap, entry.cropState, viewerOrientation, true);
         }
-        try {
-            return PhotoViewer.createCroppedBitmap(bitmap, cropState, orientation, true);
-        } finally {
-            bitmap.recycle();
-        }
+        return cropped != null ? cropped : rebakeCroppedBitmap(entry);
     }
 
     /** The edit source: the filtered image when there is one, else the original. */
@@ -101,6 +108,32 @@ public class MgPhotoCrop {
         }
         final Pair<Integer, Integer> exif = AndroidUtilities.getImageOrientation(entry.getPath());
         return new int[]{exif.first, exif.second};
+    }
+
+    /**
+     * Crop bake for when the viewer has no in-memory bitmap left, or cropping it
+     * failed: re-decodes the source from disk at the send size and cuts the crop
+     * out of it. @return null when the source is unreadable.
+     */
+    public static Bitmap rebakeCroppedBitmap(MediaController.MediaEditState entry) {
+        final String path = sourcePath(entry);
+        if (entry.cropState == null || path == null) {
+            return null;
+        }
+        final int size = AndroidUtilities.getPhotoSize(true);
+        return cropAndRecycle(StoryEntry.getScaledBitmap(opts -> BitmapFactory.decodeFile(path, opts), size, size, false, true), entry.cropState, sourceOrientation(entry));
+    }
+
+    /** Cuts {@code cropState} out of a decoded source and releases the source. */
+    private static Bitmap cropAndRecycle(Bitmap source, MediaController.CropState cropState, int[] orientation) {
+        if (source == null) {
+            return null;
+        }
+        try {
+            return PhotoViewer.createCroppedBitmap(source, cropState, orientation, true);
+        } finally {
+            source.recycle();
+        }
     }
 
     /** What is actually free right now, with the same headroom StoryEntry.getScaledBitmap keeps. */
