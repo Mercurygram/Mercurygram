@@ -1314,6 +1314,15 @@ public class MessageObject {
             positions.clear();
             positionsArray.clear();
             captionMessage = null;
+            // These are set-only below, or reset only past the count<2 early returns, so a group
+            // that lost a member keeps the previous run's answer. isDocuments is the damaging one:
+            // its branch writes an absolute ph=100 where photos write a 0..1 fraction, so a stale
+            // flag makes the cell reserve a hundred screens.
+            isDocuments = false;
+            hasSibling = false;
+            hasCaption = false;
+            captionAbove = false;
+            cachedWidthForCaption = -1;
 
             maxSizeWidth = 800;
             int firstSpanAdditionalSize = 200;
