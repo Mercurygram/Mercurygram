@@ -1310,6 +1310,17 @@ public class MessageObject {
             positions.clear();
             positionsArray.clear();
             captionMessage = null;
+            // Re-derive everything below that depends on the current contents of
+            // `messages`: isDocuments and cachedWidthForCaption are otherwise only ever
+            // set, and the count<2 branches return before the resets further down, so a
+            // group that lost a member keeps the previous run's answer. isDocuments is
+            // the damaging one - its branch writes an absolute ph=100 where every photo
+            // branch writes a 0..1 fraction, so the cell asks for a hundred screens.
+            isDocuments = false;
+            hasSibling = false;
+            hasCaption = false;
+            captionAbove = false;
+            cachedWidthForCaption = -1;
 
             maxSizeWidth = 800;
             int firstSpanAdditionalSize = 200;
