@@ -68,6 +68,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_DISABLE_CLOUD_DRAFTS = 62;
     private static final int ID_CONFIRM_INTERNAL_LINKS = 63;
     private static final int ID_SHOW_CHAR_COUNTER = 64;
+    private static final int ID_DISABLE_PROXIMITY_SENSOR = 65;
 
     @Override
     protected CharSequence getTitle() {
@@ -140,6 +141,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_DISABLE_LIVE_PHOTOS, LocaleController.getString(R.string.MercurygramDisableLivePhotos))
                 .setChecked(getUserConfig().mg.disableLivePhotosByDefault));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableLivePhotosAbout)));
+        items.add(MgSettingsScope.globalCheck(ID_DISABLE_PROXIMITY_SENSOR, LocaleController.getString(R.string.MercurygramDisableProximitySensor))
+                .setChecked(SharedConfig.mg_disableProximitySensor));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDisableProximitySensorAbout)));
 
         items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsPrivacy)));
         items.add(MgSettingsScope.globalCheck(ID_REDUCE_TRACKING_FINGERPRINT,
@@ -335,6 +339,10 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 getUserConfig().mg.disableLivePhotosByDefault = !getUserConfig().mg.disableLivePhotosByDefault;
                 getUserConfig().saveConfig(false);
                 MediaController.refreshLivePhotoDefault();
+                refreshList();
+                break;
+            case ID_DISABLE_PROXIMITY_SENSOR:
+                SharedConfig.toggleMgDisableProximitySensor();
                 refreshList();
                 break;
             case ID_DISABLE_AUTO_UPDATE:
