@@ -58,7 +58,7 @@ public class EarListener implements SensorEventListener {
 
     private boolean attached;
     public void attach() {
-        if (!attached) {
+        if (!attached && !SharedConfig.mg_disableProximitySensor) {
             if (gravitySensor != null) {
                 sensorManager.registerListener(this, gravitySensor, 30000);
             }
