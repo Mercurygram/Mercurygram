@@ -2385,7 +2385,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
     }
 
     public void startRaiseToEarSensors(ChatActivity chatActivity) {
-        if (chatActivity == null || accelerometerSensor == null && (gravitySensor == null || linearAcceleration == null) || proximitySensor == null) {
+        if (chatActivity == null || accelerometerSensor == null && (gravitySensor == null || linearAcceleration == null) || proximitySensor == null || SharedConfig.mg_disableProximitySensor) {
             return;
         }
         if (!SharedConfig.enabledRaiseTo(false) && (playingMessageObject == null || !playingMessageObject.isVoice() && !playingMessageObject.isRoundVideo())) {
