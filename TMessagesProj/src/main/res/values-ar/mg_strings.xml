@@ -25,6 +25,8 @@
     <string name="MercurygramCheckForUpdatesToast">جارٍ التحقق من التحديثات…</string>
     <string name="MercurygramDisableLivePhotos">تعطيل Live Photos افتراضيًا</string>
     <string name="MercurygramDisableLivePhotosAbout">أرسل الصورة الثابتة فقط عند اختيار Google Motion Photo. لا يزال بإمكانك تمكين Live Photo لاختيار فردي بالنقر على أيقونة الحركة في لوحة المرفقات.</string>
+    <string name="MercurygramDisableProximitySensor">تعطيل مستشعر القرب</string>
+    <string name="MercurygramDisableProximitySensorAbout">لن تنطفئ الشاشة بعد الآن عندما يكون الهاتف قريبًا من وجهك أثناء المكالمات وتشغيل الرسائل الصوتية. يتوقف عمل الرفع للاستماع والتبديل إلى سماعة الأذن.</string>
     <string name="MercurygramDefaultFolder">مجلد التشغيل الافتراضي</string>
     <string name="MercurygramHideStories">إخفاء القصص</string>
     <string name="MercurygramHidePremiumPromo">إخفاء ترويج Premium</string>
