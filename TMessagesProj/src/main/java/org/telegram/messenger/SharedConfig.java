@@ -289,6 +289,14 @@ public class SharedConfig {
                 .apply();
     }
 
+    public static void toggleMgDisableProximitySensor() {
+        mg_disableProximitySensor = !mg_disableProximitySensor;
+        ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mg_disableProximitySensor", mg_disableProximitySensor)
+                .apply();
+    }
+
     public static void toggleMgUseCustomEmojiPack() {
         mg_useCustomEmojiPack = !mg_useCustomEmojiPack;
         ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
@@ -672,6 +680,9 @@ public class SharedConfig {
     // the pack is missing. Global because the emoji bitmap cache (Emoji.emojiBmp)
     // is a process-wide static, same as useSystemFont/useSystemEmoji.
     public static boolean mg_useCustomEmojiPack = false;
+    // Mercurygram: never register the proximity sensor (calls, voice playback,
+    // raise-to-listen). Global: device hardware, not an account property.
+    public static boolean mg_disableProximitySensor = false;
 
     // Mercurygram: Privacy
     public static boolean reduceTrackingFingerprint = false;
@@ -1025,6 +1036,7 @@ public class SharedConfig {
         editor.putString("mg_transcribeModel", mg_transcribeModel);
         editor.putBoolean("mg_transcribeVad", mg_transcribeVad);
         editor.putBoolean("mg_useCustomEmojiPack", mg_useCustomEmojiPack);
+        editor.putBoolean("mg_disableProximitySensor", mg_disableProximitySensor);
         editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushAuthSecret", webPushAuthSecret != null ? Base64.encodeToString(webPushAuthSecret, Base64.DEFAULT) : "");
@@ -1080,6 +1092,7 @@ public class SharedConfig {
         mg_transcribeModel = preferences.getString("mg_transcribeModel", "tiny-q8_0");
         mg_transcribeVad = preferences.getBoolean("mg_transcribeVad", true);
         mg_useCustomEmojiPack = preferences.getBoolean("mg_useCustomEmojiPack", false);
+        mg_disableProximitySensor = preferences.getBoolean("mg_disableProximitySensor", false);
         migratePerAccountSettingsV1(preferences);
         migrateTranscribeLangToPerAccount(preferences);
         migrateHideStoriesToPerAccount(preferences);
