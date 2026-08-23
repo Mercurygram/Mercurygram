@@ -25,6 +25,8 @@
     <string name="MercurygramCheckForUpdatesToast">Bezig met controleren op updates…</string>
     <string name="MercurygramDisableLivePhotos">Live Photos standaard uitschakelen</string>
     <string name="MercurygramDisableLivePhotosAbout">Alleen de stilstaande foto verzenden wanneer je een Google Motion Photo kiest. Je kunt Live Photo voor een afzonderlijke selectie nog steeds inschakelen door op het bewegingspictogram in het bijlagenpaneel te tikken.</string>
+    <string name="MercurygramDisableProximitySensor">Nabijheidssensor uitschakelen</string>
+    <string name="MercurygramDisableProximitySensorAbout">Het scherm gaat niet meer uit wanneer de telefoon tijdens gesprekken en het afspelen van spraakberichten dicht bij je gezicht is. Optillen om te luisteren en het overschakelen naar de oorluidspreker werken niet meer.</string>
     <string name="MercurygramDefaultFolder">Standaard startmap</string>
     <string name="MercurygramHideStories">Stories verbergen</string>
     <string name="MercurygramHidePremiumPromo">Premium-promotie verbergen</string>
