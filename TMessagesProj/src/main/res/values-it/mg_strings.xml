@@ -25,6 +25,8 @@
     <string name="MercurygramCheckForUpdatesToast">Ricerca aggiornamenti…</string>
     <string name="MercurygramDisableLivePhotos">Disabilita Live Photos di default</string>
     <string name="MercurygramDisableLivePhotosAbout">Invia solo la foto statica quando selezioni una Google Motion Photo. Puoi comunque abilitare Live Photo per la singola selezione toccando l\'icona movimento nel pannello allegati.</string>
+    <string name="MercurygramDisableProximitySensor">Disattiva il sensore di prossimità</string>
+    <string name="MercurygramDisableProximitySensorAbout">Lo schermo non si spegne più quando il telefono è vicino al viso durante le chiamate e la riproduzione dei messaggi vocali. Avvicina per ascoltare e il passaggio all\'altoparlante auricolare smettono di funzionare.</string>
     <string name="MercurygramDefaultFolder">Cartella di avvio predefinita</string>
     <string name="MercurygramHideStories">Nascondi le storie</string>
     <string name="MercurygramHidePremiumPromo">Nascondi promo Premium</string>
