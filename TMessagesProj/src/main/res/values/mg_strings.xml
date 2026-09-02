@@ -131,6 +131,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Enable</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Account %1$s reverted to standard mode — server rejected the reduced session-key lifetime.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Server rejected the reduced session-key lifetime for: %1$s. Those accounts use the standard 24h key. Turn off and on to retry.</string>
+    <string name="MercurygramFloodWaitToast">Telegram is rate-limiting this account (too many requests). Retrying in %1$s.</string>
     <string name="MercurygramTorRespawnGaveUp">Tor crashed repeatedly. Auto-restart paused — toggle Tor off and on to retry.</string>
     <string name="MercurygramTorPluginMissing">Tor plugin not installed. Install it to enable Tor.</string>
     <string name="MercurygramTor">Use Tor</string>

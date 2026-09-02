@@ -68,6 +68,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Inschakelen</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Account %1$s is teruggeschakeld naar de standaardmodus — de server weigerde de verkorte levensduur van de sessiesleutel.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">De server weigerde de verkorte levensduur van de sessiesleutel voor: %1$s. Deze accounts gebruiken de standaardsleutel van 24 uur. Schakel uit en weer in om opnieuw te proberen.</string>
+    <string name="MercurygramFloodWaitToast">Telegram beperkt dit account (te veel verzoeken). Nieuwe poging over %1$s.</string>
     <string name="MercurygramTorRespawnGaveUp">Tor is herhaaldelijk gecrasht. Automatisch opnieuw starten gepauzeerd — schakel Tor uit en weer in om opnieuw te proberen.</string>
     <string name="MercurygramTorPluginMissing">Tor-plug-in niet geïnstalleerd. Installeer deze om Tor in te schakelen.</string>
     <string name="MercurygramTor">Tor gebruiken</string>

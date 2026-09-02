@@ -68,6 +68,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Включить</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Аккаунт %1$s вернулся в стандартный режим — сервер отклонил сокращённое время жизни ключа сессии.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Сервер отклонил сокращённое время жизни ключа сессии для: %1$s. Эти аккаунты используют стандартный ключ на 24 часа. Отключите и включите снова, чтобы повторить.</string>
+    <string name="MercurygramFloodWaitToast">Telegram ограничивает этот аккаунт (слишком много запросов). Повтор через %1$s.</string>
     <string name="MercurygramTorRespawnGaveUp">Tor многократно завершался с ошибкой. Автоперезапуск приостановлен — отключите и включите Tor, чтобы повторить попытку.</string>
     <string name="MercurygramTorPluginMissing">Плагин Tor не установлен. Установите его, чтобы включить Tor.</string>
     <string name="MercurygramTor">Использовать Tor</string>

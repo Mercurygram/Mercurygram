@@ -68,6 +68,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Ativar</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">A conta %1$s voltou ao modo padrão — o servidor rejeitou a duração reduzida da chave de sessão.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">O servidor rejeitou a duração reduzida da chave de sessão para: %1$s. Essas contas usam a chave padrão de 24h. Desative e reative para tentar novamente.</string>
+    <string name="MercurygramFloodWaitToast">O Telegram está limitando esta conta (muitas solicitações). Nova tentativa em %1$s.</string>
     <string name="MercurygramTorRespawnGaveUp">O Tor travou repetidamente. Reinício automático pausado — desative e reative o Tor para tentar novamente.</string>
     <string name="MercurygramTorPluginMissing">Plugin do Tor não instalado. Instale-o para ativar o Tor.</string>
     <string name="MercurygramTor">Usar Tor</string>

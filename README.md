@@ -100,6 +100,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Add a "Mention" item to the text-selection toolbar (next to "Create Link"): turn the selected text into a user mention by typing a user ID or picking from your contacts. Only works for users the app already knows (contacts, chat members) — a hard MTProto limitation, same as typing `@`; an unknown ID is rejected with a hint to use the picker
 - Split the combined "Stickers & GIFs" group-permission control into four independent toggles (Stickers, GIFs, Games, Inline Bots) in both the supergroup default permissions and the per-member restriction editor, so each `chatBannedRights` flag can be set on its own (upstream bundles all four)
 - Restore the animated 🍑 emoji Telegram removed server-side in 2022-2023: sending it alone plays the large animation again, and tapping it replays it. The animation is not bundled in the APK, it is fetched once from a Telegram sticker pack and then cached on-device
+- Show a toast when Telegram rate-limits the account (`FLOOD_WAIT`) on the main connection, with the wait time. Stock Telegram silently retries once the wait expires, so "Updating..." that never clears and a message stuck as pending have no visible cause
 - Telegram application icons are replaced with [hermes wing (Created by Anthony Ledoux from Noun Project)](https://thenounproject.com/icon/hermes-wing-3559879/)
 
 ### Upstream bug fixes

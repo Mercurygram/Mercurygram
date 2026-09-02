@@ -1443,6 +1443,8 @@ void ConnectionsManager::processServerResponse(TLObject *message, int64_t messag
                                 request->minStartTime = (int32_t) (getCurrentTimeMonotonicMillis() / 1000 + waitTime);
                                 if (isPremiumFloodWait && delegate != nullptr) {
                                     delegate->onPremiumFloodWait(instanceNum, request->requestToken, (request->connectionType & ConnectionTypeUpload) != 0);
+                                } else if (discardResponse && (request->connectionType & ConnectionTypeGeneric) && delegate != nullptr) {
+                                    delegate->onFloodWait(instanceNum, waitTime);
                                 }
                             } else if (failServerErrors && error->error_code == 400) {
                                 static std::string waitFailed = "MSG_WAIT_FAILED";

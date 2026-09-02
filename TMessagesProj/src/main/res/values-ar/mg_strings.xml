@@ -68,6 +68,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">تفعيل</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">الحساب %1$s عاد إلى الوضع القياسي — رفض الخادم العمر المخفض لمفتاح الجلسة.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">رفض الخادم العمر المخفض لمفتاح الجلسة لـ: %1$s. تستخدم هذه الحسابات المفتاح القياسي لمدة 24 ساعة. أوقف وأعد التفعيل للمحاولة مرة أخرى.</string>
+    <string name="MercurygramFloodWaitToast">يقوم تيليجرام بتقييد هذا الحساب (طلبات كثيرة جدًا). إعادة المحاولة خلال %1$s.</string>
     <string name="MercurygramTorRespawnGaveUp">تعطّل Tor مرارًا. تم إيقاف إعادة التشغيل التلقائي — أوقف Tor ثم أعد تفعيله للمحاولة مرة أخرى.</string>
     <string name="MercurygramTorPluginMissing">إضافة Tor غير مثبتة. ثبّتها لتفعيل Tor.</string>
     <string name="MercurygramTor">استخدام Tor</string>
