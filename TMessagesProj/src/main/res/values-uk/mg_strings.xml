@@ -68,6 +68,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Увімкнути</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Обліковий запис %1$s повернувся до стандартного режиму — сервер відхилив скорочений час життя ключа сесії.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Сервер відхилив скорочений час життя ключа сесії для: %1$s. Ці облікові записи використовують стандартний 24-годинний ключ. Вимкніть і знову увімкніть, щоб повторити.</string>
+    <string name="MercurygramFloodWaitToast">Telegram обмежує цей обліковий запис (занадто багато запитів). Повтор через %1$s.</string>
     <string name="MercurygramTorRespawnGaveUp">Tor неодноразово аварійно завершувався. Автоматичний перезапуск призупинено — вимкніть і знову увімкніть Tor, щоб повторити.</string>
     <string name="MercurygramTorPluginMissing">Плагін Tor не встановлено. Встановіть його, щоб увімкнути Tor.</string>
     <string name="MercurygramTor">Використовувати Tor</string>

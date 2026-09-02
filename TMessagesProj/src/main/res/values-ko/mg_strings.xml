@@ -68,6 +68,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">활성화</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">%1$s 계정이 표준 모드로 되돌아갔습니다 — 서버가 단축된 세션 키 수명을 거부했습니다.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">서버가 다음 계정에 대해 단축된 세션 키 수명을 거부했습니다: %1$s. 해당 계정은 표준 24시간 키를 사용합니다. 다시 시도하려면 끄고 다시 켜십시오.</string>
+    <string name="MercurygramFloodWaitToast">Telegram이 이 계정의 요청을 제한하고 있습니다 (요청이 너무 많음). %1$s 후 다시 시도합니다.</string>
     <string name="MercurygramTorRespawnGaveUp">Tor가 반복적으로 충돌했습니다. 자동 재시작이 일시 중지되었습니다 — 다시 시도하려면 Tor를 끄고 다시 켜십시오.</string>
     <string name="MercurygramTorPluginMissing">Tor 플러그인이 설치되어 있지 않습니다. Tor를 사용하려면 설치하세요.</string>
     <string name="MercurygramTor">Tor 사용</string>

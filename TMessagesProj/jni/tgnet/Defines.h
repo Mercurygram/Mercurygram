@@ -162,6 +162,10 @@ typedef struct ConnectiosManagerDelegate {
     // network-change rotator stop emitting further work that would re-trigger
     // the same loop.
     virtual void onReducedTempKeyExhausted(int32_t instanceNum) = 0;
+    // MG: fired when a generic-connection request got FLOOD_WAIT_N and was
+    // silently re-queued (discardResponse). Upstream never tells the Java
+    // side, so "Updating..." and a pending message have no visible cause.
+    virtual void onFloodWait(int32_t instanceNum, int32_t waitTime) = 0;
 } ConnectiosManagerDelegate;
 
 typedef struct HandshakeDelegate {

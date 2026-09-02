@@ -68,6 +68,7 @@
     <string name="MercurygramReduceTrackingFingerprintEnable">Aktivieren</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedToast">Konto %1$s wurde auf den Standardmodus zurückgesetzt — der Server hat die verkürzte Sitzungsschlüssel-Lebensdauer abgelehnt.</string>
     <string name="MercurygramReduceTrackingFingerprintExhaustedFooter">Der Server hat die verkürzte Sitzungsschlüssel-Lebensdauer für: %1$s abgelehnt. Diese Konten verwenden den 24-Stunden-Standardschlüssel. Aus- und wieder einschalten, um es erneut zu versuchen.</string>
+    <string name="MercurygramFloodWaitToast">Telegram drosselt dieses Konto (zu viele Anfragen). Neuer Versuch in %1$s.</string>
     <string name="MercurygramTorRespawnGaveUp">Tor ist wiederholt abgestürzt. Auto-Neustart pausiert — Tor aus- und wieder einschalten, um es erneut zu versuchen.</string>
     <string name="MercurygramTorPluginMissing">Tor-Plugin nicht installiert. Installiere es, um Tor zu aktivieren.</string>
     <string name="MercurygramTor">Tor verwenden</string>

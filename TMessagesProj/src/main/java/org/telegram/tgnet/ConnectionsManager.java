@@ -880,6 +880,11 @@ public class ConnectionsManager extends BaseController {
         });
     }
 
+    @Keep
+    public static void onFloodWait(final int currentAccount, final int waitTime) {
+        it.belloworld.mercurygram.MgFloodWaitNotice.show(currentAccount, waitTime);
+    }
+
     public static int getInitFlags() {
         int flags = 0;
         EmuDetector detector = EmuDetector.with(ApplicationLoader.applicationContext);

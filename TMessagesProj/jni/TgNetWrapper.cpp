@@ -28,6 +28,7 @@ jmethodID jclass_ConnectionsManager_onUpdate;
 jmethodID jclass_ConnectionsManager_onSessionCreated;
 jmethodID jclass_ConnectionsManager_onLogout;
 jmethodID jclass_ConnectionsManager_onReducedTempKeyExhausted;
+jmethodID jclass_ConnectionsManager_onFloodWait;
 jmethodID jclass_ConnectionsManager_onConnectionStateChanged;
 jmethodID jclass_ConnectionsManager_onInternalPushReceived;
 jmethodID jclass_ConnectionsManager_onUpdateConfig;
@@ -367,6 +368,10 @@ class Delegate : public ConnectiosManagerDelegate {
     void onReducedTempKeyExhausted(int32_t instanceNum) {
         jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onReducedTempKeyExhausted, instanceNum);
     }
+
+    void onFloodWait(int32_t instanceNum, int32_t waitTime) {
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onFloodWait, instanceNum, waitTime);
+    }
     
     void onUpdateConfig(TL_config *config, int32_t instanceNum) {
         NativeByteBuffer *buffer = BuffersStorage::getInstance().getFreeBuffer(config->getObjectSize());
@@ -661,6 +666,10 @@ extern "C" int registerNativeTgNetFunctions(JavaVM *vm, JNIEnv *env) {
     }
     jclass_ConnectionsManager_onReducedTempKeyExhausted = env->GetStaticMethodID(jclass_ConnectionsManager, "onReducedTempKeyExhausted", "(I)V");
     if (jclass_ConnectionsManager_onReducedTempKeyExhausted == 0) {
+        return JNI_FALSE;
+    }
+    jclass_ConnectionsManager_onFloodWait = env->GetStaticMethodID(jclass_ConnectionsManager, "onFloodWait", "(II)V");
+    if (jclass_ConnectionsManager_onFloodWait == 0) {
         return JNI_FALSE;
     }
     jclass_ConnectionsManager_onConnectionStateChanged = env->GetStaticMethodID(jclass_ConnectionsManager, "onConnectionStateChanged", "(II)V");
