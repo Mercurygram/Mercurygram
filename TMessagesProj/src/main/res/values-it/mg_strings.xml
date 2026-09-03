@@ -252,4 +252,6 @@
     <string name="MercurygramDisableCloudDraftsAbout">Non caricare su Telegram le bozze non inviate. Le bozze restano su questo dispositivo e non compaiono più sugli altri.</string>
     <string name="MercurygramConfirmInternalLinks">Conferma i link di Telegram</string>
     <string name="MercurygramConfirmInternalLinksAbout">Chiede conferma prima di aprire i link t.me e tg://, mostrando prima l\'indirizzo. Utile contro i link che iscrivono a un canale o aprono un bot senza avvisare.</string>
+    <string name="MercurygramKeepAliveNotification">Servizio keep-alive</string>
+    <string name="MercurygramKeepAliveNotificationHide">Tocca per nascondere questa notifica</string>
 </resources>

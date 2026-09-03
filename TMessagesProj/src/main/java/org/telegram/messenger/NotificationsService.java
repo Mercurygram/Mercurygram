@@ -17,9 +17,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
-import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+import android.provider.Settings;
 
 import androidx.core.app.NotificationCompat;
 
@@ -40,7 +40,13 @@ public class NotificationsService extends Service {
                 // IMPORTANCE_LOW: silent, no heads-up — keeps the OS battery-warning nag to a minimum (Notifications.md).
                 NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Push Notifications Service", NotificationManager.IMPORTANCE_LOW);
                 notificationManager.createNotificationChannel(channel);
-                Intent explainIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Mercurygram/Mercurygram/blob/Mercurygram/Notifications.md"));
+                // Tapping used to open Notifications.md, which reads as "your notifications are broken";
+                // misleading here, since this notification only exists because the user turned Keep-Alive on.
+                // Send them where they can actually silence or hide it instead. API 26+, same gate as this block.
+                Intent explainIntent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName())
+                        .putExtra(Settings.EXTRA_CHANNEL_ID, CHANNEL_ID)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 int piFlags = PendingIntent.FLAG_UPDATE_CURRENT;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     piFlags |= PendingIntent.FLAG_IMMUTABLE; // mandatory on API 31+ (orig 2019 patch passed 0 -> crash on S+)
@@ -51,7 +57,8 @@ public class NotificationsService extends Service {
                         .setShowWhen(false)
                         .setOngoing(true)
                         .setSmallIcon(R.drawable.notification)
-                        .setContentText("Push service: tap to learn more")
+                        .setContentTitle(LocaleController.getString(R.string.MercurygramKeepAliveNotification))
+                        .setContentText(LocaleController.getString(R.string.MercurygramKeepAliveNotificationHide))
                         .build();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     // dataSync type required on API 34+ to match the manifest declaration.
