@@ -184,6 +184,11 @@ and Sounds* if you still want messages while the app is closed.
 If you set Battery optimization to Not optimized, Keep-Alive Service will be not
 necessary.
 
+Keep-Alive Service shows an ongoing notification while it runs: Android kills a
+background service that does not show one, so it cannot be removed by the app.
+Tapping it opens its notification channel settings, where it can be silenced or
+hidden. See [Notifications.md](Notifications.md) for the details.
+
 See [dontkillmyapp](https://dontkillmyapp.com/) for more information.
 
 If you can't/want set Battery optimization to Not optimized and you don't
