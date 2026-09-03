@@ -251,4 +251,6 @@
     <string name="MercurygramDisableCloudDraftsAbout">Niet-verzonden concepten niet naar Telegram uploaden. Concepten blijven op dit apparaat en verschijnen niet meer op je andere apparaten.</string>
     <string name="MercurygramConfirmInternalLinks">Telegram-links bevestigen</string>
     <string name="MercurygramConfirmInternalLinksAbout">Vraagt om bevestiging voordat t.me- en tg://-links worden geopend, met eerst het adres. Handig tegen links die ongemerkt een kanaal joinen of een bot openen.</string>
+    <string name="MercurygramKeepAliveNotification">Keep-alive-service</string>
+    <string name="MercurygramKeepAliveNotificationHide">Tik om deze melding te verbergen</string>
 </resources>
