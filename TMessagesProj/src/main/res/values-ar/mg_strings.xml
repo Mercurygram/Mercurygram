@@ -252,4 +252,6 @@
     <string name="MercurygramDisableCloudDraftsAbout">عدم رفع المسودات غير المُرسلة إلى تيليجرام. تبقى المسودات على هذا الجهاز ولا تظهر بعد الآن على أجهزتك الأخرى.</string>
     <string name="MercurygramConfirmInternalLinks">تأكيد روابط تيليجرام</string>
     <string name="MercurygramConfirmInternalLinksAbout">يطلب التأكيد قبل فتح روابط ‏t.me و‏tg://‎، مع عرض العنوان أولاً. مفيد ضد الروابط التي تنضم إلى قناة أو تفتح بوتًا دون إشعارك.</string>
+    <string name="MercurygramKeepAliveNotification">خدمة الإبقاء نشطًا</string>
+    <string name="MercurygramKeepAliveNotificationHide">اضغط لإخفاء هذا الإشعار</string>
 </resources>
