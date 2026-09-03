@@ -256,4 +256,6 @@
     <string name="MercurygramDisableCloudDraftsAbout">Nicht gesendete Entwürfe nicht zu Telegram hochladen. Entwürfe bleiben auf diesem Gerät und erscheinen nicht mehr auf deinen anderen Geräten.</string>
     <string name="MercurygramConfirmInternalLinks">Telegram-Links bestätigen</string>
     <string name="MercurygramConfirmInternalLinksAbout">Fragt vor dem Öffnen von t.me- und tg://-Links nach und zeigt zuerst die Adresse. Hilft gegen Links, die unbemerkt einem Kanal beitreten oder einen Bot öffnen.</string>
+    <string name="MercurygramKeepAliveNotification">Keep-Alive-Dienst</string>
+    <string name="MercurygramKeepAliveNotificationHide">Tippen, um diese Benachrichtigung auszublenden</string>
 </resources>
