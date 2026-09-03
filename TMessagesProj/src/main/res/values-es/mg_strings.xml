@@ -256,4 +256,6 @@
     <string name="MercurygramDisableCloudDraftsAbout">No subir a Telegram los borradores sin enviar. Los borradores se quedan en este dispositivo y dejan de aparecer en tus otros dispositivos.</string>
     <string name="MercurygramConfirmInternalLinks">Confirmar los enlaces de Telegram</string>
     <string name="MercurygramConfirmInternalLinksAbout">Pide confirmación antes de abrir enlaces t.me y tg://, mostrando primero la dirección. Útil contra los enlaces que se unen a un canal o abren un bot sin avisar.</string>
+    <string name="MercurygramKeepAliveNotification">Servicio de mantenimiento de conexión</string>
+    <string name="MercurygramKeepAliveNotificationHide">Toca para ocultar esta notificación</string>
 </resources>
