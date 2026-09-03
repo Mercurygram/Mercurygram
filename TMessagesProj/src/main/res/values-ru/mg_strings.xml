@@ -251,4 +251,6 @@
     <string name="MercurygramDisableCloudDraftsAbout">Не загружать неотправленные черновики в Telegram. Черновики остаются на этом устройстве и больше не появляются на других ваших устройствах.</string>
     <string name="MercurygramConfirmInternalLinks">Подтверждать ссылки Telegram</string>
     <string name="MercurygramConfirmInternalLinksAbout">Спрашивать подтверждение перед открытием ссылок t.me и tg://, показывая сначала адрес. Помогает против ссылок, которые незаметно подписывают на канал или открывают бота.</string>
+    <string name="MercurygramKeepAliveNotification">Служба поддержания соединения</string>
+    <string name="MercurygramKeepAliveNotificationHide">Нажмите, чтобы скрыть это уведомление</string>
 </resources>
