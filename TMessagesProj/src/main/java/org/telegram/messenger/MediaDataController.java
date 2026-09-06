@@ -3684,6 +3684,7 @@ public class MediaDataController extends BaseController {
     private SparseArray<MessageObject>[] searchServerResultMessagesMap = new SparseArray[]{new SparseArray<>(), new SparseArray<>()};
     private ArrayList<MessageObject> deletedFromResultMessages = new ArrayList<>();
     private String lastSearchQuery;
+    private it.belloworld.mercurygram.search.MgSearchQuery mgChatSearchQuery = it.belloworld.mercurygram.search.MgSearchQuery.EMPTY;
     private int lastReturnedNum;
     private boolean loadingMoreSearchMessages;
     private boolean loadingSearchLocal;
@@ -3855,6 +3856,9 @@ public class MediaDataController extends BaseController {
         int max_id = 0;
         long queryWithDialog = dialogId;
         boolean firstQuery = !internal;
+        if (query != null && !internal) {
+            query = (mgChatSearchQuery = it.belloworld.mercurygram.search.MgSearchQuery.parse(query, getMessagesController())).q;
+        }
         if (reqId != 0) {
             loadingMoreSearchMessages = false;
             getConnectionsManager().cancelRequest(reqId, true);
@@ -3958,6 +3962,7 @@ public class MediaDataController extends BaseController {
                     req.flags |= 8;
                 }
                 req.filter = new TLRPC.TL_inputMessagesFilterEmpty();
+                mgChatSearchQuery.applyTo(req);
                 mergeReqId = getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                     if (lastMergeDialogId == mergeDialogId) {
                         mergeReqId = 0;
@@ -4006,7 +4011,7 @@ public class MediaDataController extends BaseController {
         loadedPredirectedSearchLocal = false;
         int currentReqId = ++lastReqId;
         final boolean isSaved = dialogId == getUserConfig().getClientUserId();
-        if (isSaved && reaction != null && firstQuery) {
+        if (isSaved && reaction != null && firstQuery && !mgChatSearchQuery.hasOperators()) {
             lastReturnedNum = 0;
             searchServerResultMessages.clear();
             searchServerResultMessagesMap[0].clear();
@@ -4043,6 +4048,7 @@ public class MediaDataController extends BaseController {
             req.flags |= 8;
         }
         req.filter = new TLRPC.TL_inputMessagesFilterEmpty();
+        mgChatSearchQuery.applyTo(req);
         lastSearchQuery = query;
         long queryWithDialogFinal = queryWithDialog;
         String finalQuery = query;
