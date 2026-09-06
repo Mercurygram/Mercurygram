@@ -35,6 +35,8 @@ public class MgAccountConfig {
     public boolean disableCloudDrafts = false;
     public boolean confirmInternalLinks = false;
     public boolean showCharCounter = false;
+    /** "updated" of the last local-folders blob applied to or pushed from this device (see MgLocalFolderSync). */
+    public int folderSyncUpdated = 0;
 
     /**
      * Whether {@code draftMessage} may go to the server. An empty draft carries no
@@ -87,6 +89,7 @@ public class MgAccountConfig {
         editor.putBoolean("disableCloudDrafts", disableCloudDrafts);
         editor.putBoolean("confirmInternalLinks", confirmInternalLinks);
         editor.putBoolean("showCharCounter", showCharCounter);
+        editor.putInt("folderSyncUpdated", folderSyncUpdated);
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -112,6 +115,7 @@ public class MgAccountConfig {
         disableCloudDrafts = preferences.getBoolean("disableCloudDrafts", false);
         confirmInternalLinks = preferences.getBoolean("confirmInternalLinks", false);
         showCharCounter = preferences.getBoolean("showCharCounter", false);
+        folderSyncUpdated = preferences.getInt("folderSyncUpdated", 0);
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -137,6 +141,7 @@ public class MgAccountConfig {
         disableCloudDrafts = false;
         confirmInternalLinks = false;
         showCharCounter = false;
+        folderSyncUpdated = 0;
         mgReducedTrackingExhausted = false;
     }
 }

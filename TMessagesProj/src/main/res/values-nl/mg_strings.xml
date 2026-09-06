@@ -254,6 +254,6 @@
     <string name="MercurygramKeepAliveNotification">Keep-alive-service</string>
     <string name="MercurygramKeepAliveNotificationHide">Tik om deze melding te verbergen</string>
     <string name="MercurygramLocalFolder">Lokale map</string>
-    <string name="MercurygramLocalFolderInfo">Alleen op dit apparaat opgeslagen, nooit bij Telegram. Geen limiet op mappen of chats.</string>
+    <string name="MercurygramLocalFolderInfo">Wordt nooit als map naar Telegram gestuurd, dus geen limiet op mappen of chats. Gesynchroniseerd tussen je apparaten via één bestand in Opgeslagen berichten.</string>
     <string name="MercurygramLocalFolderTag">lokaal</string>
 </resources>

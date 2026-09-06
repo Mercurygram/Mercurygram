@@ -254,6 +254,6 @@
     <string name="MercurygramKeepAliveNotification">Служба поддержания соединения</string>
     <string name="MercurygramKeepAliveNotificationHide">Нажмите, чтобы скрыть это уведомление</string>
     <string name="MercurygramLocalFolder">Локальная папка</string>
-    <string name="MercurygramLocalFolderInfo">Хранится только на этом устройстве, не в Telegram. Без ограничений на число папок и чатов.</string>
+    <string name="MercurygramLocalFolderInfo">Не отправляется в Telegram как папка, поэтому без ограничений на число папок и чатов. Синхронизируется между вашими устройствами через один файл в Избранном.</string>
     <string name="MercurygramLocalFolderTag">локальная</string>
 </resources>

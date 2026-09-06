@@ -254,6 +254,6 @@
     <string name="MercurygramKeepAliveNotification">Servicio de mantenimiento de conexión</string>
     <string name="MercurygramKeepAliveNotificationHide">Toca para ocultar esta notificación</string>
     <string name="MercurygramLocalFolder">Carpeta local</string>
-    <string name="MercurygramLocalFolderInfo">Se guarda solo en este dispositivo, nunca en Telegram. Sin límite de carpetas ni de chats.</string>
+    <string name="MercurygramLocalFolderInfo">Nunca se envía a Telegram como carpeta, así que no hay límite de carpetas ni de chats. Se sincroniza entre tus dispositivos mediante un archivo en Mensajes guardados.</string>
     <string name="MercurygramLocalFolderTag">local</string>
 </resources>
