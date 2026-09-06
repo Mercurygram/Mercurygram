@@ -259,6 +259,6 @@
     <string name="MercurygramKeepAliveNotification">Служба підтримання з\'єднання</string>
     <string name="MercurygramKeepAliveNotificationHide">Натисніть, щоб приховати це сповіщення</string>
     <string name="MercurygramFolder">Папка Mercurygram</string>
-    <string name="MercurygramFolderInfo">Зберігається лише на цьому пристрої, не в Telegram. Без обмежень на кількість папок і чатів.</string>
+    <string name="MercurygramFolderInfo">Показується лише в Mercurygram, не надсилається в Telegram як папка, тому без обмежень на кількість папок і чатів. Синхронізується між вашими застосунками Mercurygram через один файл у Збережених повідомленнях. Перемикання в наявній папці переносить папку між Telegram і Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
 </resources>
