@@ -35,6 +35,10 @@ public class MgAccountConfig {
     public boolean disableCloudDrafts = false;
     public boolean confirmInternalLinks = false;
     public boolean showCharCounter = false;
+    /** "updated" of the last Mercurygram folders blob applied to or pushed from this device (see MgFolderSync). */
+    public int folderSyncUpdated = 0;
+    /** Folder id to icon, as JSON: read from the blob and written back unchanged (see MgFolderSync). */
+    public String folderEmoticons = "";
 
     /**
      * Whether {@code draftMessage} may go to the server. An empty draft carries no
@@ -87,6 +91,8 @@ public class MgAccountConfig {
         editor.putBoolean("disableCloudDrafts", disableCloudDrafts);
         editor.putBoolean("confirmInternalLinks", confirmInternalLinks);
         editor.putBoolean("showCharCounter", showCharCounter);
+        editor.putInt("folderSyncUpdated", folderSyncUpdated);
+        editor.putString("folderEmoticons", folderEmoticons);
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -112,6 +118,8 @@ public class MgAccountConfig {
         disableCloudDrafts = preferences.getBoolean("disableCloudDrafts", false);
         confirmInternalLinks = preferences.getBoolean("confirmInternalLinks", false);
         showCharCounter = preferences.getBoolean("showCharCounter", false);
+        folderSyncUpdated = preferences.getInt("folderSyncUpdated", 0);
+        folderEmoticons = preferences.getString("folderEmoticons", "");
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -137,6 +145,8 @@ public class MgAccountConfig {
         disableCloudDrafts = false;
         confirmInternalLinks = false;
         showCharCounter = false;
+        folderSyncUpdated = 0;
+        folderEmoticons = "";
         mgReducedTrackingExhausted = false;
     }
 }
