@@ -18982,6 +18982,9 @@ public class ChatActivity extends BaseFragment implements
                                 canSave = true;
                             }
                         }
+                        if (!canSave && it.belloworld.mercurygram.MgLocalMedia.cachedFile(messageObject) != null) {
+                            canSave = true;
+                        }
                         if (canSave) {
                             if (messageObject.getDocument() != null && !messageObject.isMusic()) {
                                 String mime = messageObject.getDocument().mime_type;
@@ -19048,6 +19051,9 @@ public class ChatActivity extends BaseFragment implements
                         if (f.exists()) {
                             canSave = true;
                         }
+                    }
+                    if (!canSave && it.belloworld.mercurygram.MgLocalMedia.cachedFile(messageObject) != null) {
+                        canSave = true;
                     }
                     if (canSave) {
                         if (messageObject.getDocument() != null) {
@@ -33398,31 +33404,8 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void saveMessageToGallery(MessageObject messageObject) {
-        String path = messageObject.messageOwner.attachPath;
-        if (!TextUtils.isEmpty(path)) {
-            File temp = new File(path);
-            if (!temp.exists()) {
-                path = null;
-            }
-        }
-        if (TextUtils.isEmpty(path)) {
-            File f = FileLoader.getInstance(currentAccount).getPathToMessage(messageObject.messageOwner);
-            if (f != null && f.exists()) {
-                path = f.getPath();
-            }
-        }
-        if (TextUtils.isEmpty(path) && messageObject.cachedQuality != null && messageObject.cachedQuality.isCached()) {
-            File f = new File(messageObject.cachedQuality.uri.getPath());
-            if (f != null && f.exists()) {
-                path = f.getPath();
-            }
-        }
-        if (TextUtils.isEmpty(path) && messageObject.qualityToSave != null) {
-            File f = FileLoader.getInstance(currentAccount).getPathToAttach(messageObject.qualityToSave, null, false, true);
-            if (f != null && f.exists()) {
-                path = f.getPath();
-            }
-        }
+        File mgFile = it.belloworld.mercurygram.MgLocalMedia.cachedFile(messageObject);
+        String path = mgFile != null ? mgFile.getPath() : null;
         if (TextUtils.isEmpty(path)) {
             return;
         }
@@ -33655,16 +33638,8 @@ public class ChatActivity extends BaseFragment implements
                 break;
             }
             case OPTION_SHARE: {
-                String path = selectedObject.messageOwner.attachPath;
-                if (path != null && path.length() > 0) {
-                    File temp = new File(path);
-                    if (!temp.exists()) {
-                        path = null;
-                    }
-                }
-                if (path == null || path.length() == 0) {
-                    path = getFileLoader().getPathToMessage(selectedObject.messageOwner).toString();
-                }
+                File mgFile = it.belloworld.mercurygram.MgLocalMedia.cachedFile(selectedObject);
+                String path = mgFile != null ? mgFile.getPath() : getFileLoader().getPathToMessage(selectedObject.messageOwner).toString();
                 Intent intent = new Intent(Intent.ACTION_SEND);
                 intent.setType(selectedObject.getDocument().mime_type);
                 File f = new File(path);
@@ -33686,37 +33661,8 @@ public class ChatActivity extends BaseFragment implements
                 break;
             }
             case OPTION_SAVE_TO_GALLERY2: {
-                String path = selectedObject.messageOwner.attachPath;
-                if (path != null && path.length() > 0) {
-                    File temp = new File(path);
-                    if (!temp.exists()) {
-                        path = null;
-                    }
-                }
-                if (TextUtils.isEmpty(path)) {
-                    File f = FileLoader.getInstance(currentAccount).getPathToMessage(selectedObject.messageOwner);
-                    if (f != null && f.exists()) {
-                        path = f.getPath();
-                    }
-                }
-                if (TextUtils.isEmpty(path)) {
-                    File f = FileLoader.getInstance(currentAccount).getPathToMessage(selectedObject.messageOwner, true, true);
-                    if (f != null && f.exists()) {
-                        path = f.getPath();
-                    }
-                }
-                if (TextUtils.isEmpty(path) && selectedObject.cachedQuality != null && selectedObject.cachedQuality.isCached()) {
-                    File f = new File(selectedObject.cachedQuality.uri.getPath());
-                    if (f != null && f.exists()) {
-                        path = f.getPath();
-                    }
-                }
-                if (TextUtils.isEmpty(path) && selectedObject.qualityToSave != null) {
-                    File f = FileLoader.getInstance(currentAccount).getPathToAttach(selectedObject.qualityToSave, null, false, true);
-                    if (f != null && f.exists()) {
-                        path = f.getPath();
-                    }
-                }
+                File mgFile = it.belloworld.mercurygram.MgLocalMedia.cachedFile(selectedObject);
+                String path = mgFile != null ? mgFile.getPath() : null;
                 if (Build.VERSION.SDK_INT >= 23 && (Build.VERSION.SDK_INT <= 28 || BuildVars.NO_SCOPED_STORAGE) && getParentActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     getParentActivity().requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 4);
                     selectedObject = null;
@@ -33874,31 +33820,8 @@ public class ChatActivity extends BaseFragment implements
                     if (TextUtils.isEmpty(fileName)) {
                         fileName = selectedObject.getFileName();
                     }
-                    String path = selectedObject.messageOwner.attachPath;
-                    if (path != null && path.length() > 0) {
-                        File temp = new File(path);
-                        if (!temp.exists()) {
-                            path = null;
-                        }
-                    }
-                    if (TextUtils.isEmpty(path)) {
-                        File f = FileLoader.getInstance(currentAccount).getPathToMessage(selectedObject.messageOwner);
-                        if (f != null && f.exists()) {
-                            path = f.getPath();
-                        }
-                    }
-                    if (TextUtils.isEmpty(path) && selectedObject.cachedQuality != null && selectedObject.cachedQuality.isCached()) {
-                        File f = new File(selectedObject.cachedQuality.uri.getPath());
-                        if (f != null && f.exists()) {
-                            path = f.getPath();
-                        }
-                    }
-                    if (TextUtils.isEmpty(path) && selectedObject.qualityToSave != null) {
-                        File f = FileLoader.getInstance(currentAccount).getPathToAttach(selectedObject.qualityToSave, null, false, true);
-                        if (f != null && f.exists()) {
-                            path = f.getPath();
-                        }
-                    }
+                    File mgFile = it.belloworld.mercurygram.MgLocalMedia.cachedFile(selectedObject);
+                    String path = mgFile != null ? mgFile.getPath() : null;
                     MediaController.saveFile(path, getParentActivity(), 2, fileName, selectedObject.getDocument() != null ? selectedObject.getDocument().mime_type : "", uri -> {
                         if (getParentActivity() == null) {
                             return;
