@@ -76,6 +76,8 @@ import java.util.function.Consumer;
 
 import me.vkryl.core.BitwiseUtils;
 
+import it.belloworld.mercurygram.folders.MgFolders;
+
 public class MessagesStorage extends BaseController {
 
     private DispatchQueue storageQueue;
@@ -3273,6 +3275,7 @@ public class MessagesStorage extends BaseController {
                 SparseArray<MessagesController.DialogFilter> filtersToDelete = new SparseArray<>();
                 for (int a = 0, N = dialogFilters.size(); a < N; a++) {
                     MessagesController.DialogFilter filter = dialogFilters.get(a);
+                    if (MgFolders.keepOnTrim(filter, dialogFilters)) continue; // Mercurygram: folders with a negative id are not on the server, never trim them
                     filtersToDelete.put(filter.id, filter);
                 }
                 ArrayList<Integer> filtersOrder = new ArrayList<>();
@@ -3596,25 +3599,9 @@ public class MessagesStorage extends BaseController {
             saveDialogFilterInternal(filtersToSave.get(a), false, true);
             anythingChanged = true;
         }
-        boolean orderChanged = false;
-        for (int a = 0, N = dialogFilters.size(); a < N; a++) {
-            MessagesController.DialogFilter filter = dialogFilters.get(a);
-            int order = filtersOrder.indexOf(filter.id);
-            if (filter.order != order) {
-                filter.order = order;
-                anythingChanged = true;
-                orderChanged = true;
-            }
-        }
-        if (orderChanged) {
-            Collections.sort(dialogFilters, (o1, o2) -> {
-                if (o1.order > o2.order) {
-                    return 1;
-                } else if (o1.order < o2.order) {
-                    return -1;
-                }
-                return 0;
-            });
+        // Mercurygram: folders with a negative id keep their slot, server folders fill the rest in server order
+        if (MgFolders.mergeRemoteOrder(dialogFilters, filtersOrder)) {
+            anythingChanged = true;
             saveDialogFiltersOrderInternal();
         }
         int remote = anythingChanged ? 1 : 2;
