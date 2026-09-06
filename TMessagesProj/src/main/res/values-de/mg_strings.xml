@@ -254,6 +254,6 @@
     <string name="MercurygramKeepAliveNotification">Keep-Alive-Dienst</string>
     <string name="MercurygramKeepAliveNotificationHide">Tippen, um diese Benachrichtigung auszublenden</string>
     <string name="MercurygramFolder">Mercurygram-Ordner</string>
-    <string name="MercurygramFolderInfo">Nur auf diesem Gerät gespeichert, nie bei Telegram. Keine Begrenzung für Ordner oder Chats.</string>
+    <string name="MercurygramFolderInfo">Nur in Mercurygram sichtbar, wird nie als Ordner an Telegram gesendet, daher keine Begrenzung für Ordner oder Chats. Wird über eine Datei in den gespeicherten Nachrichten zwischen deinen Mercurygram-Apps abgeglichen. Bei einem bestehenden Ordner verschiebt der Schalter den Ordner zwischen Telegram und Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
 </resources>
