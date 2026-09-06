@@ -72,6 +72,7 @@ import org.telegram.ui.Cells.EditEmojiTextCell;
 import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCell;
+import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.UserCell;
 import org.telegram.ui.Components.AnimatedColor;
@@ -105,6 +106,8 @@ import org.telegram.ui.Components.spoilers.SpoilersTextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
+
+import it.belloworld.mercurygram.folders.MgFolders;
 
 public class FilterCreateActivity extends BaseFragment {
 
@@ -215,9 +218,38 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newNeverShow = new ArrayList<>(filter.neverShow);
         newPinned = filter.pinnedDialogs.clone();
+        mgFolder = MgFolders.isMercurygram(filter);
     }
 
     private int requestingInvitesReqId;
+
+    // Mercurygram: this folder gets a negative id and never reaches the server;
+    // the id is applied on save so an existing folder can be moved either way
+    private boolean mgFolder;
+
+    public FilterCreateActivity mgSetFolder(boolean mercurygram) {
+        mgFolder = mercurygram;
+        return this;
+    }
+
+    private void mgToggleFolder(TextCheckCell cell) {
+        if (mgFolder) {
+            final MessagesController mc = getMessagesController();
+            final int chatsLimit = getUserConfig().isPremium() ? mc.dialogFiltersChatsLimitPremium : mc.dialogFiltersChatsLimitDefault;
+            if (MgFolders.serverFull(getAccountInstance())) {
+                showDialog(new LimitReachedBottomSheet(this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
+                return;
+            }
+            if (newAlwaysShow.size() > chatsLimit || newNeverShow.size() > chatsLimit) {
+                showDialog(new LimitReachedBottomSheet(this, getContext(), LimitReachedBottomSheet.TYPE_CHATS_IN_FOLDER, currentAccount, null));
+                return;
+            }
+        }
+        mgFolder = !mgFolder;
+        cell.setChecked(mgFolder);
+        checkDoneButton(true);
+        updateRows();
+    }
 
     @Override
     public boolean onFragmentCreate() {
@@ -291,7 +323,11 @@ public class FilterCreateActivity extends BaseFragment {
         }));
         nameRow = items.size();
         items.add(ItemInner.asEdit());
-        items.add(ItemInner.asShadow(null));
+        final boolean mgFolderRow = creatingNew || !filter.isChatlist() && invites.isEmpty(); // Mercurygram: a shared folder lives on the server
+        if (mgFolderRow) {
+            items.add(ItemInner.asCheck(LocaleController.getString(R.string.MercurygramFolder), mgFolder).whenClicked(v -> mgToggleFolder((TextCheckCell) v)));
+        }
+        items.add(ItemInner.asShadow(mgFolderRow ? LocaleController.getString(R.string.MercurygramFolderInfo) : null));
         items.add(ItemInner.asHeader(LocaleController.getString(R.string.FilterInclude)));
         items.add(ItemInner.asButton(R.drawable.msg2_chats_add, LocaleController.getString(R.string.FilterAddChats), false).whenClicked(v -> selectChatsFor(true)));
 
@@ -363,7 +399,9 @@ public class FilterCreateActivity extends BaseFragment {
             items.add(ItemInner.asShadow(LocaleController.getString(R.string.FolderTagColorInfo)));
         }
 
-        if (invites.isEmpty()) {
+        if (mgFolder) {
+            // Mercurygram: nothing on the server to share
+        } else if (invites.isEmpty()) {
             items.add(ItemInner.asHeader(LocaleController.getString(R.string.FilterShareFolder), true));
             items.add(ItemInner.asButton(R.drawable.msg2_link2, LocaleController.getString(R.string.FilterShareFolderButton), false));
             items.add(ItemInner.asShadow(LocaleController.getString(R.string.FilterInviteLinksHintNew)));
@@ -869,6 +907,7 @@ public class FilterCreateActivity extends BaseFragment {
         ArrayList<Long> arrayList = include ? newAlwaysShow : newNeverShow;
         UsersSelectActivity fragment = new UsersSelectActivity(include, arrayList, newFilterFlags);
         fragment.noChatTypes = filter.isChatlist();
+        fragment.mgNoLimit = mgFolder;
         fragment.setDelegate((ids, flags) -> {
             newFilterFlags = flags;
             if (include) {
@@ -1062,6 +1101,13 @@ public class FilterCreateActivity extends BaseFragment {
     }
 
     private void save(boolean progress, Runnable after) {
+        if (mgFolder != MgFolders.isMercurygram(filter)) { // Mercurygram
+            if (creatingNew) {
+                filter.id = MgFolders.newId(getMessagesController(), mgFolder);
+            } else {
+                MgFolders.move(getAccountInstance(), filter, mgFolder);
+            }
+        }
         final CharSequence[] parsedTitle = new CharSequence[] { newFilterName };
         final ArrayList<TLRPC.MessageEntity> entities = getMediaDataController().getEntities(parsedTitle, false);
         saveFilterToServer(filter, newFilterFlags, parsedTitle[0].toString(), entities, !newFilterAnimations, newFilterColor, newAlwaysShow, newNeverShow, newPinned, creatingNew, false, hasUserChanged, true, progress, this, () -> {
@@ -1094,6 +1140,7 @@ public class FilterCreateActivity extends BaseFragment {
         filter.alwaysShow = newAlwaysShow;
         filter.title_noanimate = newFilterNoanimate;
         if (creatingNew) {
+            if (MgFolders.isMercurygram(filter)) MgFolders.ensureDefaultFilter(fragment.getAccountInstance()); // Mercurygram
             fragment.getMessagesController().addFilter(filter, atBegin);
         } else {
             fragment.getMessagesController().onFilterUpdate(filter);
@@ -1240,6 +1287,9 @@ public class FilterCreateActivity extends BaseFragment {
 
     private boolean hasChanges() {
         hasUserChanged = false;
+        if (mgFolder != MgFolders.isMercurygram(filter)) { // Mercurygram
+            return true;
+        }
         if (filter.alwaysShow.size() != newAlwaysShow.size()) {
             hasUserChanged = true;
         }
@@ -1306,6 +1356,7 @@ public class FilterCreateActivity extends BaseFragment {
     private static final int VIEW_TYPE_HEADER_COLOR_PREVIEW = 9;
     private static final int VIEW_TYPE_COLOR = 10;
     private static final int VIEW_TYPE_HEADER_ANIMATED = 11;
+    private static final int VIEW_TYPE_CHECK = 12; // Mercurygram
 
     private static class ItemInner extends AdapterWithDiffUtils.Item {
 
@@ -1322,6 +1373,7 @@ public class FilterCreateActivity extends BaseFragment {
 
         private int iconResId;
         private boolean isRed;
+        private boolean checked;
 
         private TL_chatlists.TL_exportedChatlistInvite link;
 
@@ -1392,6 +1444,13 @@ public class FilterCreateActivity extends BaseFragment {
 
         public static ItemInner asCreateLink() {
             return new ItemInner(VIEW_TYPE_CREATE_LINK, false);
+        }
+
+        public static ItemInner asCheck(CharSequence text, boolean checked) {
+            ItemInner item = new ItemInner(VIEW_TYPE_CHECK, false);
+            item.text = text;
+            item.checked = checked;
+            return item;
         }
 
         public ItemInner whenClicked(View.OnClickListener onClickListener) {
@@ -1556,6 +1615,9 @@ public class FilterCreateActivity extends BaseFragment {
                 case VIEW_TYPE_COLOR:
                     view = new PeerColorActivity.PeerColorGrid(getContext(), PeerColorActivity.PeerColorGrid.TYPE_FOLDER_TAG, currentAccount, resourceProvider);
                     break;
+                case VIEW_TYPE_CHECK:
+                    view = new TextCheckCell(mContext);
+                    break;
                 case VIEW_TYPE_SHADOW_TEXT:
                 default:
                     view = new TextInfoPrivacyCell(mContext);
@@ -1670,6 +1732,10 @@ public class FilterCreateActivity extends BaseFragment {
                 case VIEW_TYPE_SHADOW_TEXT: {
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
                     cell.setText(item.text);
+                    break;
+                }
+                case VIEW_TYPE_CHECK: {
+                    ((TextCheckCell) holder.itemView).setTextAndCheck(item.text, item.checked, divider);
                     break;
                 }
                 case VIEW_TYPE_LINK: {
