@@ -254,4 +254,7 @@
     <string name="MercurygramConfirmInternalLinksAbout">t.me 및 tg:// 링크를 열기 전에 주소를 먼저 보여 주고 확인을 받습니다. 조용히 채널에 가입시키거나 봇을 여는 링크를 막는 데 유용합니다.</string>
     <string name="MercurygramKeepAliveNotification">연결 유지 서비스</string>
     <string name="MercurygramKeepAliveNotificationHide">이 알림을 숨기려면 누르세요</string>
+    <string name="MercurygramFolder">Mercurygram 폴더</string>
+    <string name="MercurygramFolderInfo">이 기기에만 저장되며 텔레그램에는 저장되지 않습니다. 폴더나 채팅 수 제한이 없습니다.</string>
+    <string name="MercurygramFolderTag">Mercurygram</string>
 </resources>
