@@ -254,6 +254,6 @@
     <string name="MercurygramKeepAliveNotification">Keep-alive service</string>
     <string name="MercurygramKeepAliveNotificationHide">Tap to hide this notification</string>
     <string name="MercurygramLocalFolder">Local folder</string>
-    <string name="MercurygramLocalFolderInfo">Stored on this device only, never on Telegram. No folder or chat limit.</string>
+    <string name="MercurygramLocalFolderInfo">Never sent to Telegram as a folder, so no folder or chat limit. Synced between your devices through one file in Saved Messages.</string>
     <string name="MercurygramLocalFolderTag">local</string>
 </resources>

@@ -254,6 +254,6 @@
     <string name="MercurygramKeepAliveNotification">Servizio keep-alive</string>
     <string name="MercurygramKeepAliveNotificationHide">Tocca per nascondere questa notifica</string>
     <string name="MercurygramLocalFolder">Cartella locale</string>
-    <string name="MercurygramLocalFolderInfo">Salvata solo su questo dispositivo, mai su Telegram. Nessun limite di cartelle o chat.</string>
+    <string name="MercurygramLocalFolderInfo">Non viene mai inviata a Telegram come cartella, quindi nessun limite di cartelle o chat. Sincronizzata tra i tuoi dispositivi tramite un file nei Messaggi salvati.</string>
     <string name="MercurygramLocalFolderTag">locale</string>
 </resources>

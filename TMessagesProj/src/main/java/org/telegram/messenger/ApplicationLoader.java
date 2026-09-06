@@ -283,6 +283,7 @@ public class ApplicationLoader extends Application {
             ContactsController.getInstance(a).checkAppAccount();
             DownloadController.getInstance(a);
         }
+        it.belloworld.mercurygram.folders.MgLocalFolderSync.startAll(); // Mercurygram: local folders via Saved Messages
         BillingController.getInstance().startConnection();
     }
 
