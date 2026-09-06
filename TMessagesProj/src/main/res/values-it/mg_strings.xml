@@ -258,4 +258,7 @@
     <string name="MercurygramConfirmInternalLinksAbout">Chiede conferma prima di aprire i link t.me e tg://, mostrando prima l\'indirizzo. Utile contro i link che iscrivono a un canale o aprono un bot senza avvisare.</string>
     <string name="MercurygramKeepAliveNotification">Servizio keep-alive</string>
     <string name="MercurygramKeepAliveNotificationHide">Tocca per nascondere questa notifica</string>
+    <string name="MercurygramFolder">Cartella Mercurygram</string>
+    <string name="MercurygramFolderInfo">Salvata solo su questo dispositivo, mai su Telegram. Nessun limite di cartelle o chat.</string>
+    <string name="MercurygramFolderTag">Mercurygram</string>
 </resources>
