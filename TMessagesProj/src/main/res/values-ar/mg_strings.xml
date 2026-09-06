@@ -258,4 +258,7 @@
     <string name="MercurygramConfirmInternalLinksAbout">يطلب التأكيد قبل فتح روابط ‏t.me و‏tg://‎، مع عرض العنوان أولاً. مفيد ضد الروابط التي تنضم إلى قناة أو تفتح بوتًا دون إشعارك.</string>
     <string name="MercurygramKeepAliveNotification">خدمة الإبقاء نشطًا</string>
     <string name="MercurygramKeepAliveNotificationHide">اضغط لإخفاء هذا الإشعار</string>
+    <string name="MercurygramFolder">مجلد Mercurygram</string>
+    <string name="MercurygramFolderInfo">يُحفظ على هذا الجهاز فقط، وليس على تيليجرام. بلا حد لعدد المجلدات أو الدردشات.</string>
+    <string name="MercurygramFolderTag">Mercurygram</string>
 </resources>
