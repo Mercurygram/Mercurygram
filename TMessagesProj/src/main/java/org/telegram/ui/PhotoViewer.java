@@ -4629,6 +4629,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 if (f == null) {
                     f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
                 }
+                if (f == null || !f.exists()) {
+                    File cached = it.belloworld.mercurygram.MgLocalMedia.cachedFile(currentMessageObject);
+                    if (cached != null) {
+                        f = cached;
+                    }
+                }
             } else if (currentFileLocationVideo != null) {
                 f = FileLoader.getInstance(currentAccount).getPathToAttach(getFileLocation(currentFileLocationVideo), getFileLocationExt(currentFileLocationVideo), avatarsDialogId != 0 || isEvent);
                 if (f == null || !f.exists()) {
@@ -4955,6 +4961,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         if (f != null && !f.exists()) {
                             f = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_CACHE), f.getName());
                         }
+                        if (currentMessageObject != null && currentMessageObject.isVideo() && (f == null || !f.exists())) {
+                            File mgCached = it.belloworld.mercurygram.MgLocalMedia.cachedFile(currentMessageObject);
+                            if (mgCached != null) {
+                                f = mgCached;
+                            }
+                        }
 
                         final boolean isLivePhoto = currentMessageObject != null && currentMessageObject.isLivePhoto();
                         File videoFileForLivePhoto = null;
@@ -5011,6 +5023,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                                         f = FileLoader.getInstance(currentAccount).getPathToAttach(fileLocation, true);
                                     } else {
                                         f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+                                        if (currentMessageObject.isVideo() && (f == null || !f.exists())) {
+                                            File mgCached = it.belloworld.mercurygram.MgLocalMedia.cachedFile(currentMessageObject);
+                                            if (mgCached != null) {
+                                                f = mgCached;
+                                            }
+                                        }
                                     }
                                     boolean isThisVideo = currentMessageObject.isVideo();
                                     final boolean isThisLivePhoto = currentMessageObject.isLivePhoto();
@@ -5059,6 +5077,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                                             f = FileLoader.getInstance(currentAccount).getPathToAttach(getFileLocation(currentIndex, null), true);
                                         } else {
                                             f = FileLoader.getInstance(currentAccount).getPathToMessage(msg.messageOwner);
+                                            if (msg.isVideo() && (f == null || !f.exists())) {
+                                                File mgCached = it.belloworld.mercurygram.MgLocalMedia.cachedFile(msg);
+                                                if (mgCached != null) {
+                                                    f = mgCached;
+                                                }
+                                            }
                                         }
                                         boolean isThisVideo = msg.isVideo();
                                         final boolean isThisLivePhoto = msg.isLivePhoto();
@@ -17214,6 +17238,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             if (file == null) {
                 file = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+            }
+            if (isVideo && (file == null || !file.exists())) {
+                File mgCached = it.belloworld.mercurygram.MgLocalMedia.cachedFile(currentMessageObject);
+                if (mgCached != null) {
+                    file = mgCached;
+                }
             }
         }
 
