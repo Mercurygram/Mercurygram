@@ -259,6 +259,6 @@
     <string name="MercurygramKeepAliveNotification">Serviço de conexão persistente</string>
     <string name="MercurygramKeepAliveNotificationHide">Toque para ocultar esta notificação</string>
     <string name="MercurygramFolder">Pasta Mercurygram</string>
-    <string name="MercurygramFolderInfo">Guardada apenas neste aparelho, nunca no Telegram. Sem limite de pastas ou conversas.</string>
+    <string name="MercurygramFolderInfo">Aparece apenas no Mercurygram, nunca é enviada ao Telegram como pasta, então não há limite de pastas ou conversas. Sincronizada entre seus apps Mercurygram por um arquivo nas Mensagens salvas. Alterar em uma pasta existente move a pasta entre o Telegram e o Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
 </resources>
