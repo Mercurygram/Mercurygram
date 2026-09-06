@@ -34,6 +34,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import it.belloworld.mercurygram.MgLocalMedia;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ContactsController;
@@ -196,27 +198,8 @@ public class MessageDetailsActivity extends BaseFragment {
         if (messageObject.messageOwner.from_id != null && messageObject.messageOwner.from_id.user_id != 0) {
             fromUser = getMessagesController().getUser(messageObject.messageOwner.from_id.user_id);
         }
-        filePath = messageObject.messageOwner.attachPath;
-        if (!TextUtils.isEmpty(filePath)) {
-            File temp = new File(filePath);
-            if (!temp.exists()) {
-                filePath = null;
-            }
-        }
-        if (TextUtils.isEmpty(filePath)) {
-            filePath = FileLoader.getInstance(currentAccount).getPathToMessage(messageObject.messageOwner).toString();
-            File temp = new File(filePath);
-            if (!temp.exists()) {
-                filePath = null;
-            }
-        }
-        if (TextUtils.isEmpty(filePath)) {
-            filePath = FileLoader.getInstance(currentAccount).getPathToAttach(messageObject.getDocument(), true).toString();
-            File temp = new File(filePath);
-            if (!temp.isFile()) {
-                filePath = null;
-            }
-        }
+        File localFile = MgLocalMedia.cachedFile(messageObject);
+        filePath = localFile == null ? null : localFile.getPath();
         if (messageObject.messageOwner.media != null && messageObject.messageOwner.media.document != null) {
             if (TextUtils.isEmpty(messageObject.messageOwner.media.document.file_name)) {
                 for (int a = 0; a < messageObject.messageOwner.media.document.attributes.size(); a++) {
