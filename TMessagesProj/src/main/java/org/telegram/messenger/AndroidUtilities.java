@@ -4179,6 +4179,12 @@ public class AndroidUtilities {
         if (f == null || f != null && !f.exists()) {
             f = FileLoader.getInstance(UserConfig.selectedAccount).getPathToMessage(message.messageOwner);
         }
+        if (f == null || !f.exists()) {
+            File mgCached = it.belloworld.mercurygram.MgLocalMedia.cachedFile(message);
+            if (mgCached != null) {
+                f = mgCached;
+            }
+        }
         if (f != null && f.exists()) {
             if (parentFragment != null && f.getName().toLowerCase().endsWith("attheme")) {
                 Theme.ThemeInfo themeInfo = Theme.applyThemeFile(f, message.getDocumentName(), null, true);
@@ -4311,6 +4317,12 @@ public class AndroidUtilities {
         }
         if (f == null || !f.exists()) {
             f = FileLoader.getInstance(message.currentAccount).getPathToMessage(message.messageOwner);
+        }
+        if (f == null || !f.exists()) {
+            File mgCached = it.belloworld.mercurygram.MgLocalMedia.cachedFile(message);
+            if (mgCached != null) {
+                f = mgCached;
+            }
         }
         String mimeType = message.type == MessageObject.TYPE_FILE || message.type == MessageObject.TYPE_TEXT ? message.getMimeType() : null;
         return openForView(f, message.getFileName(), mimeType, activity, resourcesProvider, restrict);
