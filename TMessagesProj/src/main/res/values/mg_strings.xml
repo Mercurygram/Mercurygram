@@ -253,4 +253,7 @@
     <string name="MercurygramConfirmInternalLinksAbout">Ask for confirmation before opening t.me and tg:// links, showing the address first. Useful against links that quietly join a channel or open a bot.</string>
     <string name="MercurygramKeepAliveNotification">Keep-alive service</string>
     <string name="MercurygramKeepAliveNotificationHide">Tap to hide this notification</string>
+    <string name="MercurygramLocalFolder">Local folder</string>
+    <string name="MercurygramLocalFolderInfo">Stored on this device only, never on Telegram. No folder or chat limit.</string>
+    <string name="MercurygramLocalFolderTag">local</string>
 </resources>

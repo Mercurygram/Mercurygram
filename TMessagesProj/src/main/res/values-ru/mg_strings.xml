@@ -253,4 +253,7 @@
     <string name="MercurygramConfirmInternalLinksAbout">Спрашивать подтверждение перед открытием ссылок t.me и tg://, показывая сначала адрес. Помогает против ссылок, которые незаметно подписывают на канал или открывают бота.</string>
     <string name="MercurygramKeepAliveNotification">Служба поддержания соединения</string>
     <string name="MercurygramKeepAliveNotificationHide">Нажмите, чтобы скрыть это уведомление</string>
+    <string name="MercurygramLocalFolder">Локальная папка</string>
+    <string name="MercurygramLocalFolderInfo">Хранится только на этом устройстве, не в Telegram. Без ограничений на число папок и чатов.</string>
+    <string name="MercurygramLocalFolderTag">локальная</string>
 </resources>

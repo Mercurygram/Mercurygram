@@ -253,4 +253,7 @@
     <string name="MercurygramConfirmInternalLinksAbout">Запитувати підтвердження перед відкриттям посилань t.me і tg://, показуючи спершу адресу. Корисно проти посилань, які непомітно підписують на канал або відкривають бота.</string>
     <string name="MercurygramKeepAliveNotification">Служба підтримання з\'єднання</string>
     <string name="MercurygramKeepAliveNotificationHide">Натисніть, щоб приховати це сповіщення</string>
+    <string name="MercurygramLocalFolder">Локальна папка</string>
+    <string name="MercurygramLocalFolderInfo">Зберігається лише на цьому пристрої, не в Telegram. Без обмежень на кількість папок і чатів.</string>
+    <string name="MercurygramLocalFolderTag">локальна</string>
 </resources>

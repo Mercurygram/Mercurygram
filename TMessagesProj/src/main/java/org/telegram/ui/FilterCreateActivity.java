@@ -72,6 +72,7 @@ import org.telegram.ui.Cells.EditEmojiTextCell;
 import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCell;
+import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.UserCell;
 import org.telegram.ui.Components.AnimatedColor;
@@ -105,6 +106,8 @@ import org.telegram.ui.Components.spoilers.SpoilersTextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
+
+import it.belloworld.mercurygram.folders.MgLocalFolders;
 
 public class FilterCreateActivity extends BaseFragment {
 
@@ -219,6 +222,12 @@ public class FilterCreateActivity extends BaseFragment {
 
     private int requestingInvitesReqId;
 
+    // Mercurygram: a local folder gets a negative id and never reaches the server
+    public FilterCreateActivity mgSetLocal(boolean local) {
+        filter.id = MgLocalFolders.newId(getMessagesController(), local);
+        return this;
+    }
+
     @Override
     public boolean onFragmentCreate() {
         updateRows();
@@ -291,7 +300,14 @@ public class FilterCreateActivity extends BaseFragment {
         }));
         nameRow = items.size();
         items.add(ItemInner.asEdit());
-        items.add(ItemInner.asShadow(null));
+        if (creatingNew) { // Mercurygram: local-folder switch, only decidable at creation
+            items.add(ItemInner.asCheck(LocaleController.getString(R.string.MercurygramLocalFolder), MgLocalFolders.isLocal(filter)).whenClicked(v -> {
+                mgSetLocal(!MgLocalFolders.isLocal(filter));
+                ((TextCheckCell) v).setChecked(MgLocalFolders.isLocal(filter));
+                updateRows();
+            }));
+        }
+        items.add(ItemInner.asShadow(creatingNew ? LocaleController.getString(R.string.MercurygramLocalFolderInfo) : null));
         items.add(ItemInner.asHeader(LocaleController.getString(R.string.FilterInclude)));
         items.add(ItemInner.asButton(R.drawable.msg2_chats_add, LocaleController.getString(R.string.FilterAddChats), false).whenClicked(v -> selectChatsFor(true)));
 
@@ -363,7 +379,9 @@ public class FilterCreateActivity extends BaseFragment {
             items.add(ItemInner.asShadow(LocaleController.getString(R.string.FolderTagColorInfo)));
         }
 
-        if (invites.isEmpty()) {
+        if (MgLocalFolders.isLocal(filter)) {
+            // Mercurygram: nothing on the server to share
+        } else if (invites.isEmpty()) {
             items.add(ItemInner.asHeader(LocaleController.getString(R.string.FilterShareFolder), true));
             items.add(ItemInner.asButton(R.drawable.msg2_link2, LocaleController.getString(R.string.FilterShareFolderButton), false));
             items.add(ItemInner.asShadow(LocaleController.getString(R.string.FilterInviteLinksHintNew)));
@@ -869,6 +887,7 @@ public class FilterCreateActivity extends BaseFragment {
         ArrayList<Long> arrayList = include ? newAlwaysShow : newNeverShow;
         UsersSelectActivity fragment = new UsersSelectActivity(include, arrayList, newFilterFlags);
         fragment.noChatTypes = filter.isChatlist();
+        fragment.mgNoLimit = MgLocalFolders.isLocal(filter);
         fragment.setDelegate((ids, flags) -> {
             newFilterFlags = flags;
             if (include) {
@@ -1094,6 +1113,7 @@ public class FilterCreateActivity extends BaseFragment {
         filter.alwaysShow = newAlwaysShow;
         filter.title_noanimate = newFilterNoanimate;
         if (creatingNew) {
+            if (MgLocalFolders.isLocal(filter)) MgLocalFolders.ensureDefaultFilter(fragment.getAccountInstance()); // Mercurygram
             fragment.getMessagesController().addFilter(filter, atBegin);
         } else {
             fragment.getMessagesController().onFilterUpdate(filter);
@@ -1306,6 +1326,7 @@ public class FilterCreateActivity extends BaseFragment {
     private static final int VIEW_TYPE_HEADER_COLOR_PREVIEW = 9;
     private static final int VIEW_TYPE_COLOR = 10;
     private static final int VIEW_TYPE_HEADER_ANIMATED = 11;
+    private static final int VIEW_TYPE_CHECK = 12; // Mercurygram
 
     private static class ItemInner extends AdapterWithDiffUtils.Item {
 
@@ -1322,6 +1343,7 @@ public class FilterCreateActivity extends BaseFragment {
 
         private int iconResId;
         private boolean isRed;
+        private boolean checked;
 
         private TL_chatlists.TL_exportedChatlistInvite link;
 
@@ -1392,6 +1414,13 @@ public class FilterCreateActivity extends BaseFragment {
 
         public static ItemInner asCreateLink() {
             return new ItemInner(VIEW_TYPE_CREATE_LINK, false);
+        }
+
+        public static ItemInner asCheck(CharSequence text, boolean checked) {
+            ItemInner item = new ItemInner(VIEW_TYPE_CHECK, false);
+            item.text = text;
+            item.checked = checked;
+            return item;
         }
 
         public ItemInner whenClicked(View.OnClickListener onClickListener) {
@@ -1556,6 +1585,9 @@ public class FilterCreateActivity extends BaseFragment {
                 case VIEW_TYPE_COLOR:
                     view = new PeerColorActivity.PeerColorGrid(getContext(), PeerColorActivity.PeerColorGrid.TYPE_FOLDER_TAG, currentAccount, resourceProvider);
                     break;
+                case VIEW_TYPE_CHECK:
+                    view = new TextCheckCell(mContext);
+                    break;
                 case VIEW_TYPE_SHADOW_TEXT:
                 default:
                     view = new TextInfoPrivacyCell(mContext);
@@ -1670,6 +1702,10 @@ public class FilterCreateActivity extends BaseFragment {
                 case VIEW_TYPE_SHADOW_TEXT: {
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
                     cell.setText(item.text);
+                    break;
+                }
+                case VIEW_TYPE_CHECK: {
+                    ((TextCheckCell) holder.itemView).setTextAndCheck(item.text, item.checked, divider);
                     break;
                 }
                 case VIEW_TYPE_LINK: {

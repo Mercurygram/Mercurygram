@@ -253,4 +253,7 @@
     <string name="MercurygramConfirmInternalLinksAbout">Vraagt om bevestiging voordat t.me- en tg://-links worden geopend, met eerst het adres. Handig tegen links die ongemerkt een kanaal joinen of een bot openen.</string>
     <string name="MercurygramKeepAliveNotification">Keep-alive-service</string>
     <string name="MercurygramKeepAliveNotificationHide">Tik om deze melding te verbergen</string>
+    <string name="MercurygramLocalFolder">Lokale map</string>
+    <string name="MercurygramLocalFolderInfo">Alleen op dit apparaat opgeslagen, nooit bij Telegram. Geen limiet op mappen of chats.</string>
+    <string name="MercurygramLocalFolderTag">lokaal</string>
 </resources>

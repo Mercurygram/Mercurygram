@@ -139,6 +139,8 @@ import java.util.stream.Collectors;
 
 import me.vkryl.core.BitwiseUtils;
 
+import it.belloworld.mercurygram.folders.MgLocalFolders;
+
 public class MessagesController extends BaseController implements NotificationCenter.NotificationCenterDelegate {
 
     public int lastKnownSessionsCount;
@@ -875,9 +877,10 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void lockFiltersInternal() {
         boolean changed = false;
-        if (!getUserConfig().isPremium() && dialogFilters.size() - 1 > dialogFiltersLimitDefault) {
-            int n = dialogFilters.size() - 1 - dialogFiltersLimitDefault;
-            ArrayList<DialogFilter> filtersSortedById = new ArrayList<>(dialogFilters);
+        final int remoteCount = MgLocalFolders.remoteCount(dialogFilters); // Mercurygram: local folders count against no limit
+        if (!getUserConfig().isPremium() && remoteCount - 1 > dialogFiltersLimitDefault) {
+            int n = remoteCount - 1 - dialogFiltersLimitDefault;
+            ArrayList<DialogFilter> filtersSortedById = MgLocalFolders.remote(dialogFilters);
             Collections.reverse(filtersSortedById);
             for (int i = 0; i < filtersSortedById.size(); i++) {
                 if (i < n) {

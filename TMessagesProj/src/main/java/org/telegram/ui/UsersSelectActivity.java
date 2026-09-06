@@ -106,6 +106,7 @@ public class UsersSelectActivity extends BaseFragment implements NotificationCen
     AnimatedAvatarContainer animatedAvatarContainer;
 
     public boolean noChatTypes;
+    public boolean mgNoLimit; // Mercurygram: local folders have no chats-per-folder cap
     public boolean allowSelf;
     public boolean doNotNewChats;
     private boolean isInclude;
@@ -781,7 +782,7 @@ public class UsersSelectActivity extends BaseFragment implements NotificationCen
                     GroupCreateSpan span = selectedContacts.get(id);
                     spansContainer.removeSpan(span);
                 } else {
-                    if (!(object instanceof String) && (!getUserConfig().isPremium() && selectedCount >= MessagesController.getInstance(currentAccount).dialogFiltersChatsLimitDefault) || selectedCount >= MessagesController.getInstance(currentAccount).dialogFiltersChatsLimitPremium) {
+                    if (!mgNoLimit && (!(object instanceof String) && (!getUserConfig().isPremium() && selectedCount >= MessagesController.getInstance(currentAccount).dialogFiltersChatsLimitDefault) || selectedCount >= MessagesController.getInstance(currentAccount).dialogFiltersChatsLimitPremium)) {
                         LimitReachedBottomSheet limitReachedBottomSheet = new LimitReachedBottomSheet(this, context, LimitReachedBottomSheet.TYPE_CHATS_IN_FOLDER, currentAccount, null);
                         limitReachedBottomSheet.setCurrentValue(selectedCount);
                         showDialog(limitReachedBottomSheet);
@@ -1037,7 +1038,9 @@ public class UsersSelectActivity extends BaseFragment implements NotificationCen
     }
 
     private void updateHint() {
-        if (type == TYPE_FILTER) {
+        if (mgNoLimit) {
+            actionBar.setSubtitle(LocaleController.formatPluralString("Chats", selectedCount));
+        } else if (type == TYPE_FILTER) {
             int limit = getUserConfig().isPremium() ? getMessagesController().dialogFiltersChatsLimitPremium : getMessagesController().dialogFiltersChatsLimitDefault;
             if (selectedCount == 0) {
                 actionBar.setSubtitle(formatString("MembersCountZero", R.string.MembersCountZero, LocaleController.formatPluralString("Chats", limit)));

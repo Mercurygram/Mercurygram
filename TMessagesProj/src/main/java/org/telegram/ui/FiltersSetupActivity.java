@@ -71,6 +71,8 @@ import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
 
+import it.belloworld.mercurygram.folders.MgLocalFolders;
+
 public class FiltersSetupActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private RecyclerListView listView;
@@ -470,6 +472,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             if (info.length() == 0) {
                 info.append(LocaleController.getString(R.string.FilterNoChats));
             }
+            if (MgLocalFolders.isLocal(filter)) info.append(", ").append(LocaleController.getString(R.string.MercurygramLocalFolderTag)); // Mercurygram
 
             String name = filter.name;
             if (filter.isDefault()) {
@@ -588,13 +591,12 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             }
             filtersSectionEnd = items.size();
 
-            if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(filtersSectionStart, filtersSectionEnd - 1 + (dialogFilters.size() < getMessagesController().dialogFiltersLimitPremium ? 1 : 0)));
+            if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(filtersSectionStart, filtersSectionEnd)); // Mercurygram: create button always shown
         } else {
             filtersSectionStart = filtersSectionEnd = -1;
         }
-        if (dialogFilters.size() < getMessagesController().dialogFiltersLimitPremium) {
-            items.add(ItemInner.asButton(LocaleController.getString(R.string.CreateNewFilter)));
-        }
+        // Mercurygram: past the server limit the button creates a local folder
+        items.add(ItemInner.asButton(LocaleController.getString(R.string.CreateNewFilter)));
         items.add(ItemInner.asShadow(null));
         folderTagsPosition = items.size();
         showTagsRow = items.size();
@@ -732,14 +734,14 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
     }
 
     public void createFolder(INavigationLayout navigationLayout) {
-        final int count = getMessagesController().getDialogFilters().size();
-        if (
+        // Mercurygram: only server folders count against the limit, and reaching it
+        // offers a local folder instead of the Premium sheet
+        final int count = MgLocalFolders.remoteCount(getMessagesController().getDialogFilters());
+        final boolean serverFull =
             count - 1 >= getMessagesController().dialogFiltersLimitDefault && !getUserConfig().isPremium() ||
-            count >= getMessagesController().dialogFiltersLimitPremium
-        ) {
-            showDialog(new LimitReachedBottomSheet(this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
-        } else if (navigationLayout != null) {
-            navigationLayout.presentFragment(new FilterCreateActivity());
+            count >= getMessagesController().dialogFiltersLimitPremium;
+        if (navigationLayout != null) {
+            navigationLayout.presentFragment(new FilterCreateActivity().mgSetLocal(serverFull));
         }
     }
 
