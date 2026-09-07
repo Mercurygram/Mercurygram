@@ -1749,7 +1749,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 if (message.media == null) {
                     continue;
                 }
-                if (message.date + message.media.period > date) {
+                if (!MessageObject.isExpiredLiveLocation(message, date)) {
                     long fromId = MessageObject.getFromChatId(message);
                     if (notYouUser == null && fromId != currentUserId) {
                         notYouUser = MessagesController.getInstance(currentAccount).getUser(fromId);
