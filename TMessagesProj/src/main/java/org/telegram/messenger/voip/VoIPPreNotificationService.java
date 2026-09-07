@@ -277,6 +277,9 @@ public class VoIPPreNotificationService { // } extends Service implements AudioM
     private static Vibrator vibrator;
 
     public static void startRinging(Context context, int account, long user_id) {
+        if (!org.telegram.messenger.SharedConfig.mg_callsRingEnabled) {
+            return;
+        }
         SharedPreferences prefs = MessagesController.getNotificationsSettings(account);
         AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         boolean needRing = am.getRingerMode() != AudioManager.RINGER_MODE_SILENT;

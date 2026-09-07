@@ -479,13 +479,19 @@ public class SharedConfig {
         persistMgLiveLoc();
     }
 
+    public static void setMgCallsRingEnabled(boolean value) {
+        mg_callsRingEnabled = value;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
                 .edit()
+                .putBoolean("mg_callsRingEnabled", mg_callsRingEnabled)
                 .apply();
     }
 
+    public static void setMgServicesAsMainTab(boolean value) {
+        mg_servicesAsMainTab = value;
         ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
                 .edit()
+                .putBoolean("mg_servicesAsMainTab", mg_servicesAsMainTab)
                 .apply();
     }
 
@@ -874,6 +880,8 @@ public class SharedConfig {
     public static int mg_liveLocSleepMode = it.belloworld.mercurygram.MgLiveLocationPolicy.SLEEP_MODE_FIXED;
     /** 0 = no limit; -1 = infer from last 5 TTFFs (μ+σ); else seconds. */
     public static int mg_liveLocMaxAcquireSec = 0;
+    public static boolean mg_callsRingEnabled = true;
+    public static boolean mg_servicesAsMainTab = false;
     // Anti-censorship transport for the Tor daemon. "Direct" is vanilla Tor (no
     // bridges), which is DPI-blocked in Russia/Iran/etc. "Snowflake" routes the
     // Tor handshake through domain-fronted WebRTC so it bootstraps behind those
@@ -1225,6 +1233,8 @@ public class SharedConfig {
         editor.putInt("mg_liveLocSleepMaxSec", mg_liveLocSleepMaxSec);
         editor.putInt("mg_liveLocSleepMode", mg_liveLocSleepMode);
         editor.putInt("mg_liveLocMaxAcquireSec", mg_liveLocMaxAcquireSec);
+        editor.putBoolean("mg_callsRingEnabled", mg_callsRingEnabled);
+        editor.putBoolean("mg_servicesAsMainTab", mg_servicesAsMainTab);
         editor.putInt("mg_torTransportMode", mg_torTransportMode);
         editor.putString("mg_torBridgeLines", mg_torBridgeLines);
         editor.putString("mg_translateMode", mg_translateMode);
@@ -1354,6 +1364,8 @@ public class SharedConfig {
         } else {
             mg_liveLocMaxAcquireSec = Math.max(0, maxAcquire);
         }
+        mg_callsRingEnabled = preferences.getBoolean("mg_callsRingEnabled", true);
+        mg_servicesAsMainTab = preferences.getBoolean("mg_servicesAsMainTab", false);
         mg_torTransportMode = sanitizeMgTorTransportMode(
                 preferences.getInt("mg_torTransportMode", MG_TOR_TRANSPORT_DIRECT));
         mg_torBridgeLines = preferences.getString("mg_torBridgeLines", "");
