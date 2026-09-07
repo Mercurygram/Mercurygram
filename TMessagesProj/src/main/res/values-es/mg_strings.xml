@@ -257,4 +257,6 @@
     <string name="MercurygramFolder">Carpeta Mercurygram</string>
     <string name="MercurygramFolderInfo">Solo se muestra en Mercurygram, nunca se envía a Telegram como carpeta, así que no hay límite de carpetas ni de chats. Se sincroniza entre tus apps Mercurygram mediante un archivo en Mensajes guardados. Cambiarlo en una carpeta existente mueve la carpeta entre Telegram y Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramLiveLocationPaused">Ubicación en tiempo real en pausa</string>
+    <string name="MercurygramLiveLocationPausedInfo">El envío se detuvo al reiniciar el dispositivo. Abre Mercurygram para reanudarlo.</string>
 </resources>

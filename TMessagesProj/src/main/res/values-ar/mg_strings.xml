@@ -257,4 +257,6 @@
     <string name="MercurygramFolder">مجلد Mercurygram</string>
     <string name="MercurygramFolderInfo">يظهر في Mercurygram فقط، ولا يُرسل إلى تيليجرام كمجلد، لذا لا حد لعدد المجلدات أو الدردشات. يُزامن بين تطبيقات Mercurygram لديك عبر ملف واحد في الرسائل المحفوظة. تغييره في مجلد موجود ينقل المجلد بين تيليجرام وMercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramLiveLocationPaused">تم إيقاف مشاركة الموقع المباشر مؤقتًا</string>
+    <string name="MercurygramLiveLocationPausedInfo">توقفت المشاركة عند إعادة تشغيل الجهاز. افتح Mercurygram لاستئنافها.</string>
 </resources>
