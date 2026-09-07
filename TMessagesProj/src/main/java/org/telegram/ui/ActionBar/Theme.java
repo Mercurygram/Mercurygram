@@ -4128,6 +4128,19 @@ public class Theme {
                 editor.putString("lastDarkTheme", currentNightTheme.getKey());
                 editor.commit();
             }
+			// Mercurygram: lastDarkTheme / lastDayTheme are the single source for auto-night + Browse Themes dual selection
+			if (themeConfig.contains("lastDarkTheme")) {
+				ThemeInfo rememberedNight = themesDict.get(themeConfig.getString("lastDarkTheme", null));
+				if (rememberedNight != null && rememberedNight.isDark()) {
+					currentNightTheme = rememberedNight;
+				}
+			}
+			if (themeConfig.contains("lastDayTheme")) {
+				ThemeInfo rememberedDay = themesDict.get(themeConfig.getString("lastDayTheme", null));
+				if (rememberedDay != null && !rememberedDay.isDark()) {
+					currentDayTheme = rememberedDay;
+				}
+			}
 
             SharedPreferences.Editor oldEditor = null;
             SharedPreferences.Editor oldEditorNew = null;
@@ -6452,6 +6465,63 @@ public class Theme {
         return currentNightTheme;
     }
 
+	// Mercurygram: last day/night look used by the sun/moon switch
+	public static ThemeInfo getRememberedDayTheme() {
+		SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE);
+		String dayThemeName = preferences.getString("lastDayTheme", "Blue");
+		ThemeInfo info = getTheme(dayThemeName);
+		if (info == null || info.isDark()) {
+			info = getTheme("Blue");
+		}
+		return info;
+	}
+
+	public static ThemeInfo getRememberedNightTheme() {
+		SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE);
+		String nightThemeName = preferences.getString("lastDarkTheme", "Dark Blue");
+		ThemeInfo info = getTheme(nightThemeName);
+		if (info == null || !info.isDark()) {
+			info = getTheme("Dark Blue");
+		}
+		return info;
+	}
+
+	public static ThemeInfo getRememberedOtherModeTheme() {
+		return isCurrentThemeDay() ? getRememberedNightTheme() : getRememberedDayTheme();
+	}
+
+	public static String getThemeDisplayName(ThemeInfo themeInfo) {
+		if (themeInfo == null) {
+			return "";
+		}
+		String text = themeInfo.getName();
+		if (text.toLowerCase().endsWith(".attheme")) {
+			text = text.substring(0, text.lastIndexOf('.'));
+		}
+		return text;
+	}
+
+	public static String getRememberedDayNightPairName() {
+		return getThemeDisplayName(getRememberedDayTheme()) + " / " + getThemeDisplayName(getRememberedNightTheme());
+	}
+
+	/** Keep lastDay/lastDark and currentDay/currentNight in sync (Browse Themes + Auto-Night). */
+	public static void syncRememberedDayNightTheme(ThemeInfo themeInfo) {
+		if (themeInfo == null || ApplicationLoader.applicationContext == null) {
+			return;
+		}
+		SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE).edit();
+		if (themeInfo.isDark()) {
+			editor.putString("lastDarkTheme", themeInfo.getKey());
+			currentNightTheme = themeInfo;
+			saveAutoNightThemeConfig();
+		} else {
+			editor.putString("lastDayTheme", themeInfo.getKey());
+			currentDayTheme = themeInfo;
+		}
+		editor.commit();
+	}
+
     public static boolean isCurrentThemeNight() {
         return currentTheme == currentNightTheme;
     }
@@ -6668,6 +6738,16 @@ public class Theme {
             return;
         }
 
+		// Mercurygram: Auto-Night uses the same light/dark pair remembered in Browse Themes
+		ThemeInfo nightTheme = getRememberedNightTheme();
+		if (nightTheme != null) {
+			currentNightTheme = nightTheme;
+		}
+		ThemeInfo dayTheme = getRememberedDayTheme();
+		if (dayTheme != null) {
+			currentDayTheme = dayTheme;
+		}
+
         if (night) {
             if (currentTheme != currentNightTheme && (currentTheme == null || currentNightTheme != null &&  currentTheme.isDark() != currentNightTheme.isDark())) {
                 isInNigthMode = true;
@@ -6677,7 +6757,7 @@ public class Theme {
                 switchingNightTheme = false;
             }
         } else {
-            ThemeInfo dayTheme = currentDayTheme;
+            dayTheme = currentDayTheme;
             if (dayTheme != null && dayTheme.isDark() && selectedAutoNightType != AUTO_NIGHT_TYPE_NONE && defaultTheme != null) {
                 dayTheme = defaultTheme;
             }
@@ -6716,6 +6796,214 @@ public class Theme {
         saveOtherThemes(true);
         return currentThemeDeleted;
     }
+
+	// Mercurygram: reset flags — looks = emoji accents; base = built-in accent customs; custom = .attheme files
+	public static final int RESET_LOOKS = 1;
+	public static final int RESET_BASE = 2;
+	public static final int RESET_CUSTOM = 4;
+	public static final int RESET_BOTH = RESET_LOOKS | RESET_BASE | RESET_CUSTOM;
+
+	public static boolean isEmojiLookAccent(ThemeAccent accent) {
+		return accent != null && accent.info != null;
+	}
+
+	public static boolean isCustomThemeFile(ThemeInfo theme) {
+		return theme != null && theme.pathToFile != null;
+	}
+
+	public static int getDefaultAccentId(ThemeInfo theme) {
+		if (theme == null) {
+			return 0;
+		}
+		return theme.firstAccentIsDefault ? DEFALT_THEME_ACCENT_ID : 0;
+	}
+
+	public static boolean canResetEmojiLooks(ThemeInfo theme) {
+		// Emoji looks live on built-in themes; custom .attheme files have no emoji-look accents.
+		return theme != null && !isCustomThemeFile(theme) && theme.assetName != null;
+	}
+
+	public static boolean canResetBaseAccents(ThemeInfo theme) {
+		if (theme == null || isCustomThemeFile(theme) || theme.themeAccents == null || theme.themeAccents.isEmpty()) {
+			return false;
+		}
+		for (int a = 0; a < theme.themeAccents.size(); a++) {
+			ThemeAccent accent = theme.themeAccents.get(a);
+			if (accent != null && accent.id >= 100 && !isEmojiLookAccent(accent)) {
+				return true;
+			}
+		}
+		ThemeAccent current = theme.getAccent(false);
+		if (isEmojiLookAccent(current)) {
+			return false;
+		}
+		int defaultId = getDefaultAccentId(theme);
+		return theme.themeAccentsMap != null && theme.themeAccentsMap.get(defaultId) != null && theme.currentAccentId != defaultId;
+	}
+
+	public static ArrayList<ThemeInfo> getBuiltInThemesSorted() {
+		ArrayList<ThemeInfo> list = new ArrayList<>();
+		for (int a = 0, N = themes.size(); a < N; a++) {
+			ThemeInfo info = themes.get(a);
+			if (info != null && info.pathToFile == null && info.assetName != null) {
+				list.add(info);
+			}
+		}
+		Collections.sort(list, (o1, o2) -> Integer.compare(o1.sortIndex, o2.sortIndex));
+		return list;
+	}
+
+	public static boolean resetThemeAccentsToDefault(ThemeInfo theme) {
+		return resetThemeAccentsToDefault(theme, true, true);
+	}
+
+	public static boolean resetThemeAccentsToDefault(ThemeInfo theme, boolean emojiLooks, boolean baseAccents) {
+		if (theme == null || theme.themeAccents == null || theme.themeAccents.isEmpty() || (!emojiLooks && !baseAccents)) {
+			return false;
+		}
+		boolean changed = false;
+		ArrayList<ThemeAccent> toDelete = new ArrayList<>();
+		for (int a = 0; a < theme.themeAccents.size(); a++) {
+			ThemeAccent accent = theme.themeAccents.get(a);
+			if (accent == null || accent.id < 100) {
+				continue;
+			}
+			boolean emoji = isEmojiLookAccent(accent);
+			if (emoji && emojiLooks || !emoji && baseAccents) {
+				toDelete.add(accent);
+			}
+		}
+		for (int a = 0; a < toDelete.size(); a++) {
+			ThemeAccent accent = toDelete.get(a);
+			boolean wasCurrent = accent.id == theme.currentAccentId;
+			deleteThemeAccent(theme, accent, false);
+			if (accent.info != null) {
+				MessagesController.getInstance(accent.account).saveTheme(theme, accent, wasCurrent && theme == currentNightTheme, true);
+			}
+			changed = true;
+		}
+		boolean restoreDefault = false;
+		if (theme.themeAccentsMap == null || theme.themeAccentsMap.get(theme.currentAccentId) == null) {
+			restoreDefault = true;
+		} else if (baseAccents) {
+			ThemeAccent current = theme.themeAccentsMap.get(theme.currentAccentId);
+			if (!isEmojiLookAccent(current) && theme.currentAccentId != getDefaultAccentId(theme)) {
+				restoreDefault = true;
+			}
+		}
+		if (restoreDefault) {
+			int defaultId = getDefaultAccentId(theme);
+			if (theme.themeAccentsMap != null && theme.themeAccentsMap.get(defaultId) != null) {
+				if (theme.currentAccentId != defaultId) {
+					theme.setCurrentAccentId(defaultId);
+					changed = true;
+				}
+			} else if (!theme.themeAccents.isEmpty()) {
+				theme.setCurrentAccentId(theme.themeAccents.get(0).id);
+				changed = true;
+			}
+		}
+		if (changed) {
+			if (emojiLooks && baseAccents) {
+				theme.lastAccentId = 100;
+			} else {
+				int maxId = 100;
+				for (int a = 0; a < theme.themeAccents.size(); a++) {
+					ThemeAccent accent = theme.themeAccents.get(a);
+					if (accent != null && accent.id >= maxId) {
+						maxId = accent.id;
+					}
+				}
+				theme.lastAccentId = maxId;
+			}
+			saveThemeAccents(theme, true, false, false, false);
+		}
+		return changed;
+	}
+
+	private static void clearLastCustomThemePrefs() {
+		ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE).edit()
+				.remove("lastDayCustomTheme")
+				.remove("lastDayCustomThemeAccentId")
+				.remove("lastDarkCustomTheme")
+				.remove("lastDarkCustomThemeAccentId")
+				.apply();
+	}
+
+	public static boolean resetThemeCustomizations(ThemeInfo theme) {
+		return resetThemeCustomizations(theme, RESET_BOTH);
+	}
+
+	public static boolean resetThemeCustomizations(ThemeInfo theme, int category) {
+		if (theme == null || category == 0) {
+			return false;
+		}
+		ThemeEditorView editorView = ThemeEditorView.getInstance();
+		if (editorView != null) {
+			editorView.destroy();
+		}
+		boolean resetLooks = (category & RESET_LOOKS) != 0;
+		boolean resetBase = (category & RESET_BASE) != 0;
+		boolean resetCustom = (category & RESET_CUSTOM) != 0;
+		boolean changed = false;
+		if (resetCustom && theme.pathToFile != null) {
+			deleteTheme(theme);
+			NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.themeListUpdated);
+			return true;
+		}
+		if ((resetLooks || resetBase) && theme.pathToFile == null) {
+			changed = resetThemeAccentsToDefault(theme, resetLooks, resetBase);
+			if (resetLooks) {
+				clearLastCustomThemePrefs();
+				changed = true;
+			}
+		}
+		return changed;
+	}
+
+	public static boolean resetAllThemeCustomizations() {
+		return resetAllThemeCustomizations(RESET_BOTH);
+	}
+
+	public static boolean resetAllThemeCustomizations(int category) {
+		if (category == 0) {
+			return false;
+		}
+		ThemeEditorView editorView = ThemeEditorView.getInstance();
+		if (editorView != null) {
+			editorView.destroy();
+		}
+		boolean resetLooks = (category & RESET_LOOKS) != 0;
+		boolean resetBase = (category & RESET_BASE) != 0;
+		boolean resetCustom = (category & RESET_CUSTOM) != 0;
+		boolean changed = false;
+		if (resetCustom) {
+			ArrayList<ThemeInfo> customThemes = new ArrayList<>(otherThemes);
+			for (int a = 0; a < customThemes.size(); a++) {
+				ThemeInfo info = customThemes.get(a);
+				if (info != null && info.pathToFile != null) {
+					deleteTheme(info);
+					changed = true;
+				}
+			}
+		}
+		if (resetLooks || resetBase) {
+			ArrayList<ThemeInfo> builtIns = new ArrayList<>(themesDict.values());
+			for (int a = 0; a < builtIns.size(); a++) {
+				ThemeInfo info = builtIns.get(a);
+				if (info != null && info.assetName != null && resetThemeAccentsToDefault(info, resetLooks, resetBase)) {
+					changed = true;
+				}
+			}
+			if (resetLooks) {
+				clearLastCustomThemePrefs();
+			}
+		}
+		if (changed) {
+			NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.themeListUpdated);
+		}
+		return changed;
+	}
 
     public static ThemeInfo createNewTheme(String name) {
         ThemeInfo newTheme = new ThemeInfo();

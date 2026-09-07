@@ -12,6 +12,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -24,6 +25,7 @@ import android.text.TextUtils;
 import android.util.SparseIntArray;
 
 import androidx.collection.LongSparseArray;
+import androidx.core.content.ContextCompat;
 
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLitePreparedStatement;
@@ -32,7 +34,7 @@ import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_stories;
 import org.telegram.tgnet.tl.TL_update;
-import org.telegram.ui.Components.PermissionRequest;
+import it.belloworld.mercurygram.MgLiveLocationPolicy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +62,8 @@ public class LocationController extends BaseController implements NotificationCe
     private SparseIntArray requests = new SparseIntArray();
     private LongSparseArray<Boolean> cacheRequests = new LongSparseArray<>();
     private long locationEndWatchTime;
+    private final MgLiveLocationPolicy mgLiveLoc = new MgLiveLocationPolicy();
+    private String pendingGpsTrigger;
 
     public ArrayList<SharingLocationInfo> sharingLocationsUI = new ArrayList<>();
     private LongSparseArray<SharingLocationInfo> sharingLocationsMapUI = new LongSparseArray<>();
@@ -110,6 +114,8 @@ public class LocationController extends BaseController implements NotificationCe
             if (location == null) {
                 return;
             }
+            String src = this == gpsLocationListener ? "gps" : this == networkLocationListener ? "network" : "passive";
+            LiveLocationDebug.log("nativeFix src=" + src + " started=" + started + " " + LiveLocationDebug.fixSummary(location));
             if (lastKnownLocation != null && (this == networkLocationListener || this == passiveLocationListener)) {
                 if (!started && location.distanceTo(lastKnownLocation) > 20) {
                     setLastKnownLocation(location);
@@ -176,6 +182,8 @@ public class LocationController extends BaseController implements NotificationCe
                 return;
             }
             long did = (Long) args[0];
+            ArrayList<MessageObject> arr = (ArrayList<MessageObject>) args[1];
+            it.belloworld.mercurygram.MgIncomingLiveLocationStore.onNewMessages(currentAccount, did, arr);
             if (!isSharingLocation(did)) {
                 return;
             }
@@ -183,7 +191,6 @@ public class LocationController extends BaseController implements NotificationCe
             if (messages == null) {
                 return;
             }
-            ArrayList<MessageObject> arr = (ArrayList<MessageObject>) args[1];
             boolean added = false;
             for (int a = 0; a < arr.size(); a++) {
                 MessageObject messageObject = arr.get(a);
@@ -438,25 +445,190 @@ public class LocationController extends BaseController implements NotificationCe
             }
         }
         getConnectionsManager().resumeNetworkMaybe();
-        if (shouldStopGps()) {
-            stop(false);
-        }
     }
 
     private boolean shouldStopGps() {
-        return SystemClock.elapsedRealtime() > locationEndWatchTime;
+        return mgLiveLoc.shouldStopGps(!sharingLocations.isEmpty(), started);
+    }
+
+    private void refreshLiveLocSharePeriod() {
+        int minRemaining = 0;
+        int now = getConnectionsManager().getCurrentTime();
+        for (int a = 0; a < sharingLocations.size(); a++) {
+            SharingLocationInfo info = sharingLocations.get(a);
+            int remaining;
+            if (info.stopTime == Integer.MAX_VALUE || info.period == 0x7FFFFFFF) {
+                remaining = 0x7FFFFFFF;
+            } else {
+                remaining = Math.max(0, info.stopTime - now);
+            }
+            if (remaining <= 0) {
+                continue;
+            }
+            if (minRemaining == 0 || remaining < minRemaining) {
+                minRemaining = remaining;
+            }
+        }
+        mgLiveLoc.setMinShareRemainingSec(minRemaining);
+    }
+
+    public void onGeoLiveViewed(TLRPC.Peer peer, int messageId) {
+        long peerDialogId = peer != null ? DialogObject.getPeerDialogId(peer) : 0;
+        long shareDialogId = 0;
+        boolean midMatched = false;
+        if (peer != null) {
+            for (int a = 0; a < sharingLocations.size(); a++) {
+                SharingLocationInfo info = sharingLocations.get(a);
+                if (info.mid != messageId) {
+                    continue;
+                }
+                midMatched = true;
+                if (info.did == peerDialogId) {
+                    shareDialogId = info.did;
+                    break;
+                }
+                // Docs may send the viewer user as peer while the share lives in a group.
+                if (shareDialogId == 0) {
+                    shareDialogId = info.did;
+                }
+            }
+            if (shareDialogId == 0) {
+                shareDialogId = peerDialogId;
+            }
+            it.belloworld.mercurygram.MgLiveLocationViewerLog.logGeoLiveViewed(
+                    currentAccount, peer, messageId, shareDialogId);
+        }
+        LiveLocationDebug.log("onGeoLiveViewed peer=" + peerDialogId
+                + " msg=" + messageId
+                + " shareDid=" + shareDialogId
+                + " midMatched=" + midMatched
+                + " shares=" + sharingLocations.size()
+                + " started=" + started
+                + " boost=" + SharedConfig.mg_liveLocViewerBoost
+                + " batteryBlock=" + mgLiveLoc.viewerBoostBlockedByBatterySaver()
+                + " alwaysOff=" + mgLiveLoc.alwaysOff()
+                + " alwaysOn=" + mgLiveLoc.alwaysOn()
+                + " fgs=" + (ApplicationLoader.applicationContext != null));
+        setNewLocationEndWatchTime();
+        // processUpdateArray runs on stageQueue; DEBUG_VERSION throws if we notify off-main.
+        AndroidUtilities.runOnUIThread(() ->
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsChanged));
+    }
+
+    private static final int[] mgIncomingLiveCountByAccount = new int[UserConfig.MAX_ACCOUNT_COUNT];
+
+    public static int getIncomingLiveLocationsCount() {
+        int total = 0;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            total += mgIncomingLiveCountByAccount[a];
+        }
+        return total;
+    }
+
+    public static int getLiveLocationBannerCount() {
+        return getLocationsCount() + getIncomingLiveLocationsCount();
+    }
+
+    public static void setIncomingLiveCount(int account, int count) {
+        if (account >= 0 && account < mgIncomingLiveCountByAccount.length) {
+            mgIncomingLiveCountByAccount[account] = count;
+        }
+    }
+
+    public static void refreshIncomingLiveLocationsCount() {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (UserConfig.getInstance(a).isClientActivated()) {
+                it.belloworld.mercurygram.MgIncomingLiveLocationStore.ensureScan(a, null);
+                mgIncomingLiveCountByAccount[a] = it.belloworld.mercurygram.MgIncomingLiveLocationStore.getForAccount(a).size();
+            } else {
+                mgIncomingLiveCountByAccount[a] = 0;
+            }
+        }
+    }
+
+    public void loadAllIncomingLiveLocations(Utilities.Callback<ArrayList<it.belloworld.mercurygram.MgIncomingLiveLocation>> callback) {
+        ArrayList<it.belloworld.mercurygram.MgIncomingLiveLocation> cached = it.belloworld.mercurygram.MgIncomingLiveLocationStore.getForAccount(currentAccount);
+        mgIncomingLiveCountByAccount[currentAccount] = cached.size();
+        if (callback != null) {
+            callback.run(cached);
+        }
+        it.belloworld.mercurygram.MgIncomingLiveLocationStore.ensureScan(currentAccount, percent -> {
+            mgIncomingLiveCountByAccount[currentAccount] = it.belloworld.mercurygram.MgIncomingLiveLocationStore.getForAccount(currentAccount).size();
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsChanged);
+        });
+    }
+
+    private void collectIncomingLiveLocationsForDialog(long did, long selfId, ArrayList<it.belloworld.mercurygram.MgIncomingLiveLocation> out) {
+        SQLiteCursor cursor = null;
+        try {
+            int now = getConnectionsManager().getCurrentTime();
+            HashMap<Long, TLRPC.Message> bySender = new HashMap<>();
+            cursor = getMessagesStorage().getDatabase().queryFinalized(
+                    "SELECT data FROM messages_v2 WHERE uid = ? AND media = -1 ORDER BY date DESC", did);
+            while (cursor.next()) {
+                NativeByteBuffer data = cursor.byteBufferValue(0);
+                if (data == null) {
+                    continue;
+                }
+                TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
+                data.reuse();
+                if (!isActiveLiveLocation(message, now)) {
+                    continue;
+                }
+                long fromId = MessageObject.getFromChatId(message);
+                if (fromId == selfId) {
+                    continue;
+                }
+                TLRPC.Message existing = bySender.get(fromId);
+                if (existing == null || liveLocationSortKey(message) >= liveLocationSortKey(existing)) {
+                    bySender.put(fromId, message);
+                }
+            }
+            for (TLRPC.Message message : bySender.values()) {
+                out.add(new it.belloworld.mercurygram.MgIncomingLiveLocation(currentAccount, did, message));
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        } finally {
+            if (cursor != null) {
+                cursor.dispose();
+            }
+        }
     }
 
     protected void setNewLocationEndWatchTime() {
         if (sharingLocations.isEmpty()) {
+            LiveLocationDebug.log("viewerSignal skipped: no active shares");
             return;
         }
         locationEndWatchTime = SystemClock.elapsedRealtime() + WATCH_LOCATION_TIMEOUT;
-        start();
+        mgLiveLoc.onWatcher();
+        boolean blocked = mgLiveLoc.viewerBoostBlockedByBatterySaver();
+        LiveLocationDebug.log("viewerSignal shares=" + sharingLocations.size()
+                + " battery=" + mgLiveLoc.batterySaver()
+                + " alwaysOn=" + mgLiveLoc.alwaysOn()
+                + " alwaysOff=" + mgLiveLoc.alwaysOff()
+                + " watcherWants=" + mgLiveLoc.watcherWantsGps()
+                + " blocked=" + blocked
+                + " started=" + started
+                + " lastFix=" + LiveLocationDebug.fixSummary(lastKnownLocation));
+        if (!blocked) {
+            // Clear last fix so always-off → boost acquire requires a fresh accurate sample.
+            if (mgLiveLoc.alwaysOff() || !started) {
+                setLastKnownLocation(null);
+            }
+            if (!started) {
+                pendingGpsTrigger = it.belloworld.mercurygram.MgLiveLocationFixLog.TRIGGER_VIEWED;
+            }
+            start();
+            LiveLocationDebug.log("viewerSignal start() invoked started=" + started
+                    + " pendingTrigger=" + pendingGpsTrigger);
+        } else {
+            LiveLocationDebug.log("viewerSignal GPS not started (battery saver block)");
+        }
     }
 
     protected void update() {
-        UserConfig userConfig = getUserConfig();
         if (!sharingLocations.isEmpty()) {
             for (int a = 0; a < sharingLocations.size(); a++) {
                 final SharingLocationInfo info = sharingLocations.get(a);
@@ -476,27 +648,59 @@ public class LocationController extends BaseController implements NotificationCe
                     a--;
                 }
             }
+            refreshLiveLocSharePeriod();
+        }
+        boolean sharing = !sharingLocations.isEmpty();
+        if (!sharing) {
+            if (started) {
+                stop(true);
+                mgLiveLoc.reset();
+            }
+            return;
         }
         if (started) {
+            boolean canSend = mgLiveLoc.hasAccurateFix()
+                    || (mgLiveLoc.alwaysOn() && isFreshEnoughToSend(lastKnownLocation));
             long newTime = SystemClock.elapsedRealtime();
-            if (lastLocationByMaps || Math.abs(lastLocationStartTime - newTime) > LOCATION_ACQUIRE_TIME || shouldSendLocationNow()) {
+            if (canSend && (lastLocationByMaps || Math.abs(lastLocationStartTime - newTime) > LOCATION_ACQUIRE_TIME || shouldSendLocationNow())) {
                 lastLocationByMaps = false;
                 locationSentSinceLastMapUpdate = true;
                 boolean cancelAll = (SystemClock.elapsedRealtime() - lastLocationSendTime) > 2 * 1000;
                 lastLocationStartTime = newTime;
                 lastLocationSendTime = SystemClock.elapsedRealtime();
+                LiveLocationDebug.log("broadcast try hasFix=" + (lastKnownLocation != null)
+                        + " " + LiveLocationDebug.fixSummary(lastKnownLocation)
+                        + " accurate=" + mgLiveLoc.hasAccurateFix()
+                        + " shares=" + sharingLocations.size());
                 broadcastLastKnownLocation(cancelAll);
             }
-        } else if (!sharingLocations.isEmpty()) {
-            if (Math.abs(lastLocationSendTime - SystemClock.elapsedRealtime()) > BACKGROUD_UPDATE_TIME) {
-                lastLocationStartTime = SystemClock.elapsedRealtime();
-                start();
+            if (shouldStopGps()) {
+                stop(true);
+                mgLiveLoc.onStoppedForSleepOrTimeout(true);
             }
+        } else if (mgLiveLoc.shouldStartGps(true, false) || mgLiveLoc.watcherWantsGps()) {
+            lastLocationStartTime = SystemClock.elapsedRealtime();
+            setLastKnownLocation(null);
+            if (pendingGpsTrigger == null) {
+                pendingGpsTrigger = mgLiveLoc.inferStartReason();
+            }
+            start();
         }
     }
 
+    private boolean isFreshEnoughToSend(Location location) {
+        if (location == null) {
+            return false;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            long ageSec = (SystemClock.elapsedRealtimeNanos() - location.getElapsedRealtimeNanos()) / 1000000000L;
+            return ageSec >= 0 && ageSec <= 15;
+        }
+        return true;
+    }
+
     private boolean shouldSendLocationNow() {
-        if (!shouldStopGps()) {
+        if (!mgLiveLoc.hasAccurateFix()) {
             return false;
         }
         if (Math.abs(lastLocationSendTime - SystemClock.elapsedRealtime()) >= SEND_NEW_LOCATION_TIME) {
@@ -518,6 +722,7 @@ public class LocationController extends BaseController implements NotificationCe
             sharingLocationsMap.clear();
             sharingLocations.clear();
             setLastKnownLocation(null);
+            mgLiveLoc.reset();
             stop(true);
         });
     }
@@ -527,6 +732,9 @@ public class LocationController extends BaseController implements NotificationCe
             return;
         }
         lastKnownLocation = location;
+        if (mgLiveLoc.onLocation(location)) {
+            lastLocationStartTime = SystemClock.elapsedRealtime() - LOCATION_ACQUIRE_TIME;
+        }
         if (lastKnownLocation != null) {
             AndroidUtilities.runOnUIThread(() -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.newLocationAvailable));
         }
@@ -552,6 +760,8 @@ public class LocationController extends BaseController implements NotificationCe
         }
         sharingLocations.add(info);
         saveSharingLocation(info, 0);
+        mgLiveLoc.prepareImmediateAcquire();
+        refreshLiveLocSharePeriod();
         lastLocationSendTime = SystemClock.elapsedRealtime() - BACKGROUD_UPDATE_TIME + 5000;
         AndroidUtilities.runOnUIThread(() -> {
             if (old != null) {
@@ -561,7 +771,15 @@ public class LocationController extends BaseController implements NotificationCe
             sharingLocationsMapUI.put(info.did, info);
             startService();
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsChanged);
+            it.belloworld.mercurygram.MgLiveLocationExtendScheduler.onSharingStarted(currentAccount, info);
         });
+    }
+
+    public void persistSharingLocationInfo(SharingLocationInfo info) {
+        if (info == null) {
+            return;
+        }
+        saveSharingLocation(info, 0);
     }
 
     public boolean isSharingLocation(long did) {
@@ -659,6 +877,7 @@ public class LocationController extends BaseController implements NotificationCe
                             SharingLocationInfo info = sharingLocations.get(a);
                             sharingLocationsMap.put(info.did, info);
                         }
+                        refreshLiveLocSharePeriod();
                         AndroidUtilities.runOnUIThread(() -> {
                             sharingLocationsUI.addAll(result);
                             for (int a = 0; a < result.size(); a++) {
@@ -667,9 +886,14 @@ public class LocationController extends BaseController implements NotificationCe
                             }
                             startService();
                             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsChanged);
+                            it.belloworld.mercurygram.MgLiveLocationExtendScheduler.rescheduleAll();
                         });
+						// Mercurygram: after kill/update restore, force one GPS acquire ASAP.
+						requestAcquireAfterRestore();
                     });
                 });
+            } else {
+                AndroidUtilities.runOnUIThread(() -> it.belloworld.mercurygram.MgLiveLocationExtendScheduler.rescheduleAll());
             }
         });
     }
@@ -738,25 +962,146 @@ public class LocationController extends BaseController implements NotificationCe
                         stopService();
                     }
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsChanged);
+                    it.belloworld.mercurygram.MgLiveLocationExtendScheduler.onSharingStopped(currentAccount, info.did);
                 });
                 if (sharingLocations.isEmpty()) {
+                    mgLiveLoc.reset();
                     stop(true);
+                } else {
+                    refreshLiveLocSharePeriod();
                 }
             }
         });
     }
 
+    /** Location permission via Context (PermissionRequest needs an Activity and fails on boot). */
+    private static boolean hasLocationPermissionForService() {
+        Context ctx = ApplicationLoader.applicationContext;
+        if (ctx == null) {
+            return false;
+        }
+        return ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
     private void startService() {
+        LiveLocationDebug.log("startService LocationSharingService sharesUI=" + sharingLocationsUI.size());
         try {
-            if (PermissionRequest.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) || PermissionRequest.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                ApplicationLoader.applicationContext.startService(new Intent(ApplicationLoader.applicationContext, LocationSharingService.class));
+            if (hasLocationPermissionForService()) {
+                Intent intent = new Intent(ApplicationLoader.applicationContext, LocationSharingService.class);
+                if (Build.VERSION.SDK_INT >= 26) {
+                    ApplicationLoader.applicationContext.startForegroundService(intent);
+                } else {
+                    ApplicationLoader.applicationContext.startService(intent);
+                }
+            } else {
+                LiveLocationDebug.log("startService skipped: no location permission");
             }
         } catch (Throwable e) {
             FileLog.e(e);
+            LiveLocationDebug.log("startService failed: " + e);
         }
     }
 
+    /**
+     * Re-start {@link LocationSharingService} when outgoing shares exist but the FGS
+     * is dead (e.g. after install restore skipped start, or service kill). Safe to call
+     * from app resume / process bring-up.
+     */
+    public static void ensureSharingServiceRunning() {
+        int shares = 0;
+        int started = 0;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (!UserConfig.getInstance(a).isClientActivated()) {
+                continue;
+            }
+            LocationController controller = getInstance(a);
+            int n = controller.sharingLocationsUI.size();
+            shares += n;
+            if (n > 0) {
+                controller.startService();
+                started++;
+            }
+        }
+        LiveLocationDebug.log("ensureSharingServiceRunning sharesUI=" + shares + " accountsStarted=" + started);
+    }
+
+	/**
+	 * One-shot duty-cycle bypass after process restore so a fresh fix is sent soon.
+	 * Safe if GPS is already running. Call from share load / boot / package-replaced only —
+	 * not from ordinary app resume.
+	 */
+	public void requestAcquireAfterRestore() {
+		Utilities.stageQueue.postRunnable(() -> {
+			if (sharingLocations.isEmpty()) {
+				return;
+			}
+			mgLiveLoc.requestForceAcquireAfterRestore();
+			if (!started) {
+				pendingGpsTrigger = it.belloworld.mercurygram.MgLiveLocationFixLog.TRIGGER_RESTART;
+				lastLocationStartTime = SystemClock.elapsedRealtime();
+				setLastKnownLocation(null);
+				start();
+				LiveLocationDebug.log("restore acquire started trigger=restart shares=" + sharingLocations.size());
+			} else {
+				LiveLocationDebug.log("restore acquire skipped (gps already on) shares=" + sharingLocations.size());
+			}
+		});
+	}
+
+	public static void requestAcquireAfterRestoreAll() {
+		for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+			if (!UserConfig.getInstance(a).isClientActivated()) {
+				continue;
+			}
+			LocationController controller = getInstance(a);
+			if (!controller.sharingLocationsUI.isEmpty() || !controller.sharingLocations.isEmpty()) {
+				controller.requestAcquireAfterRestore();
+			}
+		}
+	}
+
+	/**
+	 * Best-effort: publish last good fix and flush Fix Log before process death.
+	 * Fix Log uses commit() and is flushed synchronously when possible.
+	 */
+	public void flushForProcessDeath() {
+		final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+		Utilities.stageQueue.postRunnable(() -> {
+			try {
+				LiveLocationDebug.log("flushForProcessDeath started=" + started
+						+ " accurate=" + mgLiveLoc.hasAccurateFix()
+						+ " " + LiveLocationDebug.fixSummary(lastKnownLocation));
+				if (started && lastKnownLocation != null && mgLiveLoc.hasAccurateFix()) {
+					try {
+						broadcastLastKnownLocation(false);
+					} catch (Throwable e) {
+						FileLog.e(e);
+					}
+				}
+				mgLiveLoc.flushSessionForProcessDeath();
+			} finally {
+				latch.countDown();
+			}
+		});
+		try {
+			latch.await(500, java.util.concurrent.TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+	}
+
+	public static void flushAllForProcessDeath() {
+		for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+			if (!UserConfig.getInstance(a).isClientActivated()) {
+				continue;
+			}
+			getInstance(a).flushForProcessDeath();
+		}
+	}
+
     private void stopService() {
+        LiveLocationDebug.log("stopService LocationSharingService");
         ApplicationLoader.applicationContext.stopService(new Intent(ApplicationLoader.applicationContext, LocationSharingService.class));
     }
 
@@ -781,12 +1126,14 @@ public class LocationController extends BaseController implements NotificationCe
             sharingLocations.clear();
             sharingLocationsMap.clear();
             saveSharingLocation(null, 2);
+            mgLiveLoc.reset();
             stop(true);
             AndroidUtilities.runOnUIThread(() -> {
                 sharingLocationsUI.clear();
                 sharingLocationsMapUI.clear();
                 stopService();
                 NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsChanged);
+                it.belloworld.mercurygram.MgLiveLocationExtendScheduler.cancelAllForAccount(currentAccount);
             });
         });
     }
@@ -812,45 +1159,46 @@ public class LocationController extends BaseController implements NotificationCe
         }
         lastLocationStartTime = SystemClock.elapsedRealtime();
         started = true;
+        String trigger = pendingGpsTrigger != null ? pendingGpsTrigger : mgLiveLoc.inferStartReason();
+        pendingGpsTrigger = null;
+        mgLiveLoc.onListenersStarted(trigger);
         boolean ok = false;
         if (checkServices()) {
             try {
                 apiClient.connect();
                 ok = true;
+                LiveLocationDebug.log("start fused connect()");
             } catch (Throwable e) {
                 FileLog.e(e);
+                LiveLocationDebug.log("start fused failed: " + e);
             }
         }
         if (!ok) {
+            LiveLocationDebug.log("start native GPS+network+passive services=" + checkServices());
             try {
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, 0, gpsLocationListener);
             } catch (Exception e) {
                 FileLog.e(e);
+                LiveLocationDebug.log("GPS_PROVIDER failed: " + e);
             }
             try {
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1, 0, networkLocationListener);
             } catch (Exception e) {
                 FileLog.e(e);
+                LiveLocationDebug.log("NETWORK_PROVIDER failed: " + e);
             }
             try {
                 locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 1, 0, passiveLocationListener);
             } catch (Exception e) {
                 FileLog.e(e);
-            }
-            if (lastKnownLocation == null) {
-                try {
-                    setLastKnownLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-                    if (lastKnownLocation == null) {
-                        setLastKnownLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
-                    }
-                } catch (Exception e) {
-                    FileLog.e(e);
-                }
+                LiveLocationDebug.log("PASSIVE_PROVIDER failed: " + e);
             }
         }
     }
 
     private void stop(boolean empty) {
+        LiveLocationDebug.log("stop empty=" + empty + " hadFix=" + (lastKnownLocation != null)
+                + " " + LiveLocationDebug.fixSummary(lastKnownLocation));
         started = false;
         if (checkServices()) {
             try {
@@ -871,6 +1219,101 @@ public class LocationController extends BaseController implements NotificationCe
         return lastKnownLocation;
     }
 
+    public static boolean isActiveLiveLocation(TLRPC.Message message, int now) {
+        if (message == null || !(message.media instanceof TLRPC.TL_messageMediaGeoLive)) {
+            return false;
+        }
+        int period = message.media.period;
+        if (period == 0x7FFFFFFF) {
+            return true;
+        }
+        return message.date + period > now;
+    }
+
+    private static int liveLocationSortKey(TLRPC.Message message) {
+        return message.edit_date != 0 ? message.edit_date : message.date;
+    }
+
+    public static ArrayList<TLRPC.Message> mergeLiveLocationLists(ArrayList<TLRPC.Message> first, ArrayList<TLRPC.Message> second) {
+        HashMap<Long, TLRPC.Message> bySender = new HashMap<>();
+        mergeLiveLocationIntoMap(bySender, first);
+        mergeLiveLocationIntoMap(bySender, second);
+        return new ArrayList<>(bySender.values());
+    }
+
+    private static void mergeLiveLocationIntoMap(HashMap<Long, TLRPC.Message> bySender, ArrayList<TLRPC.Message> messages) {
+        if (messages == null) {
+            return;
+        }
+        for (int a = 0; a < messages.size(); a++) {
+            TLRPC.Message message = messages.get(a);
+            if (!MessageObject.isLiveLocationMessage(message)) {
+                continue;
+            }
+            long fromId = MessageObject.getFromChatId(message);
+            TLRPC.Message existing = bySender.get(fromId);
+            if (existing == null || liveLocationSortKey(message) >= liveLocationSortKey(existing)) {
+                bySender.put(fromId, message);
+            }
+        }
+    }
+
+    public void loadLocalActiveLiveLocations(long did, Utilities.Callback<ArrayList<TLRPC.Message>> callback) {
+        getMessagesStorage().getStorageQueue().postRunnable(() -> {
+            HashMap<Long, TLRPC.Message> bySender = new HashMap<>();
+            SQLiteCursor cursor = null;
+            try {
+                int now = getConnectionsManager().getCurrentTime();
+                cursor = getMessagesStorage().getDatabase().queryFinalized(
+                        "SELECT data FROM messages_v2 WHERE uid = ? AND media = -1 ORDER BY date DESC", did);
+                while (cursor.next()) {
+                    NativeByteBuffer data = cursor.byteBufferValue(0);
+                    if (data == null) {
+                        continue;
+                    }
+                    TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
+                    data.reuse();
+                    if (!isActiveLiveLocation(message, now)) {
+                        continue;
+                    }
+                    long fromId = MessageObject.getFromChatId(message);
+                    TLRPC.Message existing = bySender.get(fromId);
+                    if (existing == null || liveLocationSortKey(message) >= liveLocationSortKey(existing)) {
+                        bySender.put(fromId, message);
+                    }
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            } finally {
+                if (cursor != null) {
+                    cursor.dispose();
+                }
+            }
+            ArrayList<TLRPC.Message> result = new ArrayList<>(bySender.values());
+            AndroidUtilities.runOnUIThread(() -> callback.run(result));
+        });
+    }
+
+    private void storeMergedLiveLocations(long did, ArrayList<TLRPC.Message> serverMessages, TLRPC.messages_Messages res) {
+        loadLocalActiveLiveLocations(did, local -> {
+            ArrayList<TLRPC.Message> merged = mergeLiveLocationLists(serverMessages, local);
+            int now = getConnectionsManager().getCurrentTime();
+            for (int a = 0; a < merged.size(); a++) {
+                if (!isActiveLiveLocation(merged.get(a), now)) {
+                    merged.remove(a);
+                    a--;
+                }
+            }
+            if (res != null) {
+                getMessagesStorage().putUsersAndChats(res.users, res.chats, true, true);
+                getMessagesController().putUsers(res.users, false);
+                getMessagesController().putChats(res.chats, false);
+            }
+            locationsCache.put(did, merged);
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsCacheChanged, did, currentAccount);
+        });
+    }
+
     public void loadLiveLocations(long did) {
         if (cacheRequests.indexOfKey(did) >= 0) {
             return;
@@ -881,23 +1324,18 @@ public class LocationController extends BaseController implements NotificationCe
         req.limit = 100;
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (error != null) {
+                cacheRequests.delete(did);
                 return;
             }
-            AndroidUtilities.runOnUIThread(() -> {
-                cacheRequests.delete(did);
-                TLRPC.messages_Messages res = (TLRPC.messages_Messages) response;
-                for (int a = 0; a < res.messages.size(); a++) {
-                    if (!(res.messages.get(a).media instanceof TLRPC.TL_messageMediaGeoLive)) {
-                        res.messages.remove(a);
-                        a--;
-                    }
+            AndroidUtilities.runOnUIThread(() -> cacheRequests.delete(did));
+            TLRPC.messages_Messages res = (TLRPC.messages_Messages) response;
+            ArrayList<TLRPC.Message> serverMessages = new ArrayList<>();
+            for (int a = 0; a < res.messages.size(); a++) {
+                if (res.messages.get(a).media instanceof TLRPC.TL_messageMediaGeoLive) {
+                    serverMessages.add(res.messages.get(a));
                 }
-                getMessagesStorage().putUsersAndChats(res.users, res.chats, true, true);
-                getMessagesController().putUsers(res.users, false);
-                getMessagesController().putChats(res.chats, false);
-                locationsCache.put(did, res.messages);
-                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsCacheChanged, did, currentAccount);
-            });
+            }
+            AndroidUtilities.runOnUIThread(() -> storeMergedLiveLocations(did, serverMessages, res));
         });
     }
 

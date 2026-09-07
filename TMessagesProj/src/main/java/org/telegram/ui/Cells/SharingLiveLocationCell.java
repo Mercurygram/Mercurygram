@@ -72,6 +72,7 @@ public class SharingLiveLocationCell extends FrameLayout {
 
     private LocationController.SharingLocationInfo currentInfo;
     private LocationActivity.LiveLocation liveLocation;
+    private it.belloworld.mercurygram.MgIncomingLiveLocation incomingLiveLocation;
     private Location location = new Location("network");
     private final Theme.ResourcesProvider resourcesProvider;
 
@@ -331,7 +332,22 @@ public class SharingLiveLocationCell extends FrameLayout {
 
     public void setDialog(LocationActivity.LiveLocation info, Location userLocation) {
         liveLocation = info;
-        if (DialogObject.isUserDialog(info.id)) {
+        incomingLiveLocation = null;
+        if (info == null) {
+            return;
+        }
+        int markerAccount = info.account >= 0 ? info.account : currentAccount;
+        if (info.user != null) {
+            avatarDrawable.setInfo(markerAccount, info.user);
+            nameTextView.setText(ContactsController.formatName(info.user.first_name, info.user.last_name));
+            avatarImageView.getImageReceiver().setCurrentAccount(markerAccount);
+            avatarImageView.setForUserOrChat(info.user, avatarDrawable);
+        } else if (info.chat != null) {
+            avatarDrawable.setInfo(markerAccount, info.chat);
+            nameTextView.setText(info.chat.title);
+            avatarImageView.getImageReceiver().setCurrentAccount(markerAccount);
+            avatarImageView.setForUserOrChat(info.chat, avatarDrawable);
+        } else if (DialogObject.isUserDialog(info.id)) {
             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(info.id);
             if (user != null) {
                 avatarDrawable.setInfo(currentAccount, user);
@@ -347,20 +363,61 @@ public class SharingLiveLocationCell extends FrameLayout {
             }
         }
 
-        IMapsProvider.LatLng position = info.marker.getPosition();
-        location.setLatitude(position.latitude);
-        location.setLongitude(position.longitude);
+        if (info.marker != null) {
+            IMapsProvider.LatLng position = info.marker.getPosition();
+            location.setLatitude(position.latitude);
+            location.setLongitude(position.longitude);
+        } else if (info.object != null && info.object.media != null && info.object.media.geo != null) {
+            location.setLatitude(info.object.media.geo.lat);
+            location.setLongitude(info.object.media.geo._long);
+        }
 
-        String time = LocaleController.formatLocationUpdateDate(info.object.edit_date != 0 ? info.object.edit_date : info.object.date);
-        if (userLocation != null) {
-            distanceTextView.setText(String.format("%s - %s", time, LocaleController.formatDistance(location.distanceTo(userLocation), 0)));
+        if (distanceTextView != null && info.object != null) {
+            String time = LocaleController.formatLocationUpdateDate(info.object.edit_date != 0 ? info.object.edit_date : info.object.date);
+            if (userLocation != null) {
+                distanceTextView.setText(String.format("%s - %s", time, LocaleController.formatDistance(location.distanceTo(userLocation), 0)));
+            } else {
+                distanceTextView.setText(time);
+            }
+        }
+    }
+
+    public void setIncomingLiveLocation(it.belloworld.mercurygram.MgIncomingLiveLocation info) {
+        currentInfo = null;
+        liveLocation = null;
+        incomingLiveLocation = info;
+        currentAccount = info.account;
+        avatarImageView.getImageReceiver().setCurrentAccount(currentAccount);
+        TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(info.senderId);
+        if (user != null) {
+            avatarDrawable.setInfo(currentAccount, user);
+            nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
+            avatarImageView.setForUserOrChat(user, avatarDrawable);
+        }
+        CharSequence dialogTitle = null;
+        if (DialogObject.isUserDialog(info.dialogId)) {
+            TLRPC.User chatUser = MessagesController.getInstance(currentAccount).getUser(info.dialogId);
+            if (chatUser != null) {
+                dialogTitle = UserObject.getFirstName(chatUser);
+            }
         } else {
-            distanceTextView.setText(time);
+            TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-info.dialogId);
+            if (chat != null) {
+                dialogTitle = chat.title;
+            }
+        }
+        if (distanceTextView != null && dialogTitle != null) {
+            distanceTextView.setText(dialogTitle);
+        }
+        if (info.message != null && info.message.media != null && info.message.media.geo != null) {
+            location.setLatitude(info.message.media.geo.lat);
+            location.setLongitude(info.message.media.geo._long);
         }
     }
 
     public void setDialog(LocationController.SharingLocationInfo info) {
         currentInfo = info;
+        incomingLiveLocation = null;
         currentAccount = info.account;
         avatarImageView.getImageReceiver().setCurrentAccount(currentAccount);
         if (DialogObject.isUserDialog(info.did)) {
@@ -385,7 +442,7 @@ public class SharingLiveLocationCell extends FrameLayout {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (currentInfo == null && liveLocation == null) {
+        if (currentInfo == null && liveLocation == null && incomingLiveLocation == null) {
             return;
         }
         int stopTime;
@@ -393,16 +450,19 @@ public class SharingLiveLocationCell extends FrameLayout {
         if (currentInfo != null) {
             stopTime = currentInfo.stopTime;
             period = currentInfo.period;
+        } else if (incomingLiveLocation != null) {
+            period = incomingLiveLocation.message.media.period;
+            stopTime = period == 0x7FFFFFFF ? Integer.MAX_VALUE : incomingLiveLocation.message.date + period;
         } else {
-            stopTime = liveLocation.object.date + liveLocation.object.media.period;
             period = liveLocation.object.media.period;
+            stopTime = period == 0x7FFFFFFF ? Integer.MAX_VALUE : liveLocation.object.date + period;
         }
         boolean forever = period == 0x7FFFFFFF;
         int currentTime = ConnectionsManager.getInstance(currentAccount).getCurrentTime();
         if (stopTime < currentTime && !forever) {
             return;
         }
-        float progress = forever ? 1 : Math.abs(stopTime - currentTime) / (float) period;
+        float progress = forever ? 1 : Math.min(1f, Math.abs(stopTime - currentTime) / (float) Math.max(1, period));
         if (LocaleController.isRTL) {
             rect.set(dp(13), dp(distanceTextView != null ? 18 : 12), dp(43), dp(distanceTextView != null ? 48 : 42));
         } else {

@@ -301,8 +301,17 @@ public class EmojiThemes {
     }
 
 
+	// Mercurygram: createPreviewCustom pads Day/Dark Blue slots with null ThemeItems
+	private ThemeItem themeItemAt(int index) {
+		if (index < 0 || index >= items.size()) {
+			return null;
+		}
+		return items.get(index);
+	}
+
     public TLRPC.TL_theme getTlTheme(int index) {
-        return items.get(index).tlTheme;
+		ThemeItem item = themeItemAt(index);
+		return item != null ? item.tlTheme : null;
     }
 
     public ThemeKey getThemeKey() {
@@ -314,30 +323,39 @@ public class EmojiThemes {
     }
 
     public ITheme getITheme(int index) {
-        return items.get(index);
+		return themeItemAt(index);
     }
 
     public long getThemeId(int index) {
-        final ThemeItem item = items.get(index);
-        return item.getThemeId();
+		final ThemeItem item = themeItemAt(index);
+		return item != null ? item.getThemeId() : 0;
     }
 
     public TLRPC.WallPaper getWallpaper(int index) {
-        final ThemeItem item = items.get(index);
+		final ThemeItem item = themeItemAt(index);
+		if (item == null) {
+			return null;
+		}
         final int settingsIndex = item.settingsIndex;
         return item.getThemeWallPaper(settingsIndex);
     }
 
     public String getWallpaperLink(int index) {
-        return items.get(index).wallpaperLink;
+		ThemeItem item = themeItemAt(index);
+		return item != null ? item.wallpaperLink : null;
     }
 
     public int getSettingsIndex(int index) {
-        return items.get(index).settingsIndex;
+		ThemeItem item = themeItemAt(index);
+		return item != null ? item.settingsIndex : -1;
     }
 
     public SparseIntArray getPreviewColors(int currentAccount, int index) {
-        SparseIntArray currentColors = items.get(index).currentPreviewColors;
+		ThemeItem themeItem = themeItemAt(index);
+		if (themeItem == null) {
+			return new SparseIntArray();
+		}
+        SparseIntArray currentColors = themeItem.currentPreviewColors;
         if (currentColors != null) {
             return currentColors;
         }
@@ -371,7 +389,7 @@ public class EmojiThemes {
             }
         } else {
             if (themeInfo.themeAccentsMap != null) {
-                accent = themeInfo.themeAccentsMap.get(items.get(index).accentId);
+                accent = themeInfo.themeAccentsMap.get(themeItem.accentId);
             }
         }
 
@@ -389,7 +407,7 @@ public class EmojiThemes {
             currentColorsNoAccent = new SparseIntArray();
         }
 
-        items.get(index).wallpaperLink = wallpaperLink[0];
+        themeItem.wallpaperLink = wallpaperLink[0];
 
         if (accent != null) {
             currentColors = currentColorsNoAccent.clone();
@@ -403,7 +421,7 @@ public class EmojiThemes {
 
         SparseIntArray fallbackKeys = Theme.getFallbackKeys();
         SparseIntArray array = new SparseIntArray();
-        items.get(index).currentPreviewColors = array;
+        themeItem.currentPreviewColors = array;
         try {
             for (int i = 0; i < previewColorKeys.length; i++) {
                 int key = previewColorKeys[i];
@@ -427,6 +445,10 @@ public class EmojiThemes {
     }
 
     public SparseIntArray createColors(int currentAccount, int index) {
+		ThemeItem themeItem = themeItemAt(index);
+		if (themeItem == null) {
+			return new SparseIntArray();
+		}
         SparseIntArray currentColors;
 
         Theme.ThemeInfo themeInfo = getThemeInfo(index);
@@ -435,6 +457,9 @@ public class EmojiThemes {
             int settingsIndex = getSettingsIndex(index);
 
             final ITheme iTheme = getITheme(index);
+			if (iTheme == null) {
+				return new SparseIntArray();
+			}
             final TLRPC.ThemeSettings settings = iTheme.getThemeSettings(settingsIndex);
 
             TLRPC.TL_theme tlTheme = getTlTheme(index);
@@ -450,7 +475,7 @@ public class EmojiThemes {
             themeInfo.setCurrentAccentId(accent.id);
         } else {
             if (themeInfo.themeAccentsMap != null) {
-                accent = themeInfo.themeAccentsMap.get(items.get(index).accentId);
+                accent = themeInfo.themeAccentsMap.get(themeItem.accentId);
             }
         }
 
@@ -464,7 +489,7 @@ public class EmojiThemes {
             currentColorsNoAccent = new SparseIntArray();
         }
 
-        items.get(index).wallpaperLink = wallpaperLink[0];
+        themeItem.wallpaperLink = wallpaperLink[0];
 
         if (accent != null) {
             currentColors = currentColorsNoAccent.clone();
@@ -497,7 +522,8 @@ public class EmojiThemes {
     }
 
     public Theme.ThemeInfo getThemeInfo(int index) {
-        return items.get(index).themeInfo;
+		ThemeItem item = themeItemAt(index);
+		return item != null ? item.themeInfo : null;
     }
 
     public void loadWallpaper(int index, ResultCallback<Pair<Long, WallpaperBitmapHolder>> callback) {
@@ -686,7 +712,8 @@ public class EmojiThemes {
     }
 
     public int getAccentId(int themeIndex) {
-        return items.get(themeIndex).accentId;
+		ThemeItem item = themeItemAt(themeIndex);
+		return item != null ? item.accentId : -1;
     }
 
     public void loadPreviewColors(int currentAccount) {
@@ -730,7 +757,7 @@ public class EmojiThemes {
     }
 
     public ThemeItem getThemeItem(int index) {
-        return items.get(index);
+		return themeItemAt(index);
     }
 
     public static void saveCustomTheme(Theme.ThemeInfo themeInfo, int accentId) {

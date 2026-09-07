@@ -768,6 +768,66 @@ public class ThemeDescription {
         return currentKey;
     }
 
+    public View getViewToInvalidate() {
+        return viewToInvalidate;
+    }
+
+    public Class[] getListClasses() {
+        return listClasses;
+    }
+
+    public String[] getListClassesFieldName() {
+        return listClassesFieldName;
+    }
+
+    public boolean matchesViewTag(View view) {
+        return (changeFlags & FLAG_CHECKTAG) == 0 || checkTag(currentKey, view);
+    }
+
+    /**
+     * Resolves a nested field on a list cell when {@link #listClassesFieldName} names a {@link View}.
+     * Returns null for missing fields, non-View types, or canvas-only bindings.
+     */
+    public View resolveFieldView(View cell, int classIndex) {
+        if (cell == null || listClasses == null || listClassesFieldName == null) {
+            return null;
+        }
+        if (classIndex < 0 || classIndex >= listClasses.length || classIndex >= listClassesFieldName.length) {
+            return null;
+        }
+        if (!listClasses[classIndex].isInstance(cell)) {
+            return null;
+        }
+        String key = listClasses[classIndex] + "_" + listClassesFieldName[classIndex];
+        if (notFoundCachedFields != null && notFoundCachedFields.containsKey(key)) {
+            return null;
+        }
+        try {
+            Field field;
+            if (cachedFields != null) {
+                field = cachedFields.get(key);
+                if (field == null) {
+                    field = listClasses[classIndex].getDeclaredField(listClassesFieldName[classIndex]);
+                    field.setAccessible(true);
+                    cachedFields.put(key, field);
+                }
+            } else {
+                field = listClasses[classIndex].getDeclaredField(listClassesFieldName[classIndex]);
+                field.setAccessible(true);
+            }
+            Object object = field.get(cell);
+            if (object instanceof View) {
+                return (View) object;
+            }
+        } catch (Throwable e) {
+            if (notFoundCachedFields == null) {
+                notFoundCachedFields = new HashMap<>();
+            }
+            notFoundCachedFields.put(key, true);
+        }
+        return null;
+    }
+
     public void startEditing() {
         currentColor = previousColor = Theme.getColor(currentKey, previousIsDefault);
     }

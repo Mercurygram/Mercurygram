@@ -4054,6 +4054,9 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	private void startRingtoneAndVibration(long chatID) {
+		if (!SharedConfig.mg_callsRingEnabled) {
+			return;
+		}
 		SharedPreferences prefs = MessagesController.getNotificationsSettings(currentAccount);
 		AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
 		boolean needRing = am.getRingerMode() != AudioManager.RINGER_MODE_SILENT;
