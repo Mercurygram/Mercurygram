@@ -925,6 +925,8 @@ public class LocationController extends BaseController implements NotificationCe
         req.limit = 100;
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (error != null) {
+                // [MG] otherwise one failed load blocks every later load for this dialog
+                AndroidUtilities.runOnUIThread(() -> cacheRequests.delete(did));
                 return;
             }
             AndroidUtilities.runOnUIThread(() -> {
