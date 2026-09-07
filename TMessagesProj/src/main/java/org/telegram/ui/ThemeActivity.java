@@ -81,6 +81,7 @@ import org.telegram.ui.Cells.AppIconsSelectorCell;
 import org.telegram.ui.Cells.BrightnessControlCell;
 import org.telegram.ui.Cells.ChatListCell;
 import org.telegram.ui.Cells.ChatMessageCell;
+import org.telegram.ui.Cells.CheckBoxCell;
 import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.NotificationsCheckCell;
 import org.telegram.ui.Cells.RadioButtonCell;
@@ -95,6 +96,7 @@ import org.telegram.ui.Cells.ThemeTypeCell;
 import org.telegram.ui.Cells.ThemesHorizontalListCell;
 import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.BulletinFactory;
+import org.telegram.ui.Components.ChatThemeBottomSheet;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.PermissionRequest;
@@ -194,6 +196,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int automaticBrightnessRow;
     private int automaticBrightnessInfoRow;
     private int preferedHeaderRow;
+    private int chooseDayNightThemesRow;
+    private int dayNightThemesInfoRow;
     private int newThemeInfoRow;
     private int themeHeaderRow;
     private int bubbleRadiusHeaderRow;
@@ -222,6 +226,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int editThemeRow;
     @Keep
     private int createNewThemeRow;
+	@Keep
+	private int resetThemeRow;
     private int lastShadowRow;
     @Keep
     private int stickersRow;
@@ -555,6 +561,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         themeAccentListRow = -1;
         themeInfoRow = -1;
         preferedHeaderRow = -1;
+        chooseDayNightThemesRow = -1;
+        dayNightThemesInfoRow = -1;
         automaticHeaderRow = -1;
         automaticBrightnessRow = -1;
         automaticBrightnessInfoRow = -1;
@@ -606,6 +614,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         themePreviewRow = -1;
         editThemeRow = -1;
         createNewThemeRow = -1;
+		resetThemeRow = -1;
 
         appIconHeaderRow = -1;
         appIconSelectorRow = -1;
@@ -662,6 +671,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             themeHeaderRow = rowCount++;
 
             themeListRow2 = rowCount++;
+			resetThemeRow = rowCount++;
             themeInfoRow = rowCount++;
 
             bubbleRadiusHeaderRow = rowCount++;
@@ -731,16 +741,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 automaticBrightnessInfoRow = rowCount++;
             }
             if (Theme.selectedAutoNightType != Theme.AUTO_NIGHT_TYPE_NONE) {
+				// Mercurygram: light/dark pair is chosen in Browse Themes (not a separate preferred-night list)
                 preferedHeaderRow = rowCount++;
-                themeListRow = rowCount++;
-                hasThemeAccents = Theme.getCurrentNightTheme().hasAccentColors();
-                if (themesHorizontalListCell != null) {
-                    themesHorizontalListCell.setDrawDivider(hasThemeAccents);
-                }
-                if (hasThemeAccents) {
-                    themeAccentListRow = rowCount++;
-                }
-                themeInfoRow = rowCount++;
+                chooseDayNightThemesRow = rowCount++;
+                dayNightThemesInfoRow = rowCount++;
             }
         }
 
@@ -1389,7 +1393,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     Theme.saveAutoNightThemeConfig();
                     Theme.checkAutoNightThemeConditions(true);
                     boolean enabled = Theme.selectedAutoNightType != Theme.AUTO_NIGHT_TYPE_NONE;
-                    String value = enabled ? Theme.getCurrentNightThemeName() : getString("AutoNightThemeOff", R.string.AutoNightThemeOff);
+                    String value = enabled ? Theme.getRememberedDayNightPairName() : getString("AutoNightThemeOff", R.string.AutoNightThemeOff);
                     if (enabled) {
                         String type;
                         if (Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_SCHEDULED) {
@@ -1399,7 +1403,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         } else {
                             type = getString("AutoNightAdaptive", R.string.AutoNightAdaptive);
                         }
-                        value = type + " " + value;
+                        value = type + " · " + value;
                     }
                     checkCell.setTextAndValueAndIconAndCheck(getString("AutoNightTheme", R.string.AutoNightTheme), value, R.drawable.menu_night_mode_24, enabled, 0, false, true);
                 } else {
@@ -1481,10 +1485,14 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 showDialog(dialog);
             } else if (position == scheduleUpdateLocationRow) {
                 updateSunTime(null, true);
+            } else if (position == chooseDayNightThemesRow) {
+				presentFragment(new ThemeActivity(THEME_TYPE_THEMES_BROWSER));
             } else if (position == createNewThemeRow) {
                 createNewTheme();
             } else if (position == editThemeRow) {
                 editTheme();
+			} else if (position == resetThemeRow) {
+				showResetThemeDialog();
             } else if (position == stickersRow) {
                 presentFragment(new StickersActivity(MediaDataController.TYPE_IMAGE, null));
             } else if (position == liteModeRow) {
@@ -1540,6 +1548,257 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         builder.setPositiveButton(getString("CreateTheme", R.string.CreateTheme), (dialog, which) -> AlertsCreator.createThemeCreateDialog(ThemeActivity.this, 0, null, null));
         showDialog(builder.create());
     }
+
+	private String buildEmojiLooksChecklistLabel() {
+		StringBuilder emojis = new StringBuilder();
+		ArrayList<ChatThemeBottomSheet.ChatThemeItem> items = getMediaDataController().defaultEmojiThemes;
+		boolean hasPalette = false;
+		String palette = "\uD83C\uDFA8";
+		if (items != null) {
+			for (int a = 0; a < items.size(); a++) {
+				ChatThemeBottomSheet.ChatThemeItem item = items.get(a);
+				if (item == null) {
+					continue;
+				}
+		String emoticon = item.getEmoticon();
+				if (TextUtils.isEmpty(emoticon) && item.chatTheme != null) {
+					emoticon = item.chatTheme.emoji;
+				}
+				if (TextUtils.isEmpty(emoticon)) {
+					continue;
+				}
+				if (palette.equals(emoticon)) {
+					hasPalette = true;
+				}
+				if (emojis.length() > 0) {
+					emojis.append('/');
+				}
+				emojis.append(emoticon);
+			}
+		}
+		if (emojis.length() == 0) {
+			emojis.append("\uD83C\uDFE0");
+		}
+		if (!hasPalette) {
+			emojis.append('/').append(palette);
+		}
+		return LocaleController.formatString(R.string.MercurygramResetCheckLooks, emojis.toString());
+	}
+
+	private String buildBaseThemesChecklistLabel(boolean allScope) {
+		if (!allScope) {
+			Theme.ThemeInfo active = Theme.getActiveTheme();
+			String name = active != null ? active.getName() : "";
+			return LocaleController.formatString(R.string.MercurygramResetCheckBaseCurrent, name);
+		}
+		StringBuilder names = new StringBuilder();
+		ArrayList<Theme.ThemeInfo> builtIns = Theme.getBuiltInThemesSorted();
+		for (int a = 0; a < builtIns.size(); a++) {
+			Theme.ThemeInfo info = builtIns.get(a);
+			if (info == null) {
+				continue;
+			}
+			if (names.length() > 0) {
+				names.append('/');
+			}
+			names.append(info.getName());
+		}
+		if (names.length() == 0) {
+			names.append(getString(R.string.ThemeClassic));
+		}
+		return LocaleController.formatString(R.string.MercurygramResetCheckBaseAll, names.toString());
+	}
+
+	private void showResetThemeDialog() {
+		if (getParentActivity() == null) {
+			return;
+		}
+		Context context = getParentActivity();
+		LinearLayout linearLayout = new LinearLayout(context);
+		linearLayout.setOrientation(LinearLayout.VERTICAL);
+		linearLayout.setPadding(dp(4), 0, dp(4), dp(4));
+
+		final int[] scope = {0}; // 0 = current, 1 = all
+		final boolean[] checks = new boolean[]{true, true, true};
+		final boolean[] enabled = new boolean[]{true, true, true};
+
+		TextView scopeHeader = new TextView(context);
+		scopeHeader.setText(getString(R.string.MercurygramResetScopeHeader));
+		scopeHeader.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader));
+		scopeHeader.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 15);
+		scopeHeader.setTypeface(AndroidUtilities.bold());
+		scopeHeader.setPadding(dp(20), dp(12), dp(20), dp(4));
+		linearLayout.addView(scopeHeader);
+
+		RadioColorCell[] scopeCells = new RadioColorCell[2];
+		String[] scopeLabels = new String[]{
+			getString(R.string.MercurygramResetScopeCurrent),
+			getString(R.string.MercurygramResetScopeAll)
+		};
+		for (int i = 0; i < scopeCells.length; i++) {
+			final int index = i;
+			RadioColorCell cell = new RadioColorCell(context);
+			cell.setPadding(dp(4), 0, dp(4), 0);
+			cell.setCheckColor(Theme.getColor(Theme.key_radioBackground), Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
+			cell.setTextAndValue(scopeLabels[i], index == scope[0]);
+			cell.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL));
+			scopeCells[i] = cell;
+			linearLayout.addView(cell);
+		}
+
+		TextView categoryHeader = new TextView(context);
+		categoryHeader.setText(getString(R.string.MercurygramResetCategoryHeader));
+		categoryHeader.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader));
+		categoryHeader.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 15);
+		categoryHeader.setTypeface(AndroidUtilities.bold());
+		categoryHeader.setPadding(dp(20), dp(16), dp(20), dp(4));
+		linearLayout.addView(categoryHeader);
+
+		CheckBoxCell[] checkCells = new CheckBoxCell[3];
+		for (int i = 0; i < checkCells.length; i++) {
+			final int index = i;
+			CheckBoxCell cell = new CheckBoxCell(context, 1);
+			cell.setPadding(dp(4), 0, dp(4), 0);
+			cell.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL));
+			cell.setOnClickListener(v -> {
+				if (!enabled[index]) {
+					return;
+				}
+				checks[index] = !checks[index];
+				checkCells[index].setChecked(checks[index], true);
+			});
+			checkCells[i] = cell;
+			linearLayout.addView(cell);
+		}
+
+		Runnable refreshChecklist = () -> {
+			boolean all = scope[0] == 1;
+			Theme.ThemeInfo active = Theme.getActiveTheme();
+			if (all) {
+				enabled[0] = true;
+				enabled[1] = true;
+				enabled[2] = true;
+			} else {
+				// Current: emoji looks only if this built-in has emoji accents; base if resettable; never delete-all-customs
+				enabled[0] = Theme.canResetEmojiLooks(active);
+				enabled[1] = Theme.canResetBaseAccents(active);
+				enabled[2] = false;
+				if (!enabled[0]) {
+					checks[0] = false;
+				}
+				if (!enabled[1]) {
+					checks[1] = false;
+				}
+				checks[2] = false;
+			}
+			checkCells[0].setText(buildEmojiLooksChecklistLabel(), null, checks[0] && enabled[0], false);
+			checkCells[1].setText(buildBaseThemesChecklistLabel(all), null, checks[1] && enabled[1], false);
+			checkCells[2].setText(getString(R.string.MercurygramResetCheckDeleteCustom), null, checks[2] && enabled[2], false);
+			for (int a = 0; a < checkCells.length; a++) {
+				checkCells[a].setEnabled(enabled[a]);
+				checkCells[a].setChecked(checks[a] && enabled[a], true);
+				checkCells[a].setClickable(enabled[a]);
+				checkCells[a].setAlpha(enabled[a] ? 1f : 0.5f);
+			}
+		};
+
+		for (int i = 0; i < scopeCells.length; i++) {
+			final int index = i;
+			scopeCells[i].setOnClickListener(v -> {
+				scope[0] = index;
+				for (int a = 0; a < scopeCells.length; a++) {
+					scopeCells[a].setChecked(a == index, true);
+				}
+				if (index == 1) {
+					// switching to All: re-enable defaults
+					checks[0] = true;
+					checks[1] = true;
+					checks[2] = true;
+				}
+				refreshChecklist.run();
+			});
+		}
+		refreshChecklist.run();
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		builder.setTitle(getString(R.string.MercurygramResetTheme));
+		builder.setView(linearLayout);
+		builder.setNegativeButton(getString(R.string.Cancel), null);
+		builder.setPositiveButton(getString(R.string.OK), (dialog, which) -> {
+			int category = 0;
+			if (checks[0] && enabled[0]) {
+				category |= Theme.RESET_LOOKS;
+			}
+			if (checks[1] && enabled[1]) {
+				category |= Theme.RESET_BASE;
+			}
+			if (checks[2] && enabled[2]) {
+				category |= Theme.RESET_CUSTOM;
+			}
+			if (category == 0) {
+				return;
+			}
+			boolean all = scope[0] == 1;
+			if (all) {
+				confirmResetAllThemes(category);
+			} else {
+				applyThemeReset(false, category);
+			}
+		});
+		showDialog(builder.create());
+	}
+
+	private void confirmResetAllThemes(int category) {
+		if (getParentActivity() == null) {
+			return;
+		}
+		AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+		builder.setTitle(getString(R.string.MercurygramResetAllThemesTitle));
+		boolean looks = (category & Theme.RESET_LOOKS) != 0;
+		boolean base = (category & Theme.RESET_BASE) != 0;
+		boolean custom = (category & Theme.RESET_CUSTOM) != 0;
+		int messageRes;
+		if (looks && base && custom) {
+			messageRes = R.string.MercurygramResetAllThemesMessage;
+		} else if (looks && base) {
+			messageRes = R.string.MercurygramResetAllLooksAndBaseMessage;
+		} else if (looks && custom) {
+			messageRes = R.string.MercurygramResetAllLooksAndCustomMessage;
+		} else if (base && custom) {
+			messageRes = R.string.MercurygramResetAllBaseAndCustomMessage;
+		} else if (looks) {
+			messageRes = R.string.MercurygramResetAllLooksMessage;
+		} else if (base) {
+			messageRes = R.string.MercurygramResetAllBaseAccentsMessage;
+		} else {
+			messageRes = R.string.MercurygramResetAllCustomMessage;
+		}
+		builder.setMessage(getString(messageRes));
+		builder.setPositiveButton(getString(R.string.Reset), (dialogInterface, i) -> applyThemeReset(true, category));
+		builder.setNegativeButton(getString(R.string.Cancel), null);
+		AlertDialog alertDialog = builder.create();
+		showDialog(alertDialog);
+		TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+		if (button != null) {
+			button.setTextColor(Theme.getColor(Theme.key_text_RedBold));
+		}
+	}
+
+	private void applyThemeReset(boolean all, int category) {
+		boolean changed;
+		if (all) {
+			changed = Theme.resetAllThemeCustomizations(category);
+		} else {
+			changed = Theme.resetThemeCustomizations(Theme.getActiveTheme(), category);
+		}
+		if (!changed) {
+			return;
+		}
+		Theme.refreshThemeColors();
+		NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, Theme.getActiveTheme(), Theme.isCurrentThemeNight(), null, -1);
+		updateRows(true);
+		updateMenuItem();
+	}
 
     @Override
     public void onResume() {
@@ -2473,12 +2732,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             switch (holder.getItemViewType()) {
                 case TYPE_TEXT_SETTING: {
                     TextSettingsCell cell = (TextSettingsCell) holder.itemView;
-                    if (position == nightThemeRow) {
-                        if (Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_NONE || Theme.getCurrentNightTheme() == null) {
-                            cell.setTextAndValue(getString(R.string.AutoNightTheme), getString(R.string.AutoNightThemeOff), false);
-                        } else {
-                            cell.setTextAndValue(getString(R.string.AutoNightTheme), Theme.getCurrentNightThemeName(), false);
-                        }
+                    if (position == chooseDayNightThemesRow) {
+						cell.setTextAndValue(getString(R.string.SettingsBrowseThemes), Theme.getRememberedDayNightPairName(), false);
                     } else if (position == scheduleFromRow) {
                         int currentHour = Theme.autoNightDayStartTime / 60;
                         int currentMinute = (Theme.autoNightDayStartTime - currentHour * 60);
@@ -2529,6 +2784,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         cell.setText(LocaleController.formatString("AutoNightBrightnessInfo", R.string.AutoNightBrightnessInfo, (int) (100 * Theme.autoNightBrighnessThreshold)));
                     } else if (position == scheduleLocationInfoRow) {
                         cell.setText(getLocationSunString());
+                    } else if (position == dayNightThemesInfoRow) {
+						cell.setText(getString(R.string.MercurygramAutoNightDayNightThemesInfo));
                     } else if (position == swipeGestureInfoRow) {
                         cell.setText(getString("ChatListSwipeGestureInfo", R.string.ChatListSwipeGestureInfo));
                     } else if (position == liteModeInfoRow) {
@@ -2562,7 +2819,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == automaticHeaderRow) {
                         headerCell.setText(getString("AutoNightBrightness", R.string.AutoNightBrightness));
                     } else if (position == preferedHeaderRow) {
-                        headerCell.setText(getString("AutoNightPreferred", R.string.AutoNightPreferred));
+                        headerCell.setText(getString(R.string.MercurygramAutoNightDayNightThemes));
                     } else if (position == settingsRow) {
                         headerCell.setText(getString("SETTINGS", R.string.SETTINGS));
                     } else if (position == themeHeaderRow) {
@@ -2628,7 +2885,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     NotificationsCheckCell checkCell = (NotificationsCheckCell) holder.itemView;
                     if (position == nightThemeRow) {
                         boolean enabled = Theme.selectedAutoNightType != Theme.AUTO_NIGHT_TYPE_NONE;
-                        String value = enabled ? Theme.getCurrentNightThemeName() : getString("AutoNightThemeOff", R.string.AutoNightThemeOff);
+                        String value = enabled ? Theme.getRememberedDayNightPairName() : getString("AutoNightThemeOff", R.string.AutoNightThemeOff);
                         if (enabled) {
                             String type;
                             if (Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_SCHEDULED) {
@@ -2638,7 +2895,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                             } else {
                                 type = getString("AutoNightAdaptive", R.string.AutoNightAdaptive);
                             }
-                            value = type + " " + value;
+                            value = type + " · " + value;
                         }
                         checkCell.setTextAndValueAndIconAndCheck(getString("AutoNightTheme", R.string.AutoNightTheme), value, R.drawable.menu_night_mode_24, enabled, 0, false, true);
                     } else if (position == browserRow) {
@@ -2681,6 +2938,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         cell.setSubtitle(null);
                         cell.setColors(Theme.key_windowBackgroundWhiteBlueText4, Theme.key_windowBackgroundWhiteBlueText4);
                         cell.setTextAndIcon(getString(R.string.CreateNewTheme), R.drawable.msg_colors, false);
+					} else if (position == resetThemeRow) {
+						cell.setSubtitle(null);
+						cell.setColors(Theme.key_windowBackgroundWhiteBlueText4, Theme.key_windowBackgroundWhiteBlueText4);
+						cell.setTextAndIcon(getString(R.string.MercurygramResetTheme), R.drawable.msg_reset, false);
                     } else if (position == liteModeRow) {
                         cell.setColors(Theme.key_dialogIcon, Theme.key_windowBackgroundWhiteBlackText);
                         cell.setTextAndIcon(getString(R.string.LiteMode), R.drawable.msg2_animations, true);
@@ -2733,9 +2994,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             if (position == scheduleFromRow || position == distanceRow ||
                     position == scheduleToRow || position == scheduleUpdateLocationRow ||
                     position == contactsReimportRow || position == contactsSortRow ||
-                    position == bluetoothScoRow || position == searchEngineRow) {
+                    position == bluetoothScoRow || position == searchEngineRow ||
+                    position == chooseDayNightThemesRow) {
                 return TYPE_TEXT_SETTING;
-            } else if (position == automaticBrightnessInfoRow || position == scheduleLocationInfoRow || position == swipeGestureInfoRow || position == stickersInfoRow || position == liteModeInfoRow) {
+            } else if (position == automaticBrightnessInfoRow || position == scheduleLocationInfoRow || position == swipeGestureInfoRow || position == stickersInfoRow || position == liteModeInfoRow || position == dayNightThemesInfoRow) {
                 return TYPE_TEXT_INFO_PRIVACY;
             } else if (position == themeInfoRow || position == nightTypeInfoRow || position == scheduleFromToInfoRow ||
                     position == settings2Row || position == newThemeInfoRow || position == chatListInfoRow || position == bubbleRadiusInfoRow ||
@@ -2769,7 +3031,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             } else if (position == bubbleRadiusRow) {
                 return TYPE_BUBBLE_RADIUS;
             } else if (position == backgroundRow || position == editThemeRow || position == createNewThemeRow ||
-                        position == liteModeRow || position == stickersRow) {
+                        position == resetThemeRow || position == liteModeRow || position == stickersRow) {
                 return TYPE_TEXT_PREFERENCE;
             } else if (position == swipeGestureRow) {
                 return TYPE_SWIPE_GESTURE;
@@ -2942,5 +3204,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 }
             }
         }
+		if (themesHorizontalListCell != null) {
+			themesHorizontalListCell.updateVisibleThemeChecks();
+		}
     }
 }

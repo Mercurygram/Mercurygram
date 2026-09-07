@@ -451,8 +451,7 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
         @Override
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
-            Theme.ThemeInfo t = currentType == ThemeActivity.THEME_TYPE_NIGHT ? Theme.getCurrentNightTheme() : Theme.getCurrentTheme();
-            button.setChecked(themeInfo == t, false);
+            button.setChecked(shouldShowChecked(themeInfo), false);
             if (themeInfo != null && themeInfo.info != null && !themeInfo.themeLoaded) {
                 String name = FileLoader.getAttachFileName(themeInfo.info.document);
                 if (!loadingThemes.containsKey(name) && !loadingWallpapers.containsKey(themeInfo)) {
@@ -465,9 +464,26 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
         }
 
         public void updateCurrentThemeCheck() {
-            Theme.ThemeInfo t = currentType == ThemeActivity.THEME_TYPE_NIGHT ? Theme.getCurrentNightTheme() : Theme.getCurrentTheme();
-            button.setChecked(themeInfo == t, true);
+            button.setChecked(shouldShowChecked(themeInfo), true);
         }
+
+		private boolean shouldShowChecked(Theme.ThemeInfo info) {
+			if (info == null) {
+				return false;
+			}
+			Theme.ThemeInfo current = currentType == ThemeActivity.THEME_TYPE_NIGHT ? Theme.getCurrentNightTheme() : Theme.getCurrentTheme();
+			if (info == current) {
+				return true;
+			}
+			// Mercurygram: also mark the remembered look for the other day/night mode
+			Theme.ThemeInfo rememberedOther;
+			if (currentType == ThemeActivity.THEME_TYPE_NIGHT) {
+				rememberedOther = Theme.getRememberedDayTheme();
+			} else {
+				rememberedOther = Theme.getRememberedOtherModeTheme();
+			}
+			return rememberedOther != null && info == rememberedOther;
+		}
 
         void updateColors(boolean animate) {
             oldInColor = inColor;
@@ -743,6 +759,7 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
         SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE).edit();
         editor.putString(currentType == ThemeActivity.THEME_TYPE_NIGHT || themeInfo.isDark() ? "lastDarkTheme" : "lastDayTheme", themeInfo.getKey());
         editor.commit();
+		Theme.syncRememberedDayNightTheme(themeInfo);
 
         if (currentType == ThemeActivity.THEME_TYPE_NIGHT) {
             if (themeInfo == Theme.getCurrentNightTheme()) {
@@ -770,6 +787,17 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
             Theme.turnOffAutoNight(fragment);
         }
     }
+
+	// Mercurygram: refresh current + remembered other-mode radio checks
+	public void updateVisibleThemeChecks() {
+		int count = getChildCount();
+		for (int a = 0; a < count; a++) {
+			View child = getChildAt(a);
+			if (child instanceof InnerThemeView) {
+				((InnerThemeView) child).updateCurrentThemeCheck();
+			}
+		}
+	}
 
     public void setDrawDivider(boolean draw) {
         drawDivider = draw;

@@ -1154,7 +1154,8 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
                 viewType == VIEW_TYPE_ROUND_GROUP_CHECKBOX ||
                 viewType == VIEW_TYPE_SWITCH ||
                 viewType == VIEW_TYPE_EXPANDABLE_SWITCH ||
-                viewType == VIEW_TYPE_SHADOW_COLLAPSE_BUTTON
+                viewType == VIEW_TYPE_SHADOW_COLLAPSE_BUTTON ||
+                (viewType == VIEW_TYPE_CUSTOM && item != null && item.id != 0)
             );
         }
         return clickable && (item == null || item.enabled);

@@ -11217,7 +11217,11 @@ public class MessageObject {
     }
 
     public boolean isExpiredLiveLocation(int date) {
-        return messageOwner.date + getMedia(messageOwner).period <= date;
+        int period = getMedia(messageOwner).period;
+        if (period == 0x7FFFFFFF) {
+            return false;
+        }
+        return messageOwner.date + period <= date;
     }
 
     public boolean isGame() {

@@ -200,7 +200,7 @@ import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.SearchTagsList;
 import org.telegram.ui.Components.ShareTopView;
-import org.telegram.ui.Components.SharingLocationsAlert;
+import it.belloworld.mercurygram.ui.MgAllLiveLocationsAlert;
 import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.StickerSetBulletinLayout;
 import org.telegram.ui.Components.StickersAlert;
@@ -3101,15 +3101,27 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             } else if (showLocations) {
                 if (!actionBarLayout.getFragmentStack().isEmpty()) {
                     BaseFragment fragment = actionBarLayout.getFragmentStack().get(0);
-                    fragment.showDialog(new SharingLocationsAlert(this, info -> {
-                        intentAccount[0] = info.messageObject.currentAccount;
-                        switchToAccount(intentAccount[0], true);
+                    fragment.showDialog(new MgAllLiveLocationsAlert(this, new MgAllLiveLocationsAlert.Delegate() {
+                        @Override
+                        public void openOutgoingShare(LocationController.SharingLocationInfo info) {
+                            intentAccount[0] = info.messageObject.currentAccount;
+                            switchToAccount(intentAccount[0], true);
+                            LocationActivity locationActivity = new LocationActivity(2);
+                            locationActivity.setMessageObject(info.messageObject);
+                            final long dialog_id = info.messageObject.getDialogId();
+                            locationActivity.setDelegate((location, live, notify, scheduleDate, payStars) -> SendMessagesHelper.getInstance(intentAccount[0]).sendMessage(SendMessagesHelper.SendMessageParams.of(location, dialog_id, null, null, null, null, notify, scheduleDate, 0)));
+                            presentFragment(locationActivity);
+                        }
 
-                        LocationActivity locationActivity = new LocationActivity(2);
-                        locationActivity.setMessageObject(info.messageObject);
-                        final long dialog_id = info.messageObject.getDialogId();
-                        locationActivity.setDelegate((location, live, notify, scheduleDate, payStars) -> SendMessagesHelper.getInstance(intentAccount[0]).sendMessage(SendMessagesHelper.SendMessageParams.of(location, dialog_id, null, null, null, null, notify, scheduleDate, 0)));
-                        presentFragment(locationActivity);
+                        @Override
+                        public void openIncomingShare(int account, MessageObject messageObject) {
+                            switchToAccount(account, true);
+                            LocationActivity locationActivity = new LocationActivity(2);
+                            locationActivity.setMessageObject(messageObject);
+                            final long dialog_id = messageObject.getDialogId();
+                            locationActivity.setDelegate((location, live, notify, scheduleDate, payStars) -> SendMessagesHelper.getInstance(account).sendMessage(SendMessagesHelper.SendMessageParams.of(location, dialog_id, null, null, null, null, notify, scheduleDate, 0)));
+                            presentFragment(locationActivity);
+                        }
                     }, null));
                 }
                 pushOpened = false;
@@ -7015,14 +7027,17 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     View feedbackView;
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        isResumed = true;
-        pipActivityHandler.onResume();
-        if (onResumeStaticCallback != null) {
-            onResumeStaticCallback.run();
-            onResumeStaticCallback = null;
-        }
+	protected void onResume() {
+		super.onResume();
+		isResumed = true;
+		pipActivityHandler.onResume();
+		// Outgoing live shares: ensure FGS + ongoing notification if service died
+		// or boot/install restore skipped startForegroundService.
+		LocationController.ensureSharingServiceRunning();
+		if (onResumeStaticCallback != null) {
+			onResumeStaticCallback.run();
+			onResumeStaticCallback = null;
+		}
         if (Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_SYSTEM) {
             Theme.checkAutoNightThemeConditions();
         }

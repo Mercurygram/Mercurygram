@@ -181,10 +181,10 @@ public class SharingLocationsAlert extends BottomSheet implements NotificationCe
         pickerBottomLayout.cancelButton.setTextColor(getThemedColor(Theme.key_text_RedBold));
         pickerBottomLayout.cancelButton.setText(LocaleController.getString(R.string.StopAllLocationSharings));
         pickerBottomLayout.cancelButton.setOnClickListener(view -> {
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                LocationController.getInstance(a).removeAllLocationSharings();
-            }
-            dismiss();
+            it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.confirmStopAll(
+                    it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.activityOf(getContext()),
+                    resourcesProvider,
+                    this::dismiss);
         });
         pickerBottomLayout.doneButtonTextView.setTextColor(getThemedColor(Theme.key_dialogTextBlue2));
         pickerBottomLayout.doneButtonTextView.setText(LocaleController.getString(R.string.Close).toUpperCase());
