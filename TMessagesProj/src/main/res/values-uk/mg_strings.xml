@@ -261,4 +261,6 @@
     <string name="MercurygramFolder">Папка Mercurygram</string>
     <string name="MercurygramFolderInfo">Показується лише в Mercurygram, не надсилається в Telegram як папка, тому без обмежень на кількість папок і чатів. Синхронізується між вашими застосунками Mercurygram через один файл у Збережених повідомленнях. Перемикання в наявній папці переносить папку між Telegram і Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramLiveLocationPaused">Трансляцію геопозиції призупинено</string>
+    <string name="MercurygramLiveLocationPausedInfo">Передавання зупинилося після перезавантаження пристрою. Відкрийте Mercurygram, щоб його відновити.</string>
 </resources>
