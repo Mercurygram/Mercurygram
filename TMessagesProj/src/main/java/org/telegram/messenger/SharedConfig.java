@@ -416,6 +416,162 @@ public class SharedConfig {
         }
     }
 
+    private static void persistMgLiveLoc() {
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .putInt("mg_liveLocAlwaysOnMode", mg_liveLocAlwaysOnMode)
+                .putInt("mg_liveLocAlwaysOnLowerIndex", mg_liveLocAlwaysOnLowerIndex)
+                .putInt("mg_liveLocAlwaysOffUpperIndex", mg_liveLocAlwaysOffUpperIndex)
+                .putInt(it.belloworld.mercurygram.MgLiveLocationThresholds.PREF_STEPS_VERSION,
+                        it.belloworld.mercurygram.MgLiveLocationThresholds.STEPS_VERSION)
+                .putBoolean("mg_liveLocViewerBoost", mg_liveLocViewerBoost)
+                .putBoolean("mg_liveLocViewerBoostInBatterySaver", mg_liveLocViewerBoostInBatterySaver)
+                .putInt("mg_liveLocDefaultSharePeriodSec", mg_liveLocDefaultSharePeriodSec)
+                .putInt("mg_liveLocLastCustomSharePeriodSec", mg_liveLocLastCustomSharePeriodSec)
+                .putInt("mg_liveLocBatterySaverMultiplier", mg_liveLocBatterySaverMultiplier)
+                .putInt("mg_liveLocDwellSec", mg_liveLocDwellSec)
+                .putInt("mg_liveLocSleepMaxSec", mg_liveLocSleepMaxSec)
+                .putInt("mg_liveLocSleepMode", mg_liveLocSleepMode)
+                .putInt("mg_liveLocMaxAcquireSec", mg_liveLocMaxAcquireSec)
+                .apply();
+    }
+
+    public static void setMgLiveLocAlwaysOnLowerIndex(int index) {
+        mg_liveLocAlwaysOnLowerIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.clampIndex(index);
+        if (mg_liveLocAlwaysOnLowerIndex > mg_liveLocAlwaysOffUpperIndex) {
+            mg_liveLocAlwaysOffUpperIndex = mg_liveLocAlwaysOnLowerIndex;
+        }
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocAlwaysOffUpperIndex(int index) {
+        mg_liveLocAlwaysOffUpperIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.clampIndex(index);
+        if (mg_liveLocAlwaysOffUpperIndex < mg_liveLocAlwaysOnLowerIndex) {
+            mg_liveLocAlwaysOnLowerIndex = mg_liveLocAlwaysOffUpperIndex;
+        }
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocThresholdIndices(int lowerIndex, int upperIndex) {
+        mg_liveLocAlwaysOnLowerIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.clampIndex(lowerIndex);
+        mg_liveLocAlwaysOffUpperIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.clampIndex(upperIndex);
+        if (mg_liveLocAlwaysOnLowerIndex > mg_liveLocAlwaysOffUpperIndex) {
+            int tmp = mg_liveLocAlwaysOnLowerIndex;
+            mg_liveLocAlwaysOnLowerIndex = mg_liveLocAlwaysOffUpperIndex;
+            mg_liveLocAlwaysOffUpperIndex = tmp;
+        }
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocViewerBoost(boolean value) {
+        mg_liveLocViewerBoost = value;
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocViewerBoostInBatterySaver(boolean value) {
+        mg_liveLocViewerBoostInBatterySaver = value;
+        persistMgLiveLoc();
+    }
+
+        persistMgLiveLoc();
+    }
+
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .apply();
+    }
+
+        ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE)
+                .edit()
+                .apply();
+    }
+
+    public static void setMgLiveLocDefaultSharePeriodSec(int sec) {
+        if (sec <= 0) {
+            sec = 15 * 60;
+        } else if (sec != 0x7FFFFFFF && sec > it.belloworld.mercurygram.ui.MgShareLocationHelper.MAX_CUSTOM_SEC) {
+            sec = it.belloworld.mercurygram.ui.MgShareLocationHelper.MAX_CUSTOM_SEC;
+        }
+        mg_liveLocDefaultSharePeriodSec = sec;
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocLastCustomSharePeriodSec(int sec) {
+        if (sec < 60) {
+            sec = 60;
+        }
+        int max = it.belloworld.mercurygram.ui.MgShareLocationHelper.MAX_CUSTOM_SEC;
+        if (sec > max && sec != 0x7FFFFFFF) {
+            sec = max;
+        }
+        mg_liveLocLastCustomSharePeriodSec = sec;
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocAlwaysOnMode(int mode) {
+        mg_liveLocAlwaysOnMode = sanitizeMgLiveLocAlwaysOnMode(mode);
+        persistMgLiveLoc();
+    }
+
+    public static int sanitizeMgLiveLocAlwaysOnMode(int mode) {
+        if (mode < it.belloworld.mercurygram.MgLiveLocationPolicy.ALWAYS_OFF
+                || mode > it.belloworld.mercurygram.MgLiveLocationPolicy.ALWAYS_ALL) {
+            return it.belloworld.mercurygram.MgLiveLocationPolicy.ALWAYS_OFF;
+        }
+        return mode;
+    }
+
+    public static void setMgLiveLocBatterySaverMultiplier(int multiplier) {
+        mg_liveLocBatterySaverMultiplier = sanitizeMgLiveLocBatterySaverMultiplier(multiplier);
+        persistMgLiveLoc();
+    }
+
+    public static int sanitizeMgLiveLocBatterySaverMultiplier(int multiplier) {
+        switch (multiplier) {
+            case it.belloworld.mercurygram.MgLiveLocationPolicy.BATTERY_SAVER_OFF:
+            case 1:
+            case 2:
+            case 3:
+            case 5:
+            case 8:
+                return multiplier;
+            default:
+                return it.belloworld.mercurygram.MgLiveLocationPolicy.BATTERY_SAVER_OFF;
+        }
+    }
+
+    public static void setMgLiveLocDwellSec(int sec) {
+        mg_liveLocDwellSec = it.belloworld.mercurygram.MgLiveLocationPolicy.clampDwellSec(sec);
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocSleepMaxSec(int sec) {
+        mg_liveLocSleepMaxSec = it.belloworld.mercurygram.MgLiveLocationPolicy.clampSleepMaxSec(sec);
+        persistMgLiveLoc();
+    }
+
+    public static void setMgLiveLocSleepMode(int mode) {
+        mg_liveLocSleepMode = sanitizeMgLiveLocSleepMode(mode);
+        persistMgLiveLoc();
+    }
+
+    public static int sanitizeMgLiveLocSleepMode(int mode) {
+        if (mode < it.belloworld.mercurygram.MgLiveLocationPolicy.SLEEP_MODE_FIXED
+                || mode > it.belloworld.mercurygram.MgLiveLocationPolicy.SLEEP_MODE_LOG) {
+            return it.belloworld.mercurygram.MgLiveLocationPolicy.SLEEP_MODE_FIXED;
+        }
+        return mode;
+    }
+
+    public static void setMgLiveLocMaxAcquireSec(int sec) {
+        if (sec == it.belloworld.mercurygram.MgLiveLocationPolicy.MAX_ACQUIRE_FROM_HISTORY) {
+            mg_liveLocMaxAcquireSec = sec;
+        } else {
+            mg_liveLocMaxAcquireSec = Math.max(0, sec);
+        }
+        persistMgLiveLoc();
+    }
+
     // Clamp a persisted/incoming transport value to the known set so a manual
     // prefs edit or a future-version downgrade can't push an out-of-range mode
     // to the plugin (falls back to Direct).
@@ -698,6 +854,21 @@ public class SharedConfig {
     public static boolean reduceTrackingFingerprint = false;
     public static boolean mg_useTor = false;
     public static int mg_torIdleStopMinutes = 5;
+    public static int mg_liveLocAlwaysOnMode = it.belloworld.mercurygram.MgLiveLocationPolicy.ALWAYS_OFF;
+    public static int mg_liveLocAlwaysOnLowerIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.DEFAULT_LOWER_INDEX;
+    public static int mg_liveLocAlwaysOffUpperIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.DEFAULT_UPPER_INDEX;
+    public static boolean mg_liveLocViewerBoost = true;
+    public static boolean mg_liveLocViewerBoostInBatterySaver = false;
+    public static int mg_liveLocDefaultSharePeriodSec = 15 * 60;
+    public static int mg_liveLocLastCustomSharePeriodSec = 2 * 60 * 60;
+    /** 0 = off; 1/2/3/5/8 = on with that wait multiplier. Default ×3. */
+    public static int mg_liveLocBatterySaverMultiplier = it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_BATTERY_SAVER_MULTIPLIER;
+    public static int mg_liveLocDwellSec = it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_DWELL_SEC;
+    /** Max wait between GPS sessions (1× for sleep modes); 5 min … 5 h. */
+    public static int mg_liveLocSleepMaxSec = it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_SLEEP_MAX_SEC;
+    public static int mg_liveLocSleepMode = it.belloworld.mercurygram.MgLiveLocationPolicy.SLEEP_MODE_FIXED;
+    /** 0 = no limit; -1 = infer from last 5 TTFFs (μ+σ); else seconds. */
+    public static int mg_liveLocMaxAcquireSec = 0;
     // Anti-censorship transport for the Tor daemon. "Direct" is vanilla Tor (no
     // bridges), which is DPI-blocked in Russia/Iran/etc. "Snowflake" routes the
     // Tor handshake through domain-fronted WebRTC so it bootstraps behind those
@@ -1034,6 +1205,20 @@ public class SharedConfig {
         editor.putBoolean("mg_reduceTrackingFingerprint", reduceTrackingFingerprint);
         editor.putBoolean("mg_useTor", mg_useTor);
         editor.putInt("mg_torIdleStopMinutes", mg_torIdleStopMinutes);
+        editor.putInt("mg_liveLocAlwaysOnMode", mg_liveLocAlwaysOnMode);
+        editor.putInt("mg_liveLocAlwaysOnLowerIndex", mg_liveLocAlwaysOnLowerIndex);
+        editor.putInt("mg_liveLocAlwaysOffUpperIndex", mg_liveLocAlwaysOffUpperIndex);
+        editor.putInt(it.belloworld.mercurygram.MgLiveLocationThresholds.PREF_STEPS_VERSION,
+                it.belloworld.mercurygram.MgLiveLocationThresholds.STEPS_VERSION);
+        editor.putBoolean("mg_liveLocViewerBoost", mg_liveLocViewerBoost);
+        editor.putBoolean("mg_liveLocViewerBoostInBatterySaver", mg_liveLocViewerBoostInBatterySaver);
+        editor.putInt("mg_liveLocDefaultSharePeriodSec", mg_liveLocDefaultSharePeriodSec);
+        editor.putInt("mg_liveLocLastCustomSharePeriodSec", mg_liveLocLastCustomSharePeriodSec);
+        editor.putInt("mg_liveLocBatterySaverMultiplier", mg_liveLocBatterySaverMultiplier);
+        editor.putInt("mg_liveLocDwellSec", mg_liveLocDwellSec);
+        editor.putInt("mg_liveLocSleepMaxSec", mg_liveLocSleepMaxSec);
+        editor.putInt("mg_liveLocSleepMode", mg_liveLocSleepMode);
+        editor.putInt("mg_liveLocMaxAcquireSec", mg_liveLocMaxAcquireSec);
         editor.putInt("mg_torTransportMode", mg_torTransportMode);
         editor.putString("mg_torBridgeLines", mg_torBridgeLines);
         editor.putString("mg_translateMode", mg_translateMode);
@@ -1090,6 +1275,78 @@ public class SharedConfig {
         reduceTrackingFingerprint = preferences.getBoolean("mg_reduceTrackingFingerprint", false);
         mg_useTor = preferences.getBoolean("mg_useTor", false);
         mg_torIdleStopMinutes = preferences.getInt("mg_torIdleStopMinutes", 5);
+        mg_liveLocAlwaysOnMode = sanitizeMgLiveLocAlwaysOnMode(preferences.getInt("mg_liveLocAlwaysOnMode", it.belloworld.mercurygram.MgLiveLocationPolicy.ALWAYS_OFF));
+        int thresholdStepsVersion = preferences.getInt(
+                it.belloworld.mercurygram.MgLiveLocationThresholds.PREF_STEPS_VERSION, 1);
+        boolean migratedThresholdSteps = false;
+        if (preferences.contains("mg_liveLocAlwaysOnLowerIndex")) {
+            int rawLower = preferences.getInt("mg_liveLocAlwaysOnLowerIndex", it.belloworld.mercurygram.MgLiveLocationThresholds.DEFAULT_LOWER_INDEX);
+            int rawUpper = preferences.getInt("mg_liveLocAlwaysOffUpperIndex", it.belloworld.mercurygram.MgLiveLocationThresholds.DEFAULT_UPPER_INDEX);
+            if (thresholdStepsVersion < it.belloworld.mercurygram.MgLiveLocationThresholds.STEPS_VERSION) {
+                // v1 → v2: remap via legacy seconds so e.g. old inf index ≠ 168h.
+                mg_liveLocAlwaysOnLowerIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.migrateIndexFromV1(rawLower);
+                mg_liveLocAlwaysOffUpperIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.migrateIndexFromV1(rawUpper);
+                migratedThresholdSteps = true;
+            } else {
+                mg_liveLocAlwaysOnLowerIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.clampIndex(rawLower);
+                mg_liveLocAlwaysOffUpperIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.clampIndex(rawUpper);
+            }
+            if (mg_liveLocAlwaysOnLowerIndex > mg_liveLocAlwaysOffUpperIndex) {
+                int tmp = mg_liveLocAlwaysOnLowerIndex;
+                mg_liveLocAlwaysOnLowerIndex = mg_liveLocAlwaysOffUpperIndex;
+                mg_liveLocAlwaysOffUpperIndex = tmp;
+            }
+        } else {
+            mg_liveLocAlwaysOnLowerIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.migrateLegacyAlwaysOnMode(mg_liveLocAlwaysOnMode);
+            mg_liveLocAlwaysOffUpperIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.DEFAULT_UPPER_INDEX;
+            migratedThresholdSteps = true;
+        }
+        if (migratedThresholdSteps) {
+            // Only touch threshold keys — full persistMgLiveLoc() would write fields not loaded yet.
+            preferences.edit()
+                    .putInt("mg_liveLocAlwaysOnLowerIndex", mg_liveLocAlwaysOnLowerIndex)
+                    .putInt("mg_liveLocAlwaysOffUpperIndex", mg_liveLocAlwaysOffUpperIndex)
+                    .putInt(it.belloworld.mercurygram.MgLiveLocationThresholds.PREF_STEPS_VERSION,
+                            it.belloworld.mercurygram.MgLiveLocationThresholds.STEPS_VERSION)
+                    .apply();
+        }
+        mg_liveLocViewerBoost = preferences.getBoolean("mg_liveLocViewerBoost", true);
+        mg_liveLocViewerBoostInBatterySaver = preferences.getBoolean("mg_liveLocViewerBoostInBatterySaver", false);
+        mg_liveLocDefaultSharePeriodSec = Math.max(60, preferences.getInt("mg_liveLocDefaultSharePeriodSec", 15 * 60));
+        mg_liveLocLastCustomSharePeriodSec = Math.max(60, Math.min(it.belloworld.mercurygram.ui.MgShareLocationHelper.MAX_CUSTOM_SEC,
+                preferences.getInt("mg_liveLocLastCustomSharePeriodSec", 2 * 60 * 60)));
+        if (mg_liveLocDefaultSharePeriodSec != 0x7FFFFFFF
+                && mg_liveLocDefaultSharePeriodSec > it.belloworld.mercurygram.ui.MgShareLocationHelper.MAX_CUSTOM_SEC) {
+            mg_liveLocDefaultSharePeriodSec = it.belloworld.mercurygram.ui.MgShareLocationHelper.MAX_CUSTOM_SEC;
+        }
+        if (preferences.contains("mg_liveLocBatterySaverMultiplier")) {
+            mg_liveLocBatterySaverMultiplier = sanitizeMgLiveLocBatterySaverMultiplier(
+                    preferences.getInt("mg_liveLocBatterySaverMultiplier",
+                            it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_BATTERY_SAVER_MULTIPLIER));
+        } else if (preferences.getBoolean("mg_liveLocBatterySaver", false)) {
+            // Legacy on/off → on at ×3 (stretch waits; ×1 would only flip the profile flag).
+            mg_liveLocBatterySaverMultiplier = it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_BATTERY_SAVER_MULTIPLIER;
+        } else {
+            // New installs / missing key → ×3 (not Disable).
+            mg_liveLocBatterySaverMultiplier = it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_BATTERY_SAVER_MULTIPLIER;
+        }
+        mg_liveLocDwellSec = it.belloworld.mercurygram.MgLiveLocationPolicy.clampDwellSec(
+                preferences.getInt("mg_liveLocDwellSec", it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_DWELL_SEC));
+        if (preferences.contains("mg_liveLocSleepMaxSec")) {
+            mg_liveLocSleepMaxSec = it.belloworld.mercurygram.MgLiveLocationPolicy.clampSleepMaxSec(
+                    preferences.getInt("mg_liveLocSleepMaxSec", it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_SLEEP_MAX_SEC));
+        } else {
+            mg_liveLocSleepMaxSec = it.belloworld.mercurygram.MgLiveLocationPolicy.clampSleepMaxSec(
+                    preferences.getInt("mg_liveLocSleepNormalSec", it.belloworld.mercurygram.MgLiveLocationPolicy.DEFAULT_SLEEP_MAX_SEC));
+        }
+        mg_liveLocSleepMode = sanitizeMgLiveLocSleepMode(
+                preferences.getInt("mg_liveLocSleepMode", it.belloworld.mercurygram.MgLiveLocationPolicy.SLEEP_MODE_FIXED));
+        int maxAcquire = preferences.getInt("mg_liveLocMaxAcquireSec", 0);
+        if (maxAcquire == it.belloworld.mercurygram.MgLiveLocationPolicy.MAX_ACQUIRE_FROM_HISTORY) {
+            mg_liveLocMaxAcquireSec = maxAcquire;
+        } else {
+            mg_liveLocMaxAcquireSec = Math.max(0, maxAcquire);
+        }
         mg_torTransportMode = sanitizeMgTorTransportMode(
                 preferences.getInt("mg_torTransportMode", MG_TOR_TRANSPORT_DIRECT));
         mg_torBridgeLines = preferences.getString("mg_torBridgeLines", "");

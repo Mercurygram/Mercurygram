@@ -265,6 +265,7 @@ public class PushListenerController {
                             return;
                         }
                         case "GEO_LIVE_PENDING": {
+                            LiveLocationDebug.log("push GEO_LIVE_PENDING account=" + accountFinal);
                             Utilities.stageQueue.postRunnable(() -> LocationController.getInstance(accountFinal).setNewLocationEndWatchTime());
                             countDownLatch.countDown();
                             return;

@@ -19711,7 +19711,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
                 sparseIntArray.addAll(updateDeleteEphemeralMessage.ids);
             } else if (baseUpdate instanceof TL_update.TL_updateGeoLiveViewed) {
-                getLocationController().setNewLocationEndWatchTime();
+                TL_update.TL_updateGeoLiveViewed viewed = (TL_update.TL_updateGeoLiveViewed) baseUpdate;
+                LiveLocationDebug.log("mtproto updateGeoLiveViewed peer=" + DialogObject.getPeerDialogId(viewed.peer) + " msg=" + viewed.msg_id);
+                getLocationController().onGeoLiveViewed(viewed.peer, viewed.msg_id);
             } else if (baseUpdate instanceof TL_update.TL_updateReadChannelDiscussionInbox) {
                 TL_update.TL_updateReadChannelDiscussionInbox update = (TL_update.TL_updateReadChannelDiscussionInbox) baseUpdate;
                 if (updatesOnMainThread == null) {
