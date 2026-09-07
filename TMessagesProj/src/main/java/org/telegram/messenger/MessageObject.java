@@ -11217,7 +11217,14 @@ public class MessageObject {
     }
 
     public boolean isExpiredLiveLocation(int date) {
-        return messageOwner.date + getMedia(messageOwner).period <= date;
+        return isExpiredLiveLocation(messageOwner, date);
+    }
+
+    // [MG] "until stopped" is period 0x7FFFFFFF, and the int sum overflows to a negative value, so
+    // the share read as already over. Widening covers that and any other large period, and replaces
+    // the hand-written 0x7FFFFFFF special cases the callers used to carry.
+    public static boolean isExpiredLiveLocation(TLRPC.Message message, int date) {
+        return (long) message.date + getMedia(message).period <= date;
     }
 
     public boolean isGame() {
