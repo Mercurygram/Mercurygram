@@ -12,12 +12,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import it.belloworld.mercurygram.ui.MgConfirmStopLiveLocationActivity;
+import it.belloworld.mercurygram.ui.MgStopLiveLocationHelper;
+
 public class StopLiveLocationReceiver extends BroadcastReceiver {
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            LocationController.getInstance(a).removeAllLocationSharings();
-        }
-    }
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		if (SharedConfig.mg_liveLocConfirmStop) {
+			Intent activityIntent = new Intent(context, MgConfirmStopLiveLocationActivity.class);
+			activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
+					| Intent.FLAG_ACTIVITY_NO_ANIMATION);
+			context.startActivity(activityIntent);
+			return;
+		}
+		MgStopLiveLocationHelper.stopAllSharings();
+	}
 }

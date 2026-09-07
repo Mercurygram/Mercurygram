@@ -93,6 +93,8 @@ import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.GroupCallActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.LocationActivity;
+
+import it.belloworld.mercurygram.ui.MgAllLiveLocationsAlert;
 import org.telegram.ui.Stories.LivePlayer;
 
 import java.lang.annotation.Retention;
@@ -701,6 +703,17 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         addView(closeButton, LayoutHelper.createFrame(36, 36, Gravity.RIGHT | Gravity.TOP, 0, 0, 4, 0));
         closeButton.setOnClickListener(v -> {
             if (currentStyle == STYLE_LIVE_LOCATION) {
+                Runnable stopAction = () -> {
+                    if (fragment instanceof DialogsActivity) {
+                        it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.stopAllSharings();
+                    } else {
+                        LocationController.getInstance(fragment.getCurrentAccount()).removeSharingLocation(chatActivity.getDialogId());
+                    }
+                };
+                if (!it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.shouldConfirm()) {
+                    stopAction.run();
+                    return;
+                }
                 AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getParentActivity(), resourcesProvider);
                 builder.setTitle(getString(R.string.StopLiveLocationAlertToTitle));
                 if (fragment instanceof DialogsActivity) {
@@ -716,15 +729,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                         builder.setMessage(getString(R.string.AreYouSure));
                     }
                 }
-                builder.setPositiveButton(getString(R.string.Stop), (dialogInterface, i) -> {
-                    if (fragment instanceof DialogsActivity) {
-                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                            LocationController.getInstance(a).removeAllLocationSharings();
-                        }
-                    } else {
-                        LocationController.getInstance(fragment.getCurrentAccount()).removeSharingLocation(chatActivity.getDialogId());
-                    }
-                });
+                builder.setPositiveButton(getString(R.string.Stop), (dialogInterface, i) -> stopAction.run());
                 builder.setNegativeButton(getString(R.string.Cancel), null);
                 AlertDialog alertDialog = builder.create();
                 builder.show();
@@ -815,7 +820,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 if (did != 0) {
                     openSharingLocation(LocationController.getInstance(account).getSharingLocationInfo(did));
                 } else {
-                    fragment.showDialog(new SharingLocationsAlert(getContext(), this::openSharingLocation, resourcesProvider));
+                    MgAllLiveLocationsAlert.show(fragment, this::openSharingLocation, this::openIncomingLiveLocation, resourcesProvider);
                 }
             } else if (currentStyle == STYLE_ACTIVE_GROUP_CALL) {
                 if (VoIPService.getSharedInstance() != null && getContext() instanceof LaunchActivity) {
@@ -1050,6 +1055,19 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         }
     }
 
+    private void openIncomingLiveLocation(int account, MessageObject messageObject) {
+        if (messageObject == null || !(fragment.getParentActivity() instanceof LaunchActivity)) {
+            return;
+        }
+        LaunchActivity launchActivity = ((LaunchActivity) fragment.getParentActivity());
+        launchActivity.switchToAccount(account, true);
+        LocationActivity locationActivity = new LocationActivity(2);
+        locationActivity.setMessageObject(messageObject);
+        final long dialog_id = messageObject.getDialogId();
+        locationActivity.setDelegate((location, live, notify, scheduleDate, payStars) -> SendMessagesHelper.getInstance(account).sendMessage(SendMessagesHelper.SendMessageParams.of(location, dialog_id, null, null, null, null, notify, scheduleDate, 0)));
+        launchActivity.presentFragment(locationActivity);
+    }
+
     private void openSharingLocation(final LocationController.SharingLocationInfo info) {
         if (info == null || !(fragment.getParentActivity() instanceof LaunchActivity)) {
             return;
@@ -1073,7 +1091,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         boolean show = false;
         if (isLocation) {
             if (fragment instanceof DialogsActivity) {
-                show = LocationController.getLocationsCount() != 0;
+                show = LocationController.getLiveLocationBannerCount() > 0;
             } else {
                 show = LocationController.getInstance(fragment.getCurrentAccount()).isSharingLocation(chatActivity.getDialogId());
             }
@@ -1613,7 +1631,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         }
         boolean show;
         if (fragment instanceof DialogsActivity) {
-            show = LocationController.getLocationsCount() != 0;
+            LocationController.refreshIncomingLiveLocationsCount();
+            show = LocationController.getLiveLocationBannerCount() > 0;
         } else {
             show = LocationController.getInstance(fragment.getCurrentAccount()).isSharingLocation(chatActivity.getDialogId());
         }
@@ -1749,7 +1768,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 if (message.media == null) {
                     continue;
                 }
-                if (message.date + message.media.period > date) {
+                if (message.date + message.media.period > date || message.media.period == 0x7FFFFFFF) {
                     long fromId = MessageObject.getFromChatId(message);
                     if (notYouUser == null && fromId != currentUserId) {
                         notYouUser = MessagesController.getInstance(currentAccount).getUser(fromId);

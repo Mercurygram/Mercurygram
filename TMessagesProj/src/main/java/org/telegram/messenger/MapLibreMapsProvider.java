@@ -283,19 +283,23 @@ public class MapLibreMapsProvider implements IMapsProvider {
         @Override
         public void moveCamera(ICameraUpdate update) {
             hasCameraMoved = true;
-            if (update instanceof MapLibreCameraUpdate) {
-                MapLibreCameraUpdate u = (MapLibreCameraUpdate) update;
-                org.maplibre.android.geometry.LatLng ll = new org.maplibre.android.geometry.LatLng(u.latLng.latitude, u.latLng.longitude);
-                if (u.zoom > 0) {
-                    mapLibreMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ll, u.zoom));
-                } else {
-                    mapLibreMap.moveCamera(CameraUpdateFactory.newLatLng(ll));
+            try {
+                if (update instanceof MapLibreCameraUpdate) {
+                    MapLibreCameraUpdate u = (MapLibreCameraUpdate) update;
+                    org.maplibre.android.geometry.LatLng ll = new org.maplibre.android.geometry.LatLng(u.latLng.latitude, u.latLng.longitude);
+                    if (u.zoom > 0) {
+                        mapLibreMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ll, u.zoom));
+                    } else {
+                        mapLibreMap.moveCamera(CameraUpdateFactory.newLatLng(ll));
+                    }
+                } else if (update instanceof MapLibreCameraUpdateBounds) {
+                    MapLibreCameraUpdateBounds u = (MapLibreCameraUpdateBounds) update;
+                    if (u.bounds != null && u.bounds.latLngBounds != null) {
+                        mapLibreMap.moveCamera(CameraUpdateFactory.newLatLngBounds(u.bounds.latLngBounds, u.padding));
+                    }
                 }
-            } else if (update instanceof MapLibreCameraUpdateBounds) {
-                MapLibreCameraUpdateBounds u = (MapLibreCameraUpdateBounds) update;
-                if (u.bounds != null && u.bounds.latLngBounds != null) {
-                    mapLibreMap.moveCamera(CameraUpdateFactory.newLatLngBounds(u.bounds.latLngBounds, u.padding));
-                }
+            } catch (Exception e) {
+                FileLog.e(e);
             }
         }
 
@@ -305,22 +309,29 @@ public class MapLibreMapsProvider implements IMapsProvider {
                 @Override public void onFinish() { callback.onFinish(); }
                 @Override public void onCancel() { callback.onCancel(); }
             };
-            if (update instanceof MapLibreCameraUpdate) {
-                MapLibreCameraUpdate u = (MapLibreCameraUpdate) update;
-                org.maplibre.android.geometry.LatLng ll = new org.maplibre.android.geometry.LatLng(u.latLng.latitude, u.latLng.longitude);
-                org.maplibre.android.camera.CameraUpdate cu = u.zoom > 0
-                        ? CameraUpdateFactory.newLatLngZoom(ll, u.zoom)
-                        : CameraUpdateFactory.newLatLng(ll);
-                mapLibreMap.animateCamera(cu, duration, cb);
-            } else if (update instanceof MapLibreCameraUpdateBounds) {
-                MapLibreCameraUpdateBounds u = (MapLibreCameraUpdateBounds) update;
-                if (u.bounds != null && u.bounds.latLngBounds != null) {
-                    mapLibreMap.animateCamera(CameraUpdateFactory.newLatLngBounds(u.bounds.latLngBounds, u.padding), duration, cb);
+            try {
+                if (update instanceof MapLibreCameraUpdate) {
+                    MapLibreCameraUpdate u = (MapLibreCameraUpdate) update;
+                    org.maplibre.android.geometry.LatLng ll = new org.maplibre.android.geometry.LatLng(u.latLng.latitude, u.latLng.longitude);
+                    org.maplibre.android.camera.CameraUpdate cu = u.zoom > 0
+                            ? CameraUpdateFactory.newLatLngZoom(ll, u.zoom)
+                            : CameraUpdateFactory.newLatLng(ll);
+                    mapLibreMap.animateCamera(cu, duration, cb);
+                } else if (update instanceof MapLibreCameraUpdateBounds) {
+                    MapLibreCameraUpdateBounds u = (MapLibreCameraUpdateBounds) update;
+                    if (u.bounds != null && u.bounds.latLngBounds != null) {
+                        mapLibreMap.animateCamera(CameraUpdateFactory.newLatLngBounds(u.bounds.latLngBounds, u.padding), duration, cb);
+                    } else if (cb != null) {
+                        cb.onFinish();
+                    }
                 } else if (cb != null) {
                     cb.onFinish();
                 }
-            } else if (cb != null) {
-                cb.onFinish();
+            } catch (Exception e) {
+                FileLog.e(e);
+                if (cb != null) {
+                    cb.onCancel();
+                }
             }
         }
 

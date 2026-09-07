@@ -594,11 +594,21 @@
             <intent-filter>
                 <action android:name="org.telegram.start" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 
 <receiver android:name=".WearReplyReceiver" android:enabled="true"/>
+
+        <activity
+            android:name="it.belloworld.mercurygram.ui.MgConfirmStopLiveLocationActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/Theme.TMessages.TransparentWithAlerts"/>
 
         <receiver android:name=".StopLiveLocationReceiver" android:enabled="true"/>
 
