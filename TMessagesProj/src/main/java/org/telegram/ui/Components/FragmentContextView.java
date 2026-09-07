@@ -701,6 +701,17 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         addView(closeButton, LayoutHelper.createFrame(36, 36, Gravity.RIGHT | Gravity.TOP, 0, 0, 4, 0));
         closeButton.setOnClickListener(v -> {
             if (currentStyle == STYLE_LIVE_LOCATION) {
+                Runnable stopAction = () -> {
+                    if (fragment instanceof DialogsActivity) {
+                        it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.stopAllSharings();
+                    } else {
+                        LocationController.getInstance(fragment.getCurrentAccount()).removeSharingLocation(chatActivity.getDialogId());
+                    }
+                };
+                if (!it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.shouldConfirm()) {
+                    stopAction.run();
+                    return;
+                }
                 AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getParentActivity(), resourcesProvider);
                 builder.setTitle(getString(R.string.StopLiveLocationAlertToTitle));
                 if (fragment instanceof DialogsActivity) {
@@ -716,15 +727,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                         builder.setMessage(getString(R.string.AreYouSure));
                     }
                 }
-                builder.setPositiveButton(getString(R.string.Stop), (dialogInterface, i) -> {
-                    if (fragment instanceof DialogsActivity) {
-                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                            LocationController.getInstance(a).removeAllLocationSharings();
-                        }
-                    } else {
-                        LocationController.getInstance(fragment.getCurrentAccount()).removeSharingLocation(chatActivity.getDialogId());
-                    }
-                });
+                builder.setPositiveButton(getString(R.string.Stop), (dialogInterface, i) -> stopAction.run());
                 builder.setNegativeButton(getString(R.string.Cancel), null);
                 AlertDialog alertDialog = builder.create();
                 builder.show();

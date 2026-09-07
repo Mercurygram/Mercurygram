@@ -45,6 +45,7 @@ public class MgShareLocationBehaviourActivity extends UniversalFragment {
 	private static final int ID_FIX_LOG = 12;
 	private static final int ID_FIX_LOG_VIEW = 13;
 	private static final int ID_FIX_LOG_CLEAR = 14;
+	private static final int ID_CONFIRM_STOP = 16;
 
 	private TextView policyDescriptionView;
 
@@ -85,6 +86,9 @@ public class MgShareLocationBehaviourActivity extends UniversalFragment {
 		items.add(UItem.asButton(ID_DEFAULT_PERIOD, LocaleController.getString(R.string.MercurygramLiveLocDefaultPeriod),
 				MgShareLocationHelper.formatPeriodLabel(SharedConfig.mg_liveLocDefaultSharePeriodSec)));
 		items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramLiveLocDefaultPeriodAbout)));
+		items.add(MgSettingsScope.globalCheck(ID_CONFIRM_STOP, LocaleController.getString(R.string.MercurygramLiveLocConfirmStop))
+				.setChecked(SharedConfig.mg_liveLocConfirmStop));
+		items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramLiveLocConfirmStopAbout)));
 		items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramLiveLocViewerLogHeader)));
 		items.add(MgSettingsScope.globalCheck(ID_VIEWER_LOG, LocaleController.getString(R.string.MercurygramLiveLocViewerLogEnable))
 				.setChecked(MgLiveLocationViewerLog.isEnabled()));
@@ -191,6 +195,10 @@ public class MgShareLocationBehaviourActivity extends UniversalFragment {
 				break;
 			case ID_DEFAULT_PERIOD:
 				showDefaultPeriodPicker();
+				break;
+			case ID_CONFIRM_STOP:
+				SharedConfig.setMgLiveLocConfirmStop(!SharedConfig.mg_liveLocConfirmStop);
+				refreshList();
 				break;
 			case ID_VIEWER_LOG:
 				MgLiveLocationViewerLog.setEnabled(!MgLiveLocationViewerLog.isEnabled());

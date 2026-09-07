@@ -1212,16 +1212,20 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
                     }
                 }
             } else if (locationType == LOCATION_TYPE_LIVE && getLocationController().isSharingLocation(dialogId) && adapter.getItemViewType(position) == LocationActivityAdapter.VIEW_TYPE_DELETE_LIVE_LOCATION) {
-                                                            adapter.notifyDataSetChanged();
-                                            finishFragment();
-
+                it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.confirmStopSharing(
+                        getParentActivity(), getResourceProvider(), currentAccount, dialogId, () -> {
+                            adapter.notifyDataSetChanged();
+                            finishFragment();
+                        });
             } else if (locationType == LOCATION_TYPE_LIVE && getLocationController().isSharingLocation(dialogId) && adapter.getItemViewType(position) == LocationActivityAdapter.VIEW_TYPE_LIVE_LOCATION) {
                 openShareLiveLocation(getLocationController().getSharingLocationInfo(dialogId).period != 0x7FFFFFFF, 0);
             } else if (position == 2 && locationType == 1 || position == 1 && locationType == 2 || position == 3 && locationType == 3) {
                 if (getLocationController().isSharingLocation(dialogId)) {
-                                                                        adapter.notifyDataSetChanged();
-                                                    finishFragment();
-
+                    it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.confirmStopSharing(
+                            getParentActivity(), getResourceProvider(), currentAccount, dialogId, () -> {
+                                adapter.notifyDataSetChanged();
+                                finishFragment();
+                            });
                 } else {
                     openShareLiveLocation(false, 0);
                 }

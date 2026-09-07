@@ -600,6 +600,14 @@
 
 <receiver android:name=".WearReplyReceiver" android:enabled="true"/>
 
+        <activity
+            android:name="it.belloworld.mercurygram.ui.MgConfirmStopLiveLocationActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/Theme.TMessages.TransparentWithAlerts"/>
+
         <receiver android:name=".StopLiveLocationReceiver" android:enabled="true"/>
 
         <receiver android:name=".PopupReplyReceiver" android:enabled="true"/>

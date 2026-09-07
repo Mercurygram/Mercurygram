@@ -426,6 +426,7 @@ public class SharedConfig {
                         it.belloworld.mercurygram.MgLiveLocationThresholds.STEPS_VERSION)
                 .putBoolean("mg_liveLocViewerBoost", mg_liveLocViewerBoost)
                 .putBoolean("mg_liveLocViewerBoostInBatterySaver", mg_liveLocViewerBoostInBatterySaver)
+                .putBoolean("mg_liveLocConfirmStop", mg_liveLocConfirmStop)
                 .putInt("mg_liveLocDefaultSharePeriodSec", mg_liveLocDefaultSharePeriodSec)
                 .putInt("mg_liveLocLastCustomSharePeriodSec", mg_liveLocLastCustomSharePeriodSec)
                 .putInt("mg_liveLocBatterySaverMultiplier", mg_liveLocBatterySaverMultiplier)
@@ -473,6 +474,8 @@ public class SharedConfig {
         persistMgLiveLoc();
     }
 
+    public static void setMgLiveLocConfirmStop(boolean value) {
+        mg_liveLocConfirmStop = value;
         persistMgLiveLoc();
     }
 
@@ -859,6 +862,8 @@ public class SharedConfig {
     public static int mg_liveLocAlwaysOffUpperIndex = it.belloworld.mercurygram.MgLiveLocationThresholds.DEFAULT_UPPER_INDEX;
     public static boolean mg_liveLocViewerBoost = true;
     public static boolean mg_liveLocViewerBoostInBatterySaver = false;
+	/** Confirm before intentionally stopping outgoing live location (default off). */
+	public static boolean mg_liveLocConfirmStop = false;
     public static int mg_liveLocDefaultSharePeriodSec = 15 * 60;
     public static int mg_liveLocLastCustomSharePeriodSec = 2 * 60 * 60;
     /** 0 = off; 1/2/3/5/8 = on with that wait multiplier. Default ×3. */
@@ -1212,6 +1217,7 @@ public class SharedConfig {
                 it.belloworld.mercurygram.MgLiveLocationThresholds.STEPS_VERSION);
         editor.putBoolean("mg_liveLocViewerBoost", mg_liveLocViewerBoost);
         editor.putBoolean("mg_liveLocViewerBoostInBatterySaver", mg_liveLocViewerBoostInBatterySaver);
+        editor.putBoolean("mg_liveLocConfirmStop", mg_liveLocConfirmStop);
         editor.putInt("mg_liveLocDefaultSharePeriodSec", mg_liveLocDefaultSharePeriodSec);
         editor.putInt("mg_liveLocLastCustomSharePeriodSec", mg_liveLocLastCustomSharePeriodSec);
         editor.putInt("mg_liveLocBatterySaverMultiplier", mg_liveLocBatterySaverMultiplier);
@@ -1312,6 +1318,7 @@ public class SharedConfig {
         }
         mg_liveLocViewerBoost = preferences.getBoolean("mg_liveLocViewerBoost", true);
         mg_liveLocViewerBoostInBatterySaver = preferences.getBoolean("mg_liveLocViewerBoostInBatterySaver", false);
+		mg_liveLocConfirmStop = preferences.getBoolean("mg_liveLocConfirmStop", false);
         mg_liveLocDefaultSharePeriodSec = Math.max(60, preferences.getInt("mg_liveLocDefaultSharePeriodSec", 15 * 60));
         mg_liveLocLastCustomSharePeriodSec = Math.max(60, Math.min(it.belloworld.mercurygram.ui.MgShareLocationHelper.MAX_CUSTOM_SEC,
                 preferences.getInt("mg_liveLocLastCustomSharePeriodSec", 2 * 60 * 60)));

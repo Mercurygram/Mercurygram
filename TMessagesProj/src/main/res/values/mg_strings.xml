@@ -280,6 +280,8 @@
 	<string name="MercurygramLiveLocShareHeader">New shares</string>
 	<string name="MercurygramLiveLocDefaultPeriod">Default share duration</string>
 	<string name="MercurygramLiveLocDefaultPeriodAbout">Pre-selected option when sharing a live location. Custom can be up to 99 days; Telegram accepts at most 1 day per request, so longer targets are started at 1 day and auto-extended in ≤24h steps (up to ~90 days remaining). Forever skips the limit.</string>
+	<string name="MercurygramLiveLocConfirmStop">Confirm before stopping</string>
+	<string name="MercurygramLiveLocConfirmStopAbout">Ask for confirmation before stopping live location sharing, including from the notification. Reduces accidental stops.</string>
 	<string name="MercurygramLiveLocCustomPeriod">Custom duration</string>
 	<string name="MercurygramLiveLocCustomPeriodValue">Custom: %1$s</string>
 	<string name="MercurygramLiveLocCustom">Custom…</string>

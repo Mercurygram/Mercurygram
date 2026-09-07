@@ -226,8 +226,10 @@ public class LocationSharingService extends Service implements NotificationCente
 				builder.setShowWhen(false);
 				builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
 				builder.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE);
-				Intent stopIntent = new Intent(ApplicationLoader.applicationContext, StopLiveLocationReceiver.class);
-				builder.addAction(0, LocaleController.getString(R.string.StopLiveLocation), PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 2, stopIntent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
+				Intent stopIntent = new Intent(ApplicationLoader.applicationContext, it.belloworld.mercurygram.ui.MgConfirmStopLiveLocationActivity.class);
+				stopIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
+						| Intent.FLAG_ACTIVITY_NO_ANIMATION);
+				builder.addAction(0, LocaleController.getString(R.string.StopLiveLocation), PendingIntent.getActivity(ApplicationLoader.applicationContext, 2, stopIntent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
 			}
 
 			updateNotification(false);

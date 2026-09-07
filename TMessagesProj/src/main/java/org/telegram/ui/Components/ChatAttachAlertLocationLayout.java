@@ -751,8 +751,9 @@ public class ChatAttachAlertLocationLayout extends ChatAttachAlert.AttachAlertLa
                 return;
             } else if (position == 2 && locationType == LOCATION_TYPE_SEND_WITH_LIVE) {
                 if (getLocationController().isSharingLocation(dialogId)) {
-                    getLocationController().removeSharingLocation(dialogId);
-                    parentAlert.dismiss(true);
+                    it.belloworld.mercurygram.ui.MgStopLiveLocationHelper.confirmStopSharing(
+                            getParentActivity(), resourcesProvider, parentAlert.currentAccount, dialogId,
+                            () -> parentAlert.dismiss(true));
                 } else {
                     if (myLocation == null && locationDenied) {
                         AlertsCreator.createLocationRequiredDialog(getParentActivity(), true).show();
@@ -1143,7 +1144,7 @@ public class ChatAttachAlertLocationLayout extends ChatAttachAlert.AttachAlertLa
         if (DialogObject.isUserDialog(dialogId)) {
             user = parentAlert.baseFragment.getMessagesController().getUser(dialogId);
         }
-                it.belloworld.mercurygram.ui.MgShareLocationHelper.openSharePeriodDialog(getParentActivity(), user, param -> {
+        it.belloworld.mercurygram.ui.MgShareLocationHelper.openSharePeriodDialog(getParentActivity(), user, param -> {
             AlertsCreator.ensurePaidMessageConfirmation(parentAlert.currentAccount, parentAlert.getDialogId(), 1 + parentAlert.getAdditionalMessagesCount(), payStars -> {
                 int target = param;
                 int apiPeriod;
