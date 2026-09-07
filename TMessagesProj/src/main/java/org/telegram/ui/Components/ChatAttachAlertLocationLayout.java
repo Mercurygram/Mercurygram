@@ -1143,17 +1143,38 @@ public class ChatAttachAlertLocationLayout extends ChatAttachAlert.AttachAlertLa
         if (DialogObject.isUserDialog(dialogId)) {
             user = parentAlert.baseFragment.getMessagesController().getUser(dialogId);
         }
-        AlertsCreator.createLocationUpdateDialog(getParentActivity(), false, user, param -> {
+                it.belloworld.mercurygram.ui.MgShareLocationHelper.openSharePeriodDialog(getParentActivity(), user, param -> {
             AlertsCreator.ensurePaidMessageConfirmation(parentAlert.currentAccount, parentAlert.getDialogId(), 1 + parentAlert.getAdditionalMessagesCount(), payStars -> {
+                int target = param;
+                int apiPeriod;
+                if (it.belloworld.mercurygram.ui.MgShareLocationHelper.isShareUntilEncoded(target)) {
+                    int end = it.belloworld.mercurygram.ui.MgShareLocationHelper.decodeShareUntil(target);
+                    int nowSec = (int) (System.currentTimeMillis() / 1000L);
+                    end = it.belloworld.mercurygram.ui.MgShareLocationHelper.clampTargetEndSec(nowSec, end);
+                    target = Math.max(it.belloworld.mercurygram.ui.MgShareLocationHelper.MIN_CUSTOM_SEC, end - nowSec);
+                    apiPeriod = it.belloworld.mercurygram.ui.MgShareLocationHelper.periodForApiStart(target);
+                    if (target > apiPeriod) {
+                        it.belloworld.mercurygram.MgLiveLocationExtendScheduler.setPendingTargetEndSec(parentAlert.currentAccount, dialogId, end);
+                    } else {
+                        it.belloworld.mercurygram.MgLiveLocationExtendScheduler.cancel(parentAlert.currentAccount, dialogId);
+                    }
+                } else {
+                    apiPeriod = it.belloworld.mercurygram.ui.MgShareLocationHelper.periodForApiStart(target);
+                    if (target != it.belloworld.mercurygram.ui.MgShareLocationHelper.FOREVER_PERIOD && target > apiPeriod) {
+                        it.belloworld.mercurygram.MgLiveLocationExtendScheduler.setPendingTargetFromDuration(parentAlert.currentAccount, dialogId, target);
+                    } else {
+                        it.belloworld.mercurygram.MgLiveLocationExtendScheduler.cancel(parentAlert.currentAccount, dialogId);
+                    }
+                }
                 final TLRPC.TL_messageMediaGeoLive location = new TLRPC.TL_messageMediaGeoLive();
                 location.geo = new TLRPC.TL_geoPoint();
                 location.geo.lat = AndroidUtilities.fixLocationCoord(myLocation.getLatitude());
                 location.geo._long = AndroidUtilities.fixLocationCoord(myLocation.getLongitude());
-                location.period = param;
+                location.period = apiPeriod;
                 delegate.didSelectLocation(location, locationType, true, 0, payStars);
                 parentAlert.dismiss(true);
             });
-        }, resourcesProvider).show();
+        }, resourcesProvider);
     }
 
     private Bitmap[] bitmapCache = new Bitmap[7];
