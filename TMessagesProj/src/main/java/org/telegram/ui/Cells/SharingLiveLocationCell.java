@@ -394,8 +394,10 @@ public class SharingLiveLocationCell extends FrameLayout {
             stopTime = currentInfo.stopTime;
             period = currentInfo.period;
         } else {
-            stopTime = liveLocation.object.date + liveLocation.object.media.period;
             period = liveLocation.object.media.period;
+            // [MG] "until stopped" is period 0x7FFFFFFF and the sum overflows to a negative value,
+            // the same saturation SharingLocationInfo.stopTime already gets when it is built
+            stopTime = period == 0x7FFFFFFF ? Integer.MAX_VALUE : liveLocation.object.date + period;
         }
         boolean forever = period == 0x7FFFFFFF;
         int currentTime = ConnectionsManager.getInstance(currentAccount).getCurrentTime();
