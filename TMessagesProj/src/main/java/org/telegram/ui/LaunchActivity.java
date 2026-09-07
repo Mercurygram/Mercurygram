@@ -255,6 +255,7 @@ import java.util.zip.ZipInputStream;
 
 import it.belloworld.mercurygram.HiddenAccountHelper;
 import it.belloworld.mercurygram.MgNetworkChangeWatcher;
+import it.belloworld.mercurygram.location.MgBackgroundLocationGate;
 import tw.nekomimi.nekogram.helpers.MonetHelper;
 
 public class LaunchActivity extends BasePermissionsActivity implements INavigationLayout.INavigationLayoutDelegate, NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, IPipActivity {
@@ -7032,6 +7033,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         MediaController.getInstance().setFeedbackView(feedbackView = actionBarLayout.getView(), true);
         ApplicationLoader.mainInterfacePaused = false;
         MgNetworkChangeWatcher.onForegroundStateChanged(false);
+        MgBackgroundLocationGate.onAppForeground();
         MessagesController.getInstance(currentAccount).sortDialogs(null);
         showLanguageAlert(false);
         Utilities.stageQueue.postRunnable(() -> {
