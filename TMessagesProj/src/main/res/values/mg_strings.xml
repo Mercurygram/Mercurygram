@@ -378,4 +378,27 @@
     <string name="MercurygramLiveLocMaxAcquireOff">No limit</string>
     <string name="MercurygramLiveLocMaxAcquireFromHistory">From last 5 fixes (μ+σ)</string>
     <string name="MercurygramLiveLocAbout">GPS stays on until a new accurate fix (≤25 m), then for the dwell time, then turns off. The policy slider uses remaining time on your share, not the duration you picked when starting it. If max wait expires, GPS stays on for one more dwell window in case a late fix arrives.</string>
+    <string name="ThemeEditorRegionFilter">Filter by region</string>
+    <string name="ThemeEditorRegionFilterClear">Clear region filter</string>
+    <string name="ThemeEditorRegionFilterSection">%1$s · %2$d%%</string>
+    <string name="ThemeEditorRegionFilterWholeView">Whole view</string>
+    <string name="MercurygramResetTheme">Reset theme</string>
+    <string name="MercurygramResetScopeHeader">Reset</string>
+    <string name="MercurygramResetScopeCurrent">Current theme</string>
+    <string name="MercurygramResetScopeAll">All themes</string>
+    <string name="MercurygramResetCategoryHeader">What to reset</string>
+    <string name="MercurygramResetCheckLooks">Emoji looks (%1$s)</string>
+    <string name="MercurygramResetCheckBaseAll">Base themes (%1$s)</string>
+    <string name="MercurygramResetCheckBaseCurrent">Base theme (%1$s)</string>
+    <string name="MercurygramResetCheckDeleteCustom">Delete custom themes (*.attheme)</string>
+    <string name="MercurygramResetAllThemesTitle">Reset all themes?</string>
+    <string name="MercurygramResetAllThemesMessage">This removes custom .attheme files and restores emoji looks and built-in theme accents to defaults.</string>
+    <string name="MercurygramResetAllLooksMessage">This restores ready-made emoji looks to defaults on all built-in themes.</string>
+    <string name="MercurygramResetAllBaseAccentsMessage">This restores Classic…Monet base theme accents/colors to defaults (custom .attheme files stay).</string>
+    <string name="MercurygramResetAllCustomMessage">This permanently removes all custom .attheme files (built-in themes stay).</string>
+    <string name="MercurygramResetAllLooksAndBaseMessage">This restores emoji looks and Classic…Monet accents to defaults (custom .attheme files stay).</string>
+    <string name="MercurygramResetAllLooksAndCustomMessage">This restores emoji looks to defaults and permanently removes all custom .attheme files.</string>
+    <string name="MercurygramResetAllBaseAndCustomMessage">This restores Classic…Monet accents to defaults and permanently removes all custom .attheme files.</string>
+    <string name="MercurygramAutoNightDayNightThemes">Day and night themes</string>
+    <string name="MercurygramAutoNightDayNightThemesInfo">Pick your light and dark looks in Browse Themes (both stay selected). Auto-Night switches between that pair — there is no separate preferred night theme.</string>
 </resources>

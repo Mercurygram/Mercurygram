@@ -117,11 +117,6 @@ public class DefaultThemesPreviewCell extends LinearLayout {
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, info, false, null, accentId);
 
             selectedPosition = position;
-            for (int i = 0; i < adapter.items.size(); i++) {
-                adapter.items.get(i).isSelected = i == selectedPosition;
-            }
-            adapter.setSelectedItem(selectedPosition);
-
             for (int i = 0; i < recyclerView.getChildCount(); i++) {
                 ThemeSmallPreviewView child = (ThemeSmallPreviewView) recyclerView.getChildAt(i);
                 if (child != view) {
@@ -134,8 +129,10 @@ public class DefaultThemesPreviewCell extends LinearLayout {
                 SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE).edit();
                 editor.putString(currentType == ThemeActivity.THEME_TYPE_NIGHT || info.isDark() ? "lastDarkTheme" : "lastDayTheme", info.getKey());
                 editor.commit();
+				Theme.syncRememberedDayNightTheme(info);
             }
 
+			updateSelectedPosition();
             Theme.turnOffAutoNight(parentFragment);
         });
 
@@ -296,7 +293,8 @@ public class DefaultThemesPreviewCell extends LinearLayout {
 
         if (!MediaDataController.getInstance(parentFragment.getCurrentAccount()).defaultEmojiThemes.isEmpty()) {
             ArrayList<ChatThemeBottomSheet.ChatThemeItem> themes = new ArrayList<>(MediaDataController.getInstance(parentFragment.getCurrentAccount()).defaultEmojiThemes);
-            if (currentType == ThemeActivity.THEME_TYPE_BASIC) {
+			// Mercurygram: 🎨 last-custom slot in Chat Settings and Browse themes (shortcut to last custom accent mix; not a .attheme file)
+            if (currentType == ThemeActivity.THEME_TYPE_BASIC || currentType == ThemeActivity.THEME_TYPE_THEMES_BROWSER) {
 
                 EmojiThemes chatTheme = EmojiThemes.createPreviewCustom(parentFragment.getCurrentAccount());
                 chatTheme.loadPreviewColors(parentFragment.getCurrentAccount());
@@ -373,7 +371,24 @@ public class DefaultThemesPreviewCell extends LinearLayout {
         }
         if (adapter.items != null) {
             for (int i = 0; i < adapter.items.size(); i++) {
-                adapter.items.get(i).themeIndex = themeIndex;
+				int idx = themeIndex;
+				// Mercurygram: createPreviewCustom pads indices 1/3 with null — map to light/dark custom slots
+				if (adapter.items.get(i).chatTheme != null && adapter.items.get(i).chatTheme.getThemeItem(idx) == null) {
+					if (idx == 1) {
+						idx = 0;
+					} else if (idx == 3) {
+						idx = 2;
+					}
+					if (adapter.items.get(i).chatTheme.getThemeItem(idx) == null) {
+						for (int t = 0; t < 4; t++) {
+							if (adapter.items.get(i).chatTheme.getThemeItem(t) != null) {
+								idx = t;
+								break;
+							}
+						}
+					}
+				}
+                adapter.items.get(i).themeIndex = idx;
             }
             adapter.notifyItemRangeChanged(0, adapter.items.size());
         }
@@ -385,39 +400,76 @@ public class DefaultThemesPreviewCell extends LinearLayout {
             return;
         }
         selectedPosition = -1;
+		int rememberedPosition = -1;
+		Theme.ThemeInfo rememberedOther = Theme.getRememberedOtherModeTheme();
+		int[] oppositeIndices = rememberedOther != null && rememberedOther.isDark() ? new int[]{2, 3} : new int[]{0, 1};
         for (int i = 0; i < adapter.items.size(); i++) {
             TLRPC.TL_theme theme = adapter.items.get(i).chatTheme.getTlTheme(themeIndex);
             Theme.ThemeInfo themeInfo = adapter.items.get(i).chatTheme.getThemeInfo(themeIndex);
             if (theme != null) {
                 int settingsIndex = adapter.items.get(i).chatTheme.getSettingsIndex(themeIndex);
+				if (theme.settings != null && settingsIndex >= 0 && settingsIndex < theme.settings.size()) {
                 String key = Theme.getBaseThemeKey(theme.settings.get(settingsIndex));
                 if (Theme.getActiveTheme().name.equals(key)) {
                     if (Theme.getActiveTheme().accentsByThemeId == null) {
                         selectedPosition = i;
-                        break;
                     } else {
                         Theme.ThemeAccent accent = Theme.getActiveTheme().accentsByThemeId.get(theme.id);
                         if (accent != null && accent.id == Theme.getActiveTheme().currentAccentId) {
                             selectedPosition = i;
-                            break;
                         }
                     }
                 }
+				}
             } else if (themeInfo != null) {
                 String key = themeInfo.getKey();
                 if (Theme.getActiveTheme().name.equals(key) && adapter.items.get(i).chatTheme.getAccentId(themeIndex) == Theme.getActiveTheme().currentAccentId) {
                     selectedPosition = i;
-                    break;
                 }
             }
+			// Mercurygram: also select the card that matches the remembered other day/night look
+			if (rememberedOther != null && rememberedPosition < 0) {
+				for (int oi : oppositeIndices) {
+					EmojiThemes.ThemeItem otherItem = adapter.items.get(i).chatTheme.getThemeItem(oi);
+					if (otherItem == null) {
+						continue;
+					}
+					TLRPC.TL_theme otherTl = adapter.items.get(i).chatTheme.getTlTheme(oi);
+					Theme.ThemeInfo otherInfo = adapter.items.get(i).chatTheme.getThemeInfo(oi);
+					if (otherTl != null) {
+						int settingsIndex = adapter.items.get(i).chatTheme.getSettingsIndex(oi);
+						if (otherTl.settings == null || settingsIndex < 0 || settingsIndex >= otherTl.settings.size()) {
+							continue;
+						}
+						String key = Theme.getBaseThemeKey(otherTl.settings.get(settingsIndex));
+						if (rememberedOther.name.equals(key)) {
+							if (rememberedOther.accentsByThemeId == null) {
+								rememberedPosition = i;
+								break;
+							}
+							Theme.ThemeAccent accent = rememberedOther.accentsByThemeId.get(otherTl.id);
+							if (accent != null && accent.id == rememberedOther.currentAccentId) {
+								rememberedPosition = i;
+								break;
+							}
+						}
+					} else if (otherInfo != null) {
+						if (rememberedOther.name.equals(otherInfo.getKey()) && adapter.items.get(i).chatTheme.getAccentId(oi) == rememberedOther.currentAccentId) {
+							rememberedPosition = i;
+							break;
+						}
+					}
+				}
+			}
         }
         if (selectedPosition == -1 && currentType != ThemeActivity.THEME_TYPE_THEMES_BROWSER) {
             selectedPosition = adapter.items.size() - 1;
         }
         for (int i = 0; i < adapter.items.size(); i++) {
-            adapter.items.get(i).isSelected = i == selectedPosition;
+            adapter.items.get(i).isSelected = i == selectedPosition || i == rememberedPosition;
         }
         adapter.setSelectedItem(selectedPosition);
+		adapter.notifyItemRangeChanged(0, adapter.items.size());
     }
 
     public void selectTheme(Theme.ThemeInfo themeInfo) {
@@ -433,6 +485,7 @@ public class DefaultThemesPreviewCell extends LinearLayout {
             SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE).edit();
             editor.putString(currentType == ThemeActivity.THEME_TYPE_NIGHT || themeInfo.isDark() ? "lastDarkTheme" : "lastDayTheme", themeInfo.getKey());
             editor.commit();
+			Theme.syncRememberedDayNightTheme(themeInfo);
         }
         if (currentType == ThemeActivity.THEME_TYPE_NIGHT) {
             if (themeInfo == Theme.getCurrentNightTheme()) {

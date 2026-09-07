@@ -1136,8 +1136,9 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
 
             view.setBackgroundColor(Theme.getColor(Theme.key_dialogBackgroundGray));
             view.setItem(newItem, parentDialogId, animated);
-            view.setSelected(position == selectedItemPosition, animated);
-            if (position == selectedItemPosition) {
+			// Mercurygram: honor item.isSelected so day+night remembered looks can both show as selected
+            view.setSelected(newItem.isSelected || position == selectedItemPosition, animated);
+            if (position == selectedItemPosition || newItem.isSelected) {
                 selectedViewRef = new WeakReference<>(view);
             }
         }
@@ -1306,15 +1307,14 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
             if (selectedItemPosition == position) {
                 return;
             }
+            int previous = selectedItemPosition;
+            selectedItemPosition = position;
+            if (previous >= 0) {
+                notifyItemChanged(previous);
+            }
             if (selectedItemPosition >= 0) {
                 notifyItemChanged(selectedItemPosition);
-                ThemeSmallPreviewView view = selectedViewRef == null ? null : selectedViewRef.get();
-                if (view != null) {
-                    view.setSelected(false);
-                }
             }
-            selectedItemPosition = position;
-            notifyItemChanged(selectedItemPosition);
         }
 
         @Override

@@ -27,6 +27,7 @@ import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.RadialGradient;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
@@ -72,12 +73,15 @@ import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeColors;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.GraySectionCell;
 import org.telegram.ui.Cells.TextColorThemeCell;
 import org.telegram.ui.LaunchActivity;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class ThemeEditorView {
 
@@ -133,10 +137,12 @@ public class ThemeEditorView {
     public class EditorAlert extends BottomSheet {
 
         private ColorPicker colorPicker;
+        private RegionPickerView regionPickerView;
         private RecyclerListView listView;
         private FrameLayout frameLayout;
         private EmptyTextProgressView searchEmptyView;
         private SearchField searchField;
+        private ImageView regionFilterButton;
         private LinearLayoutManager layoutManager;
         private ListAdapter listAdapter;
         private SearchAdapter searchAdapter;
@@ -158,6 +164,11 @@ public class ThemeEditorView {
         private boolean startedColorChange;
         private boolean ignoreTextChange;
 
+        private boolean regionFilterActive;
+        private boolean regionPickInProgress;
+        private HashSet<Integer> regionAllowedKeys = new HashSet<>();
+        private ArrayList<ThemeDescription> allDescriptions;
+
         private class SearchField extends FrameLayout {
 
             private ImageView clearSearchImageView;
@@ -167,14 +178,17 @@ public class ThemeEditorView {
             public SearchField(Context context) {
                 super(context);
 
+				// Room for region-filter button to the right (~1/3 search-bar height icon in a 36dp slot).
+				final int filterSlot = AndroidUtilities.dp(36);
+
                 View searchBackground = new View(context);
-                searchBackground.setBackgroundDrawable(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), 0xfff2f4f5));
-                addView(searchBackground, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36, Gravity.LEFT | Gravity.TOP, 14, 11, 14, 0));
+                searchBackground.setBackgroundDrawable(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), getThemedColor(Theme.key_dialogSearchBackground)));
+                addView(searchBackground, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36, Gravity.LEFT | Gravity.TOP, 14, 11, 14 + filterSlot, 0));
 
                 ImageView searchIconImageView = new ImageView(context);
                 searchIconImageView.setScaleType(ImageView.ScaleType.CENTER);
                 searchIconImageView.setImageResource(R.drawable.smiles_inputsearch);
-                searchIconImageView.setColorFilter(new PorterDuffColorFilter(0xffa1a8af, PorterDuff.Mode.MULTIPLY));
+                searchIconImageView.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_dialogSearchIcon), PorterDuff.Mode.MULTIPLY));
                 addView(searchIconImageView, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.TOP, 16, 11, 0, 0));
 
                 clearSearchImageView = new ImageView(context);
@@ -183,14 +197,14 @@ public class ThemeEditorView {
                 clearSearchImageView.setImageDrawable(progressDrawable = new CloseProgressDrawable2() {
                     @Override
                     public int getCurrentColor() {
-                        return 0xffa1a8af;
+                        return getThemedColor(Theme.key_dialogSearchIcon);
                     }
                 });
                 progressDrawable.setSide(AndroidUtilities.dp(7));
                 clearSearchImageView.setScaleX(0.1f);
                 clearSearchImageView.setScaleY(0.1f);
                 clearSearchImageView.setAlpha(0.0f);
-                addView(clearSearchImageView, LayoutHelper.createFrame(36, 36, Gravity.RIGHT | Gravity.TOP, 14, 11, 14, 0));
+                addView(clearSearchImageView, LayoutHelper.createFrame(36, 36, Gravity.RIGHT | Gravity.TOP, 14, 11, 14 + filterSlot, 0));
                 clearSearchImageView.setOnClickListener(v -> {
                     searchEditText.setText("");
                     AndroidUtilities.showKeyboard(searchEditText);
@@ -207,8 +221,8 @@ public class ThemeEditorView {
                     }
                 };
                 searchEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-                searchEditText.setHintTextColor(0xff98a0a7);
-                searchEditText.setTextColor(0xff222222);
+                searchEditText.setHintTextColor(getThemedColor(Theme.key_dialogSearchHint));
+                searchEditText.setTextColor(getThemedColor(Theme.key_dialogSearchText));
                 searchEditText.setBackgroundDrawable(null);
                 searchEditText.setPadding(0, 0, 0, 0);
                 searchEditText.setMaxLines(1);
@@ -216,10 +230,10 @@ public class ThemeEditorView {
                 searchEditText.setSingleLine(true);
                 searchEditText.setImeOptions(EditorInfo.IME_ACTION_SEARCH | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
                 searchEditText.setHint(LocaleController.getString(R.string.Search));
-                searchEditText.setCursorColor(0xff50a8eb);
+                searchEditText.setCursorColor(getThemedColor(Theme.key_featuredStickers_addedIcon));
                 searchEditText.setCursorSize(AndroidUtilities.dp(20));
                 searchEditText.setCursorWidth(1.5f);
-                addView(searchEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 40, Gravity.LEFT | Gravity.TOP, 16 + 38, 9, 16 + 30, 0));
+                addView(searchEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 40, Gravity.LEFT | Gravity.TOP, 16 + 38, 9, 16 + 30 + filterSlot, 0));
                 searchEditText.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -339,8 +353,9 @@ public class ThemeEditorView {
                 for (int a = 0; a < 4; a++) {
                     colorEditText[a] = new EditTextBoldCursor(context);
                     colorEditText[a].setInputType(InputType.TYPE_CLASS_NUMBER);
-                    colorEditText[a].setTextColor(0xff212121);
-                    colorEditText[a].setCursorColor(0xff212121);
+                    colorEditText[a].setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+                    colorEditText[a].setCursorColor(getThemedColor(Theme.key_dialogTextBlack));
+                    colorEditText[a].setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
                     colorEditText[a].setCursorSize(AndroidUtilities.dp(20));
                     colorEditText[a].setCursorWidth(1.5f);
                     colorEditText[a].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
@@ -642,10 +657,144 @@ public class ThemeEditorView {
             }
         }
 
+		private class RegionPickerView extends FrameLayout {
+
+			private static final float DEFAULT_RADIUS_PX = 50f;
+			private static final long SHRINK_INTERVAL_MS = 350;
+			private static final float SHRINK_FACTOR = 0.65f; // shrink by 35% of previous
+
+			private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+			private final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+			private final RectF drawRect = new RectF();
+
+			private float startX;
+			private float startY;
+			private float currentX;
+			private float currentY;
+			private float radius = DEFAULT_RADIUS_PX;
+			private boolean dragging;
+			private boolean tracking;
+			private final Runnable shrinkRunnable = new Runnable() {
+				@Override
+				public void run() {
+					if (!tracking || dragging) {
+						return;
+					}
+					radius = Math.max(4f, radius * SHRINK_FACTOR);
+					invalidate();
+					AndroidUtilities.runOnUIThread(this, SHRINK_INTERVAL_MS);
+				}
+			};
+
+			public RegionPickerView(Context context) {
+				super(context);
+				setWillNotDraw(false);
+				setClickable(true);
+				fillPaint.setStyle(Paint.Style.FILL);
+				fillPaint.setColor(0x332196F3);
+				strokePaint.setStyle(Paint.Style.STROKE);
+				strokePaint.setStrokeWidth(AndroidUtilities.dp(2));
+				strokePaint.setColor(0xFF2196F3);
+			}
+
+			public void resetGesture() {
+				AndroidUtilities.cancelRunOnUIThread(shrinkRunnable);
+				tracking = false;
+				dragging = false;
+				radius = DEFAULT_RADIUS_PX;
+				invalidate();
+			}
+
+			@Override
+			public boolean onTouchEvent(MotionEvent event) {
+				float x = event.getRawX();
+				float y = event.getRawY();
+				switch (event.getActionMasked()) {
+					case MotionEvent.ACTION_DOWN: {
+						tracking = true;
+						dragging = false;
+						startX = currentX = x;
+						startY = currentY = y;
+						radius = DEFAULT_RADIUS_PX;
+						AndroidUtilities.cancelRunOnUIThread(shrinkRunnable);
+						AndroidUtilities.runOnUIThread(shrinkRunnable, SHRINK_INTERVAL_MS);
+						invalidate();
+						return true;
+					}
+					case MotionEvent.ACTION_MOVE: {
+						if (!tracking) {
+							return false;
+						}
+						currentX = x;
+						currentY = y;
+						if (!dragging) {
+							float touchSlop = AndroidUtilities.getPixelsInCM(0.3f, true);
+							if (Math.abs(currentX - startX) >= touchSlop || Math.abs(currentY - startY) >= touchSlop) {
+								dragging = true;
+								AndroidUtilities.cancelRunOnUIThread(shrinkRunnable);
+							}
+						}
+						invalidate();
+						return true;
+					}
+					case MotionEvent.ACTION_UP:
+					case MotionEvent.ACTION_CANCEL: {
+						if (!tracking) {
+							return false;
+						}
+						AndroidUtilities.cancelRunOnUIThread(shrinkRunnable);
+						currentX = x;
+						currentY = y;
+						boolean wasDragging = dragging;
+						float finalRadius = radius;
+						float sx = startX;
+						float sy = startY;
+						float ex = currentX;
+						float ey = currentY;
+						tracking = false;
+						dragging = false;
+						invalidate();
+						if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+							finishRegionPick(wasDragging, sx, sy, ex, ey, finalRadius);
+						} else {
+							setRegionPickerVisible(false);
+						}
+						return true;
+					}
+				}
+				return super.onTouchEvent(event);
+			}
+
+			@Override
+			protected void onDraw(@NonNull Canvas canvas) {
+				if (!tracking) {
+					return;
+				}
+				int[] loc = new int[2];
+				getLocationOnScreen(loc);
+				if (dragging) {
+					float left = Math.min(startX, currentX) - loc[0];
+					float top = Math.min(startY, currentY) - loc[1];
+					float right = Math.max(startX, currentX) - loc[0];
+					float bottom = Math.max(startY, currentY) - loc[1];
+					drawRect.set(left, top, right, bottom);
+					canvas.drawRect(drawRect, fillPaint);
+					canvas.drawRect(drawRect, strokePaint);
+				} else {
+					float cx = startX - loc[0];
+					float cy = startY - loc[1];
+					canvas.drawCircle(cx, cy, radius, fillPaint);
+					canvas.drawCircle(cx, cy, radius, strokePaint);
+				}
+			}
+		}
+
         public EditorAlert(final Context context, ArrayList<ThemeDescription> items) {
             super(context, true);
 
+			allDescriptions = items;
             shadowDrawable = context.getResources().getDrawable(R.drawable.sheet_shadow_round).mutate();
+            shadowDrawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_dialogBackground), PorterDuff.Mode.MULTIPLY));
 
             containerView = new FrameLayout(context) {
 
@@ -733,20 +882,21 @@ public class ThemeEditorView {
                     shadowDrawable.setBounds(0, top, getMeasuredWidth(), height);
                     shadowDrawable.draw(canvas);
 
+                    int backgroundColor = getThemedColor(Theme.key_dialogBackground);
                     if (radProgress != 1.0f) {
-                        Theme.dialogs_onlineCirclePaint.setColor(0xffffffff);
+                        Theme.dialogs_onlineCirclePaint.setColor(backgroundColor);
                         rect1.set(backgroundPaddingLeft, backgroundPaddingTop + top, getMeasuredWidth() - backgroundPaddingLeft, backgroundPaddingTop + top + AndroidUtilities.dp(24));
                         canvas.drawRoundRect(rect1, AndroidUtilities.dp(12) * radProgress, AndroidUtilities.dp(12) * radProgress, Theme.dialogs_onlineCirclePaint);
                     }
 
                     int w = AndroidUtilities.dp(36);
                     rect1.set((getMeasuredWidth() - w) / 2, y, (getMeasuredWidth() + w) / 2, y + AndroidUtilities.dp(4));
-                    Theme.dialogs_onlineCirclePaint.setColor(0xffe1e4e8);
+                    Theme.dialogs_onlineCirclePaint.setColor(getThemedColor(Theme.key_sheet_scrollUp));
                     Theme.dialogs_onlineCirclePaint.setAlpha((int) (255 * listView.getAlpha()));
                     canvas.drawRoundRect(rect1, AndroidUtilities.dp(2), AndroidUtilities.dp(2), Theme.dialogs_onlineCirclePaint);
 
                     if (statusBarHeight > 0) {
-                        Theme.dialogs_onlineCirclePaint.setColor(Theme.getColor(Theme.key_dialogBackground));
+                        Theme.dialogs_onlineCirclePaint.setColor(backgroundColor);
                         canvas.drawRect(backgroundPaddingLeft, AndroidUtilities.statusBarHeight - statusBarHeight, getMeasuredWidth() - backgroundPaddingLeft, AndroidUtilities.statusBarHeight, Theme.dialogs_onlineCirclePaint);
                     }
                     updateLightStatusBar(statusBarHeight > AndroidUtilities.statusBarHeight / 2);
@@ -767,10 +917,31 @@ public class ThemeEditorView {
             containerView.setPadding(backgroundPaddingLeft, 0, backgroundPaddingLeft, 0);
 
             frameLayout = new FrameLayout(context);
-            frameLayout.setBackgroundColor(0xffffffff);
+            frameLayout.setBackgroundColor(getThemedColor(Theme.key_dialogBackground));
 
             searchField = new SearchField(context);
             frameLayout.addView(searchField, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT));
+
+			regionFilterButton = new ImageView(context);
+			regionFilterButton.setScaleType(ImageView.ScaleType.FIT_CENTER);
+			// Visual size ≈ 1/3 of the 36dp search bar height; 36dp touch target.
+			final int filterIconPad = (AndroidUtilities.dp(36) - Math.max(1, AndroidUtilities.dp(36) / 3)) / 2;
+			regionFilterButton.setPadding(filterIconPad, filterIconPad, filterIconPad, filterIconPad);
+			regionFilterButton.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1));
+			regionFilterButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_dialogSearchIcon), PorterDuff.Mode.MULTIPLY));
+			updateRegionFilterButton();
+			regionFilterButton.setOnClickListener(v -> {
+				if (regionPickInProgress || animationInProgress) {
+					return;
+				}
+				if (regionFilterActive) {
+					clearRegionFilter();
+				} else {
+					searchField.hideKeyboard();
+					setRegionPickerVisible(true);
+				}
+			});
+			frameLayout.addView(regionFilterButton, LayoutHelper.createFrame(36, 36, Gravity.RIGHT | Gravity.TOP, 0, 11, 10, 0));
 
             listView = new RecyclerListView(context) {
                 @Override
@@ -778,7 +949,7 @@ public class ThemeEditorView {
                     return y >= scrollOffsetY + AndroidUtilities.dp(48) + (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
                 }
             };
-            listView.setSelectorDrawableColor(0x0f000000);
+            listView.setSelectorDrawableColor(getThemedColor(Theme.key_listSelector));
             listView.setPadding(0, 0, 0, AndroidUtilities.dp(48));
             listView.setClipToPadding(false);
             listView.setLayoutManager(layoutManager = new LinearLayoutManager(getContext()));
@@ -787,18 +958,24 @@ public class ThemeEditorView {
             containerView.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT));
             listView.setAdapter(listAdapter = new ListAdapter(context, items));
             searchAdapter = new SearchAdapter(context);
-            listView.setGlowColor(0xfff5f6f7);
+            listView.setGlowColor(getThemedColor(Theme.key_dialogScrollGlow));
             listView.setItemAnimator(null);
             listView.setLayoutAnimation(null);
             listView.setOnItemClickListener((view, position) -> {
-                if (position == 0) {
-                    return;
-                }
                 if (listView.getAdapter() == listAdapter) {
-                    currentThemeDesription = listAdapter.getItem(position - 1);
+					if (listAdapter.getItemViewType(position) != ListAdapter.VIEW_TYPE_COLOR) {
+						return;
+					}
+                    currentThemeDesription = listAdapter.getItem(position);
                 } else {
+					if (searchAdapter.getItemViewType(position) != 0) {
+						return;
+					}
                     currentThemeDesription = searchAdapter.getItem(position - 1);
                 }
+				if (currentThemeDesription == null || currentThemeDesription.isEmpty()) {
+					return;
+				}
                 currentThemeDesriptionPosition = position;
                 for (int a = 0; a < currentThemeDesription.size(); a++) {
                     ThemeDescription description = currentThemeDesription.get(a);
@@ -841,6 +1018,10 @@ public class ThemeEditorView {
             colorPicker.setVisibility(View.GONE);
             containerView.addView(colorPicker, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER_HORIZONTAL));
 
+			regionPickerView = new RegionPickerView(context);
+			regionPickerView.setVisibility(View.GONE);
+			container.addView(regionPickerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
             frameLayoutParams = new FrameLayout.LayoutParams(LayoutHelper.MATCH_PARENT, AndroidUtilities.getShadowHeight(), Gravity.BOTTOM | Gravity.LEFT);
             frameLayoutParams.bottomMargin = AndroidUtilities.dp(48);
             shadow[1] = new View(context);
@@ -848,14 +1029,14 @@ public class ThemeEditorView {
             containerView.addView(shadow[1], frameLayoutParams);
 
             bottomSaveLayout = new FrameLayout(context);
-            bottomSaveLayout.setBackgroundColor(0xffffffff);
+            bottomSaveLayout.setBackgroundColor(getThemedColor(Theme.key_dialogBackground));
             containerView.addView(bottomSaveLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.LEFT | Gravity.BOTTOM));
 
             TextView closeButton = new TextView(context);
             closeButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            closeButton.setTextColor(0xff19a7e8);
+            closeButton.setTextColor(getThemedColor(Theme.key_dialogTextBlue2));
             closeButton.setGravity(Gravity.CENTER);
-            closeButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_AUDIO_SELECTOR_COLOR, 0));
+            closeButton.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_dialogButtonSelector), 0));
             closeButton.setPadding(AndroidUtilities.dp(18), 0, AndroidUtilities.dp(18), 0);
             closeButton.setText(LocaleController.getString(R.string.CloseEditor).toUpperCase());
             closeButton.setTypeface(AndroidUtilities.bold());
@@ -864,9 +1045,9 @@ public class ThemeEditorView {
 
             TextView saveButton = new TextView(context);
             saveButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            saveButton.setTextColor(0xff19a7e8);
+            saveButton.setTextColor(getThemedColor(Theme.key_dialogTextBlue2));
             saveButton.setGravity(Gravity.CENTER);
-            saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_AUDIO_SELECTOR_COLOR, 0));
+            saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_dialogButtonSelector), 0));
             saveButton.setPadding(AndroidUtilities.dp(18), 0, AndroidUtilities.dp(18), 0);
             saveButton.setText(LocaleController.getString(R.string.SaveTheme).toUpperCase());
             saveButton.setTypeface(AndroidUtilities.bold());
@@ -880,14 +1061,14 @@ public class ThemeEditorView {
 
             bottomLayout = new FrameLayout(context);
             bottomLayout.setVisibility(View.GONE);
-            bottomLayout.setBackgroundColor(0xffffffff);
+            bottomLayout.setBackgroundColor(getThemedColor(Theme.key_dialogBackground));
             containerView.addView(bottomLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.LEFT | Gravity.BOTTOM));
 
             TextView cancelButton = new TextView(context);
             cancelButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            cancelButton.setTextColor(0xff19a7e8);
+            cancelButton.setTextColor(getThemedColor(Theme.key_dialogTextBlue2));
             cancelButton.setGravity(Gravity.CENTER);
-            cancelButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_AUDIO_SELECTOR_COLOR, 0));
+            cancelButton.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_dialogButtonSelector), 0));
             cancelButton.setPadding(AndroidUtilities.dp(18), 0, AndroidUtilities.dp(18), 0);
             cancelButton.setText(LocaleController.getString(R.string.Cancel).toUpperCase());
             cancelButton.setTypeface(AndroidUtilities.bold());
@@ -905,9 +1086,9 @@ public class ThemeEditorView {
 
             TextView defaultButtom = new TextView(context);
             defaultButtom.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            defaultButtom.setTextColor(0xff19a7e8);
+            defaultButtom.setTextColor(getThemedColor(Theme.key_dialogTextBlue2));
             defaultButtom.setGravity(Gravity.CENTER);
-            defaultButtom.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_AUDIO_SELECTOR_COLOR, 0));
+            defaultButtom.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_dialogButtonSelector), 0));
             defaultButtom.setPadding(AndroidUtilities.dp(18), 0, AndroidUtilities.dp(18), 0);
             defaultButtom.setText(LocaleController.getString(R.string.Default).toUpperCase());
             defaultButtom.setTypeface(AndroidUtilities.bold());
@@ -921,9 +1102,9 @@ public class ThemeEditorView {
 
             saveButton = new TextView(context);
             saveButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            saveButton.setTextColor(0xff19a7e8);
+            saveButton.setTextColor(getThemedColor(Theme.key_dialogTextBlue2));
             saveButton.setGravity(Gravity.CENTER);
-            saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_AUDIO_SELECTOR_COLOR, 0));
+            saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_dialogButtonSelector), 0));
             saveButton.setPadding(AndroidUtilities.dp(18), 0, AndroidUtilities.dp(18), 0);
             saveButton.setText(LocaleController.getString(R.string.Save).toUpperCase());
             saveButton.setTypeface(AndroidUtilities.bold());
@@ -1045,6 +1226,366 @@ public class ThemeEditorView {
             }
         }
 
+		private void updateRegionFilterButton() {
+			if (regionFilterButton == null) {
+				return;
+			}
+			if (regionFilterActive) {
+				regionFilterButton.setImageResource(R.drawable.msg_close);
+				regionFilterButton.setContentDescription(LocaleController.getString(R.string.ThemeEditorRegionFilterClear));
+			} else {
+				regionFilterButton.setImageResource(R.drawable.msg_photo_cropfix);
+				regionFilterButton.setContentDescription(LocaleController.getString(R.string.ThemeEditorRegionFilter));
+			}
+		}
+
+		private void clearRegionFilter() {
+			regionFilterActive = false;
+			regionAllowedKeys.clear();
+			listAdapter.setRegionRows(null);
+			updateRegionFilterButton();
+			if (listView.getAdapter() == searchAdapter) {
+				String text = searchField.searchEditText.getText().toString();
+				searchAdapter.searchDialogs(text);
+			} else {
+				listAdapter.notifyDataSetChanged();
+			}
+		}
+
+		private void setRegionPickerVisible(boolean visible) {
+			if (visible) {
+				if (regionPickInProgress || animationInProgress) {
+					return;
+				}
+				regionPickInProgress = true;
+				setCanDismissWithTouchOutside(false);
+				regionPickerView.resetGesture();
+				regionPickerView.setVisibility(View.VISIBLE);
+				regionPickerView.setAlpha(0f);
+
+				previousScrollPosition = scrollOffsetY;
+				animationInProgress = true;
+				AnimatorSet animatorSet = new AnimatorSet();
+				animatorSet.playTogether(
+						ObjectAnimator.ofFloat(listView, View.ALPHA, 0.0f),
+						ObjectAnimator.ofFloat(frameLayout, View.ALPHA, 0.0f),
+						ObjectAnimator.ofFloat(shadow[0], View.ALPHA, 0.0f),
+						ObjectAnimator.ofFloat(searchEmptyView, View.ALPHA, 0.0f),
+						ObjectAnimator.ofFloat(bottomSaveLayout, View.ALPHA, 0.0f),
+						ObjectAnimator.ofFloat(containerView, View.ALPHA, 0.0f),
+						ObjectAnimator.ofFloat(regionPickerView, View.ALPHA, 1.0f),
+						ObjectAnimator.ofInt(this, "scrollOffsetY", listView.getPaddingTop()));
+				animatorSet.setDuration(150);
+				animatorSet.setInterpolator(decelerateInterpolator);
+				animatorSet.addListener(new AnimatorListenerAdapter() {
+					@Override
+					public void onAnimationEnd(Animator animation) {
+						listView.setVisibility(View.INVISIBLE);
+						searchField.setVisibility(View.INVISIBLE);
+						bottomSaveLayout.setVisibility(View.INVISIBLE);
+						containerView.setVisibility(View.INVISIBLE);
+						backDrawable.setAlpha(0);
+						animationInProgress = false;
+					}
+				});
+				animatorSet.start();
+			} else {
+				if (!regionPickInProgress && regionPickerView.getVisibility() != View.VISIBLE) {
+					return;
+				}
+				setCanDismissWithTouchOutside(true);
+				animationInProgress = true;
+				listView.setVisibility(View.VISIBLE);
+				bottomSaveLayout.setVisibility(View.VISIBLE);
+				searchField.setVisibility(View.VISIBLE);
+				containerView.setVisibility(View.VISIBLE);
+				listView.setAlpha(0.0f);
+				frameLayout.setAlpha(0.0f);
+				bottomSaveLayout.setAlpha(0.0f);
+				containerView.setAlpha(0.0f);
+				AnimatorSet animatorSet = new AnimatorSet();
+				animatorSet.playTogether(
+						ObjectAnimator.ofFloat(regionPickerView, View.ALPHA, 0.0f),
+						ObjectAnimator.ofFloat(listView, View.ALPHA, 1.0f),
+						ObjectAnimator.ofFloat(frameLayout, View.ALPHA, 1.0f),
+						ObjectAnimator.ofFloat(shadow[0], View.ALPHA, shadow[0].getTag() != null ? 0.0f : 1.0f),
+						ObjectAnimator.ofFloat(searchEmptyView, View.ALPHA, 1.0f),
+						ObjectAnimator.ofFloat(bottomSaveLayout, View.ALPHA, 1.0f),
+						ObjectAnimator.ofFloat(containerView, View.ALPHA, 1.0f),
+						ObjectAnimator.ofInt(this, "scrollOffsetY", previousScrollPosition));
+				animatorSet.setDuration(150);
+				animatorSet.setInterpolator(decelerateInterpolator);
+				animatorSet.addListener(new AnimatorListenerAdapter() {
+					@Override
+					public void onAnimationEnd(Animator animation) {
+						regionPickerView.setVisibility(View.GONE);
+						regionPickerView.resetGesture();
+						regionPickInProgress = false;
+						animationInProgress = false;
+						if (dimBehind) {
+							backDrawable.setAlpha(dimBehindAlpha);
+						}
+						if (listView.getAdapter() == searchAdapter) {
+							searchField.showKeyboard();
+						}
+					}
+				});
+				animatorSet.start();
+			}
+		}
+
+		private void finishRegionPick(boolean wasDragging, float startX, float startY, float endX, float endY, float radius) {
+			RegionSelection selection;
+			if (wasDragging) {
+				float left = Math.min(startX, endX);
+				float top = Math.min(startY, endY);
+				float right = Math.max(startX, endX);
+				float bottom = Math.max(startY, endY);
+				if (right - left < 1f) {
+					right = left + 1f;
+				}
+				if (bottom - top < 1f) {
+					bottom = top + 1f;
+				}
+				selection = RegionSelection.rect(left, top, right, bottom);
+			} else {
+				selection = RegionSelection.circle(startX, startY, Math.max(4f, radius));
+			}
+			applyRegionFilter(selection);
+			setRegionPickerVisible(false);
+		}
+
+		private void applyRegionFilter(RegionSelection selection) {
+			ArrayList<RegionRow> rows = buildRegionFilterRows(selection);
+			regionAllowedKeys.clear();
+			for (int i = 0; i < rows.size(); i++) {
+				RegionRow row = rows.get(i);
+				if (row.viewType == ListAdapter.VIEW_TYPE_COLOR && row.descriptions != null && !row.descriptions.isEmpty()) {
+					regionAllowedKeys.add(row.descriptions.get(0).getCurrentKey());
+				}
+			}
+			regionFilterActive = true;
+			listAdapter.setRegionRows(rows);
+			updateRegionFilterButton();
+			if (listView.getAdapter() != listAdapter) {
+				listView.setAdapter(listAdapter);
+			}
+			listAdapter.notifyDataSetChanged();
+			String searchText = searchField.searchEditText.getText().toString();
+			if (!TextUtils.isEmpty(searchText)) {
+				searchAdapter.searchDialogs(searchText);
+			}
+		}
+
+		private class HitMatch {
+			final String groupKey;
+			final String groupTitle;
+			final String subgroupKey; // null = whole view
+			final String subgroupTitle;
+			final float coverage;
+			final ThemeDescription description;
+
+			HitMatch(String groupKey, String groupTitle, String subgroupKey, String subgroupTitle, float coverage, ThemeDescription description) {
+				this.groupKey = groupKey;
+				this.groupTitle = groupTitle;
+				this.subgroupKey = subgroupKey;
+				this.subgroupTitle = subgroupTitle;
+				this.coverage = coverage;
+				this.description = description;
+			}
+		}
+
+		private ArrayList<RegionRow> buildRegionFilterRows(RegionSelection selection) {
+			ArrayList<HitMatch> matches = new ArrayList<>();
+			Rect visibleRect = new Rect();
+			if (allDescriptions != null) {
+				for (int i = 0; i < allDescriptions.size(); i++) {
+					collectHitsForDescription(allDescriptions.get(i), selection, visibleRect, matches);
+				}
+			}
+
+			// groupKey -> subgroupKey -> key -> descriptions + best coverage
+			HashMap<String, GroupAccum> groups = new HashMap<>();
+			for (int i = 0; i < matches.size(); i++) {
+				HitMatch match = matches.get(i);
+				GroupAccum group = groups.get(match.groupKey);
+				if (group == null) {
+					group = new GroupAccum(match.groupTitle);
+					groups.put(match.groupKey, group);
+				}
+				group.coverage = Math.max(group.coverage, match.coverage);
+				String subKey = match.subgroupKey != null ? match.subgroupKey : "";
+				SubAccum sub = group.subgroups.get(subKey);
+				if (sub == null) {
+					sub = new SubAccum(match.subgroupTitle);
+					group.subgroups.put(subKey, sub);
+				}
+				sub.coverage = Math.max(sub.coverage, match.coverage);
+				int colorKey = match.description.getCurrentKey();
+				ArrayList<ThemeDescription> list = sub.byKey.get(colorKey);
+				if (list == null) {
+					list = new ArrayList<>();
+					sub.byKey.put(colorKey, list);
+					sub.keyOrder.add(colorKey);
+				}
+				list.add(match.description);
+			}
+
+			ArrayList<GroupAccum> groupList = new ArrayList<>(groups.values());
+			Collections.sort(groupList, (a, b) -> Float.compare(b.coverage, a.coverage));
+
+			ArrayList<RegionRow> rows = new ArrayList<>();
+			for (int g = 0; g < groupList.size(); g++) {
+				GroupAccum group = groupList.get(g);
+				rows.add(RegionRow.section(formatSectionTitle(group.title, group.coverage), false));
+
+				ArrayList<String> subKeys = new ArrayList<>(group.subgroups.keySet());
+				Collections.sort(subKeys, (a, b) -> {
+					SubAccum sa = group.subgroups.get(a);
+					SubAccum sb = group.subgroups.get(b);
+					return Float.compare(sb.coverage, sa.coverage);
+				});
+
+				boolean hasNamedSub = false;
+				for (int s = 0; s < subKeys.size(); s++) {
+					if (subKeys.get(s).length() > 0) {
+						hasNamedSub = true;
+						break;
+					}
+				}
+
+				for (int s = 0; s < subKeys.size(); s++) {
+					String subKey = subKeys.get(s);
+					SubAccum sub = group.subgroups.get(subKey);
+					if (hasNamedSub && subKey.length() > 0) {
+						rows.add(RegionRow.section(formatSectionTitle(sub.title, sub.coverage), true));
+					} else if (hasNamedSub && subKey.length() == 0) {
+						rows.add(RegionRow.section(formatSectionTitle(LocaleController.getString(R.string.ThemeEditorRegionFilterWholeView), sub.coverage), true));
+					}
+					for (int k = 0; k < sub.keyOrder.size(); k++) {
+						ArrayList<ThemeDescription> descs = sub.byKey.get(sub.keyOrder.get(k));
+						rows.add(RegionRow.color(descs));
+					}
+				}
+			}
+			return rows;
+		}
+
+		private String formatSectionTitle(String name, float coverage) {
+			int pct = Math.round(coverage * 100f);
+			return LocaleController.formatString(R.string.ThemeEditorRegionFilterSection, name, pct);
+		}
+
+		private class GroupAccum {
+			final String title;
+			float coverage;
+			final HashMap<String, SubAccum> subgroups = new HashMap<>();
+
+			GroupAccum(String title) {
+				this.title = title;
+			}
+		}
+
+		private class SubAccum {
+			final String title;
+			float coverage;
+			final HashMap<Integer, ArrayList<ThemeDescription>> byKey = new HashMap<>();
+			final ArrayList<Integer> keyOrder = new ArrayList<>();
+
+			SubAccum(String title) {
+				this.title = title;
+			}
+		}
+
+		private void collectHitsForDescription(ThemeDescription description, RegionSelection selection, Rect visibleRect, ArrayList<HitMatch> out) {
+			View root = description.getViewToInvalidate();
+			Class[] classes = description.getListClasses();
+			String[] fields = description.getListClassesFieldName();
+
+			if (classes == null || classes.length == 0) {
+				if (root == null) {
+					return;
+				}
+				if (!description.matchesViewTag(root)) {
+					return;
+				}
+				if (!root.getGlobalVisibleRect(visibleRect) || visibleRect.isEmpty()) {
+					return;
+				}
+				float coverage = selection.coverage(visibleRect);
+				if (coverage <= 0f) {
+					return;
+				}
+				String title = root.getClass().getSimpleName();
+				out.add(new HitMatch("view:" + System.identityHashCode(root), title, null, null, coverage, description));
+				return;
+			}
+
+			if (root == null) {
+				return;
+			}
+			ArrayList<View> candidates = new ArrayList<>();
+			collectCandidateViews(root, candidates);
+			for (int c = 0; c < candidates.size(); c++) {
+				View child = candidates.get(c);
+				for (int b = 0; b < classes.length; b++) {
+					if (!classes[b].isInstance(child)) {
+						continue;
+					}
+					String groupTitle = classes[b].getSimpleName();
+					String groupKey = "class:" + classes[b].getName();
+
+					if (fields != null && b < fields.length && fields[b] != null) {
+						View fieldView = description.resolveFieldView(child, b);
+						if (fieldView == null) {
+							// canvas-only / non-View field — omit
+							continue;
+						}
+						if (!description.matchesViewTag(child) && !description.matchesViewTag(fieldView)) {
+							continue;
+						}
+						if (!fieldView.getGlobalVisibleRect(visibleRect) || visibleRect.isEmpty()) {
+							continue;
+						}
+						float coverage = selection.coverage(visibleRect);
+						if (coverage <= 0f) {
+							continue;
+						}
+						String fieldName = fields[b];
+						out.add(new HitMatch(groupKey, groupTitle, "field:" + fieldName, fieldName, coverage, description));
+					} else {
+						if (!description.matchesViewTag(child)) {
+							continue;
+						}
+						if (!child.getGlobalVisibleRect(visibleRect) || visibleRect.isEmpty()) {
+							continue;
+						}
+						float coverage = selection.coverage(visibleRect);
+						if (coverage <= 0f) {
+							continue;
+						}
+						out.add(new HitMatch(groupKey, groupTitle, null, null, coverage, description));
+					}
+				}
+			}
+		}
+
+		private void collectCandidateViews(View root, ArrayList<View> out) {
+			out.add(root);
+			if (root instanceof ViewGroup) {
+				ViewGroup group = (ViewGroup) root;
+				int count = group.getChildCount();
+				for (int i = 0; i < count; i++) {
+					collectCandidateViews(group.getChildAt(i), out);
+				}
+			}
+		}
+
+		@Override
+		protected boolean canDismissWithTouchOutside() {
+			return !regionPickInProgress && super.canDismissWithTouchOutside();
+		}
+
         private int getCurrentTop() {
             if (listView.getChildCount() != 0) {
                 View child = listView.getChildAt(0);
@@ -1142,7 +1683,7 @@ public class ThemeEditorView {
 
                     int start = builder.length();
                     builder.append(query);
-                    builder.setSpan(new ForegroundColorSpan(0xff4d83b3), start, start + query.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    builder.setSpan(new ForegroundColorSpan(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4)), start, start + query.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                     lastIndex = end;
                 }
@@ -1174,9 +1715,14 @@ public class ThemeEditorView {
 
                     ArrayList<ArrayList<ThemeDescription>> searchResults = new ArrayList<>();
                     ArrayList<CharSequence> names = new ArrayList<>();
-                    for (int a = 0, N = listAdapter.items.size(); a < N; a++) {
-                        ArrayList<ThemeDescription> themeDescriptions = listAdapter.items.get(a);
-                        String key = ThemeColors.getStringName(themeDescriptions.get(0).getCurrentKey());
+                    ArrayList<ArrayList<ThemeDescription>> source = listAdapter.getSearchSourceItems();
+                    for (int a = 0, N = source.size(); a < N; a++) {
+                        ArrayList<ThemeDescription> themeDescriptions = source.get(a);
+                        int colorKey = themeDescriptions.get(0).getCurrentKey();
+                        if (regionFilterActive && !regionAllowedKeys.contains(colorKey)) {
+                            continue;
+                        }
+                        String key = ThemeColors.getStringName(colorKey);
                         String name = key.toLowerCase();
                         for (String q : search) {
                             if (name.contains(q)) {
@@ -1299,9 +1845,14 @@ public class ThemeEditorView {
 
         private class ListAdapter extends RecyclerListView.SelectionAdapter {
 
+			public static final int VIEW_TYPE_COLOR = 0;
+			public static final int VIEW_TYPE_SPACER = 1;
+			public static final int VIEW_TYPE_SECTION = 2;
+			public static final int VIEW_TYPE_SECTION_SMALL = 3;
+
             private Context context;
-            private int currentCount;
             private ArrayList<ArrayList<ThemeDescription>> items = new ArrayList<>();
+			private ArrayList<RegionRow> regionRows;
 
             public ListAdapter(Context context, ArrayList<ThemeDescription> descriptions) {
                 this.context = context;
@@ -1324,12 +1875,48 @@ public class ThemeEditorView {
                 }
             }
 
+			public void setRegionRows(ArrayList<RegionRow> rows) {
+				regionRows = rows;
+			}
+
+			public ArrayList<ArrayList<ThemeDescription>> getSearchSourceItems() {
+				if (regionFilterActive && regionRows != null) {
+					ArrayList<ArrayList<ThemeDescription>> filtered = new ArrayList<>();
+					HashSet<Integer> seen = new HashSet<>();
+					for (int i = 0; i < regionRows.size(); i++) {
+						RegionRow row = regionRows.get(i);
+						if (row.viewType != VIEW_TYPE_COLOR || row.descriptions == null || row.descriptions.isEmpty()) {
+							continue;
+						}
+						int key = row.descriptions.get(0).getCurrentKey();
+						if (seen.add(key)) {
+							filtered.add(row.descriptions);
+						}
+					}
+					return filtered;
+				}
+				return items;
+			}
+
             @Override
             public int getItemCount() {
+				if (regionFilterActive && regionRows != null) {
+					return regionRows.isEmpty() ? 0 : (regionRows.size() + 1);
+				}
                 return items.isEmpty() ? 0 : (items.size() + 1);
             }
 
-            public ArrayList<ThemeDescription> getItem(int i) {
+			/** Adapter position → color item (skips spacer/sections). */
+            public ArrayList<ThemeDescription> getItem(int adapterPosition) {
+				if (regionFilterActive && regionRows != null) {
+					int idx = adapterPosition - 1;
+					if (idx < 0 || idx >= regionRows.size()) {
+						return null;
+					}
+					RegionRow row = regionRows.get(idx);
+					return row.viewType == VIEW_TYPE_COLOR ? row.descriptions : null;
+				}
+                int i = adapterPosition - 1;
                 if (i < 0 || i >= items.size()) {
                     return null;
                 }
@@ -1338,18 +1925,30 @@ public class ThemeEditorView {
 
             @Override
             public boolean isEnabled(RecyclerView.ViewHolder holder) {
-                return true;
+                return holder.getItemViewType() == VIEW_TYPE_COLOR;
             }
 
             @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                 View view;
                 switch (viewType) {
-                    case 0:
+                    case VIEW_TYPE_COLOR:
                         view = new TextColorThemeCell(context);
                         view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
                         break;
-                    case 1:
+					case VIEW_TYPE_SECTION:
+					case VIEW_TYPE_SECTION_SMALL: {
+						GraySectionCell cell = new GraySectionCell(context);
+						if (viewType == VIEW_TYPE_SECTION_SMALL) {
+							cell.setLayerHeight(22);
+						} else {
+							cell.setLayerHeight(28);
+						}
+						cell.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+						view = cell;
+						break;
+					}
+                    case VIEW_TYPE_SPACER:
                     default:
                         view = new View(context);
                         view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(56)));
@@ -1360,8 +1959,17 @@ public class ThemeEditorView {
 
             @Override
             public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-                if (holder.getItemViewType() == 0) {
-                    ArrayList<ThemeDescription> arrayList = items.get(position - 1);
+				int type = holder.getItemViewType();
+				if (type == VIEW_TYPE_SECTION || type == VIEW_TYPE_SECTION_SMALL) {
+					RegionRow row = regionRows.get(position - 1);
+					((GraySectionCell) holder.itemView).setText(row.sectionTitle);
+				} else if (type == VIEW_TYPE_COLOR) {
+					ArrayList<ThemeDescription> arrayList;
+					if (regionFilterActive && regionRows != null) {
+						arrayList = regionRows.get(position - 1).descriptions;
+					} else {
+						arrayList = items.get(position - 1);
+					}
                     ThemeDescription description = arrayList.get(0);
                     int color;
                     if (description.getCurrentKey() == Theme.key_chat_wallpaper) {
@@ -1376,9 +1984,12 @@ public class ThemeEditorView {
             @Override
             public int getItemViewType(int i) {
                 if (i == 0) {
-                    return 1;
+                    return VIEW_TYPE_SPACER;
                 }
-                return 0;
+				if (regionFilterActive && regionRows != null) {
+					return regionRows.get(i - 1).viewType;
+				}
+                return VIEW_TYPE_COLOR;
             }
         }
     }
@@ -1548,7 +2159,7 @@ public class ThemeEditorView {
     }
 
     private void showWithAnimation() {
-        windowView.setBackgroundResource(R.drawable.theme_picker);
+        windowView.setBackgroundResource(Theme.isCurrentThemeDark() ? R.drawable.theme_picker_dark : R.drawable.theme_picker);
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.playTogether(ObjectAnimator.ofFloat(windowView, View.ALPHA, 0.0f, 1.0f),
                 ObjectAnimator.ofFloat(windowView, View.SCALE_X, 0.0f, 1.0f),
@@ -1754,4 +2365,81 @@ public class ThemeEditorView {
         windowLayoutParams.y = value;
         windowManager.updateViewLayout(windowView, windowLayoutParams);
     }
+
+	/** Static so factories are legal under Java 8 (EditorAlert is a non-static inner class). */
+	private static class RegionSelection {
+		final boolean circle;
+		final float cx, cy, radius;
+		final float left, top, right, bottom;
+		final float area;
+
+		private RegionSelection(boolean circle, float cx, float cy, float radius, float left, float top, float right, float bottom) {
+			this.circle = circle;
+			this.cx = cx;
+			this.cy = cy;
+			this.radius = radius;
+			this.left = left;
+			this.top = top;
+			this.right = right;
+			this.bottom = bottom;
+			if (circle) {
+				this.area = (float) (Math.PI * radius * radius);
+			} else {
+				this.area = Math.max(1f, (right - left) * (bottom - top));
+			}
+		}
+
+		static RegionSelection circle(float cx, float cy, float radius) {
+			return new RegionSelection(true, cx, cy, radius, cx - radius, cy - radius, cx + radius, cy + radius);
+		}
+
+		static RegionSelection rect(float left, float top, float right, float bottom) {
+			return new RegionSelection(false, 0, 0, 0, left, top, right, bottom);
+		}
+
+		boolean intersects(Rect viewRect) {
+			if (circle) {
+				float closestX = Math.max(viewRect.left, Math.min(cx, viewRect.right));
+				float closestY = Math.max(viewRect.top, Math.min(cy, viewRect.bottom));
+				float dx = closestX - cx;
+				float dy = closestY - cy;
+				return dx * dx + dy * dy <= radius * radius;
+			}
+			return Rect.intersects(viewRect, new Rect((int) left, (int) top, (int) Math.ceil(right), (int) Math.ceil(bottom)));
+		}
+
+		float coverage(Rect viewRect) {
+			if (!intersects(viewRect)) {
+				return 0f;
+			}
+			RectF inter = new RectF(viewRect);
+			RectF regionBounds = new RectF(left, top, right, bottom);
+			if (!inter.intersect(regionBounds)) {
+				return 0f;
+			}
+			float interArea = inter.width() * inter.height();
+			return Math.min(1f, interArea / area);
+		}
+	}
+
+	/** Static so factories are legal under Java 8 (ListAdapter / EditorAlert are non-static). */
+	private static class RegionRow {
+		final int viewType;
+		final ArrayList<ThemeDescription> descriptions;
+		final String sectionTitle;
+
+		private RegionRow(int viewType, ArrayList<ThemeDescription> descriptions, String sectionTitle) {
+			this.viewType = viewType;
+			this.descriptions = descriptions;
+			this.sectionTitle = sectionTitle;
+		}
+
+		static RegionRow color(ArrayList<ThemeDescription> descriptions) {
+			return new RegionRow(0 /* ListAdapter.VIEW_TYPE_COLOR */, descriptions, null);
+		}
+
+		static RegionRow section(String title, boolean small) {
+			return new RegionRow(small ? 3 /* VIEW_TYPE_SECTION_SMALL */ : 2 /* VIEW_TYPE_SECTION */, null, title);
+		}
+	}
 }
