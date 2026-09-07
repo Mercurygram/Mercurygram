@@ -256,4 +256,6 @@
     <string name="MercurygramFolder">Mercurygram folder</string>
     <string name="MercurygramFolderInfo">Shown only in Mercurygram, never sent to Telegram as a folder, so no folder or chat limit. Synced between your Mercurygram apps through one file in Saved Messages. Switching it on an existing folder moves the folder between Telegram and Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramLiveLocationPaused">Live location paused</string>
+    <string name="MercurygramLiveLocationPausedInfo">Sharing stopped when your device restarted. Open Mercurygram to resume it.</string>
 </resources>

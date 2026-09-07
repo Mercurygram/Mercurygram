@@ -256,4 +256,6 @@
     <string name="MercurygramFolder">Pasta Mercurygram</string>
     <string name="MercurygramFolderInfo">Aparece apenas no Mercurygram, nunca é enviada ao Telegram como pasta, então não há limite de pastas ou conversas. Sincronizada entre seus apps Mercurygram por um arquivo nas Mensagens salvas. Alterar em uma pasta existente move a pasta entre o Telegram e o Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramLiveLocationPaused">Localização em tempo real pausada</string>
+    <string name="MercurygramLiveLocationPausedInfo">O compartilhamento parou quando o dispositivo reiniciou. Abra o Mercurygram para retomá-lo.</string>
 </resources>

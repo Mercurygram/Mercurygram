@@ -256,4 +256,6 @@
     <string name="MercurygramFolder">Mercurygram-Ordner</string>
     <string name="MercurygramFolderInfo">Nur in Mercurygram sichtbar, wird nie als Ordner an Telegram gesendet, daher keine Begrenzung für Ordner oder Chats. Wird über eine Datei in den gespeicherten Nachrichten zwischen deinen Mercurygram-Apps abgeglichen. Bei einem bestehenden Ordner verschiebt der Schalter den Ordner zwischen Telegram und Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramLiveLocationPaused">Live-Standort pausiert</string>
+    <string name="MercurygramLiveLocationPausedInfo">Die Freigabe wurde beim Neustart des Geräts unterbrochen. Öffne Mercurygram, um sie fortzusetzen.</string>
 </resources>

@@ -256,4 +256,6 @@
     <string name="MercurygramFolder">Cartella Mercurygram</string>
     <string name="MercurygramFolderInfo">Visibile solo in Mercurygram, non viene mai inviata a Telegram come cartella, quindi nessun limite di cartelle o chat. Sincronizzata tra le tue app Mercurygram tramite un file nei Messaggi salvati. Cambiarlo su una cartella esistente sposta la cartella tra Telegram e Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramLiveLocationPaused">Posizione in tempo reale in pausa</string>
+    <string name="MercurygramLiveLocationPausedInfo">La condivisione si è interrotta al riavvio del dispositivo. Apri Mercurygram per riprenderla.</string>
 </resources>
