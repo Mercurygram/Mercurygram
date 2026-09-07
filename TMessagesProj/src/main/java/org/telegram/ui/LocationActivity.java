@@ -1470,7 +1470,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
             if (loc.object == null || loc.object.media == null) {
                 continue;
             }
-            if (loc.object.media.period == 0x7FFFFFFF || loc.object.date + loc.object.media.period > date) {
+            if (!MessageObject.isExpiredLiveLocation(loc.object, date)) {
                 count++;
             }
         }
@@ -1492,7 +1492,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
             if (loc.marker == null || loc.object == null || loc.object.media == null) {
                 continue;
             }
-            if (loc.object.media.period == 0x7FFFFFFF || loc.object.date + loc.object.media.period > date) {
+            if (!MessageObject.isExpiredLiveLocation(loc.object, date)) {
                 points.add(loc.marker.getPosition());
             }
         }
@@ -2591,7 +2591,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
         int date = getConnectionsManager().getCurrentTime();
         for (int a = 0; a < messages.size(); a++) {
             TLRPC.Message message = messages.get(a);
-            if (message.date + message.media.period > date || message.media.period == 0x7FFFFFFF) {
+            if (!MessageObject.isExpiredLiveLocation(message, date)) {
                 if (builder != null) {
                     IMapsProvider.LatLng latLng = new IMapsProvider.LatLng(message.media.geo.lat, message.media.geo._long);
                     builder.include(latLng);
@@ -2672,7 +2672,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
             int date = getConnectionsManager().getCurrentTime();
             for (int a = 0, N = markers.size(); a < N; a++) {
                 TLRPC.Message message = markers.get(a).object;
-                if (message.date + message.media.period > date) {
+                if (!MessageObject.isExpiredLiveLocation(message, date)) {
                     IMapsProvider.LatLng latLng = new IMapsProvider.LatLng(message.media.geo.lat, message.media.geo._long);
                     builder.include(latLng);
                 }
