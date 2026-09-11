@@ -120,6 +120,7 @@ Fixes for bugs that exist in stock Telegram for Android. Several are backported 
 - Fix an album that was still laid out from stale group state after part of it was deleted: the remaining photos took each other's tile geometry and overlapped, and one cell reserved a screen and a half of empty space because the group kept the answer from back when it still held a file
 - Fix saving to Downloads silently skipping media that had to be downloaded first: the freshly downloaded file was looked up at the wrong path, so nothing was saved
 - Fix saving and sharing a watched video that has quality variants ([#135](https://github.com/Mercurygram/Mercurygram/issues/135)): after streaming, the only file on disk belongs to the quality that was played, so Save, Share, Open in and the Files tab failed or were missing. They now find that file
+- Fix push notifications getting lost: only the first push of a process waited for its message to be processed, so the wake lock could be released before the notification was shown, and an OAuth request push could block every later push until the app restarted
 
 ### TF-originated de-googling patches
 
