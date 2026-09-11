@@ -16257,6 +16257,7 @@ public class MessagesController extends BaseController implements NotificationCe
         if (SharedConfig.pushAuthKey == null) {
             SharedConfig.pushAuthKey = new byte[256];
             Utilities.random.nextBytes(SharedConfig.pushAuthKey);
+            SharedConfig.pushAuthKeyId = null; // Mercurygram: cached from the old key otherwise
             SharedConfig.saveConfig();
         }
         TL_account.registerDevice req = new TL_account.registerDevice();
