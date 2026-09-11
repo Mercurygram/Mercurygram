@@ -606,6 +606,7 @@
                 <action android:name="org.telegram.start" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="it.belloworld.mercurygram.PUSH_WATCHDOG" />
             </intent-filter>
         </receiver>
 
