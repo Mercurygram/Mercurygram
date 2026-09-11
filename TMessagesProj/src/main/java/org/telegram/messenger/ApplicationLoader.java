@@ -422,6 +422,7 @@ public class ApplicationLoader extends Application {
 
     private void initPushServices() {
         AndroidUtilities.runOnUIThread(() -> {
+            it.belloworld.mercurygram.push.MgPushWatchdog.schedule(applicationContext); // Mercurygram: periodic push watchdog
             if (getPushProvider().hasServices()) {
                 getPushProvider().onRequestPushToken();
             } else {
