@@ -72,6 +72,7 @@ public final class MgSimplePush {
         if (SharedConfig.pushAuthKey == null) {
             SharedConfig.pushAuthKey = new byte[256];
             Utilities.random.nextBytes(SharedConfig.pushAuthKey);
+            SharedConfig.pushAuthKeyId = null; // cached from the old key otherwise
             SharedConfig.saveConfig();
         }
         TL_account.registerDevice req = new TL_account.registerDevice();
