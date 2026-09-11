@@ -125,6 +125,9 @@ public class PushListenerController {
                     buffer.writeBytes(bytes);
                     buffer.position(0);
 
+                    if (SharedConfig.pushAuthKey == null) {
+                        it.belloworld.mercurygram.push.MgPushWatchdog.onNullPushKey();
+                    }
                     if (SharedConfig.pushAuthKeyId == null) {
                         SharedConfig.pushAuthKeyId = new byte[8];
                         byte[] authKeyHash = Utilities.computeSHA1(SharedConfig.pushAuthKey);
