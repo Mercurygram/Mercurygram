@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.os.SystemClock;
 
 import it.belloworld.mercurygram.location.MgBackgroundLocationGate;
+import it.belloworld.mercurygram.push.MgPushWatchdog;
 
 public class AppStartReceiver extends BroadcastReceiver {
 
@@ -34,6 +35,12 @@ public class AppStartReceiver extends BroadcastReceiver {
         // carries no temporary allowlist, so startForegroundService() from a backgrounded process
         // throws and is swallowed. BOOT_COMPLETED and MY_PACKAGE_REPLACED are exempt and do start.
         final String action = intent.getAction();
+        if (MgPushWatchdog.ACTION.equals(action)) {
+            // [MG] the periodic push watchdog: it re-registers and resumes the connection, and
+            // deliberately leaves the keep-alive service alone (see MgPushWatchdog.onAlarm)
+            MgPushWatchdog.onAlarm(context);
+            return;
+        }
         final boolean boot = Intent.ACTION_BOOT_COMPLETED.equals(action);
         final boolean selfRestart = "org.telegram.start".equals(action);
         if (selfRestart) {
@@ -55,6 +62,10 @@ public class AppStartReceiver extends BroadcastReceiver {
             }
             ApplicationLoader.startPushService();
             if (!selfRestart) {
+                // [MG] a reboot and an app update both wipe the app's alarms, and this is the
+                // only path that runs afterwards when the keep-alive service is off: without it
+                // the watchdog stays disarmed until something else initialises the app
+                MgPushWatchdog.schedule(context);
                 // [MG] boot and app update are exempt from the background start limit, so this is
                 // where a persisted live location share gets its foreground service back
                 MgBackgroundLocationGate.onSystemStart();
