@@ -166,6 +166,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Tor plugin: signature mismatch — refusing to bind</string>
     <string name="MercurygramTorPluginBindRefused">The Tor plugin is installed, but Android refused to start it. Allow it to run in the background (autostart and battery settings), then try again.</string>
     <string name="MercurygramTorPluginOpenAppInfo">Plugin settings</string>
+    <string name="MercurygramTorPluginUnavailable">The Tor plugin is not available on this install channel.</string>
     <string name="MercurygramTranslationSettings">Translation</string>
     <string name="MercurygramTranslationRowAbout">Pick how Mercurygram translates received messages.</string>
     <string name="MercurygramTranslationEngine">Engine</string>
