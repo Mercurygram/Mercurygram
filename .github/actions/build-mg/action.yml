@@ -13,7 +13,7 @@ inputs:
     description: 'Gradle task to run (e.g. assembleAfatFdArm64Release).'
     required: true
   abi:
-    description: 'ABI suffix for the output APK name (e.g. arm64-v8a).'
+    description: 'ABI suffix for the output APK name (e.g. arm64-v8a). "aab" selects the Android App Bundle output of a bundle* task instead of an APK.'
     required: true
   build-type:
     description: 'release or debug — selects the output directory.'
@@ -127,23 +127,38 @@ runs:
     - name: Compute JNI cache fingerprint
       uses: ./.github/actions/jni-cache-fingerprint
 
-    - name: Restore JNI native build outputs (${{ inputs.abi }})
-      # restore-only: the _prewarm-native reusable workflow is the
-      # authoritative writer for this key. On cache hit, every build_*.sh
-      # sentinel-skips (.a + .ndk-${NDK_VERSION}) and the assemble task
-      # completes without rebuilding natives. On miss, gradle rebuilds
-      # them inline — graceful degradation.
-      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: Restore JNI native cache (${{ inputs.abi }})
+      # Skipped for the app bundle: "aab" is not an ABI, so this key can never
+      # hit and the restore paths do not exist. The four calls below restore the
+      # real ABIs instead, since one bundle carries all of them.
+      if: ${{ inputs.abi != 'aab' }}
+      uses: ./.github/actions/restore-jni-cache
       with:
-        path: |
-          TMessagesProj/jni/boringssl/build/${{ inputs.abi }}
-          TMessagesProj/jni/ffmpeg/${{ inputs.abi }}
-          TMessagesProj/jni/ffmpeg/include
-          TMessagesProj/jni/ffmpeg/.ndk-${{ env.NDK_VERSION }}-${{ inputs.abi }}
-          TMessagesProj/jni/td/build/${{ inputs.abi }}
-          TMessagesProj/jni/td/td/generate/auto
-          TMessagesProj/jni/td/tdutils/generate/auto
-        key: jni-native-${{ runner.os }}-${{ inputs.abi }}-ndk${{ env.NDK_VERSION }}-${{ hashFiles('.jni-cache-fingerprint') }}
+        abi: ${{ inputs.abi }}
+
+    - name: Restore JNI native cache (bundle, armeabi-v7a)
+      if: ${{ inputs.abi == 'aab' }}
+      uses: ./.github/actions/restore-jni-cache
+      with:
+        abi: armeabi-v7a
+
+    - name: Restore JNI native cache (bundle, arm64-v8a)
+      if: ${{ inputs.abi == 'aab' }}
+      uses: ./.github/actions/restore-jni-cache
+      with:
+        abi: arm64-v8a
+
+    - name: Restore JNI native cache (bundle, x86)
+      if: ${{ inputs.abi == 'aab' }}
+      uses: ./.github/actions/restore-jni-cache
+      with:
+        abi: x86
+
+    - name: Restore JNI native cache (bundle, x86_64)
+      if: ${{ inputs.abi == 'aab' }}
+      uses: ./.github/actions/restore-jni-cache
+      with:
+        abi: x86_64
 
     - name: Create API_KEYS
       shell: bash
@@ -196,9 +211,15 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        APK_DIR=TMessagesProj_App/build/outputs/apk/${{ inputs.flavor }}/${{ inputs.build-type }}
-        DEST="$APK_DIR/Mercurygram${{ inputs.name-infix }}-${{ inputs.artifact-version }}-${{ inputs.abi }}.apk"
-        cp "$APK_DIR/${{ inputs.flavor }}.apk" "$DEST"
+        if [ "${{ inputs.abi }}" = "aab" ]; then
+            APK_DIR=TMessagesProj_App/build/outputs/bundle/${{ inputs.flavor }}Release
+            DEST="$APK_DIR/Mercurygram${{ inputs.name-infix }}-${{ inputs.artifact-version }}.aab"
+            cp "$APK_DIR"/*.aab "$DEST"
+        else
+            APK_DIR=TMessagesProj_App/build/outputs/apk/${{ inputs.flavor }}/${{ inputs.build-type }}
+            DEST="$APK_DIR/Mercurygram${{ inputs.name-infix }}-${{ inputs.artifact-version }}-${{ inputs.abi }}.apk"
+            cp "$APK_DIR/${{ inputs.flavor }}.apk" "$DEST"
+        fi
         echo "APK: ${DEST}"
         echo "Size: $(du -h "$DEST" | cut -f1) ($(stat -c%s "$DEST") bytes)"
         echo "SHA256: $(sha256sum "$DEST" | cut -d' ' -f1)"
