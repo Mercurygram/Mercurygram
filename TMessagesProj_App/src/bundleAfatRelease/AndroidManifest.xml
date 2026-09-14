@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Google Play overlay. Every release variant ends up with
+    config/release/AndroidManifest_SDK23.xml (the sourceSets blocks inside
+    productFlavors are not flavor-scoped, the last one wins), so the Play
+    specific removals live here: this variant source set outranks the build
+    type manifest and the library manifests in the merge.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Updates come through Play, no in-app APK installer. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>
+    <!-- Play restricts call log access to default dialers; upstream's own Play manifest omits both. -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" tools:node="remove"/>
+    <uses-permission android:name="android.permission.CALL_PHONE" tools:node="remove"/>
+
+</manifest>
