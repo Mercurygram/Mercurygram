@@ -10,8 +10,11 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.unifiedpush.android.connector.UnifiedPush;
 import org.unifiedpush.android.embedded_fcm_distributor.EmbeddedDistributorReceiver;
 import org.unifiedpush.android.embedded_fcm_distributor.Gateway;
+
+import it.belloworld.mercurygram.MgInstallSource;
 
 /**
  * UnifiedPush distributor that delivers through Firebase Cloud Messaging without any
@@ -95,6 +98,30 @@ public class MgEmbeddedFcmDistributor extends EmbeddedDistributorReceiver {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
+    }
+
+    /**
+     * True when this distributor should be the default choice: a Google Play install with Play
+     * Services and no distributor app installed. Play users expect notifications to work out of
+     * the box; every other channel keeps the entry opt-in. Evaluated only until a setter writes
+     * {@code mg_embeddedFcmChosen}, so installing a distributor app later flips the default back.
+     */
+    public static boolean isPlayDefault(Context context) {
+        return MgInstallSource.isPlayStore()
+                && isAvailable(context)
+                && firstThirdPartyDistributor(context) == null;
+    }
+
+    /**
+     * The first installed distributor that is not this built-in one, or null when none is
+     * installed. Every "is there a real distributor app" question routes through here so the
+     * own-package filter is stated once.
+     */
+    public static String firstThirdPartyDistributor(Context context) {
+        for (String distributor : UnifiedPush.getDistributors(context)) {
+            if (!isSelf(context, distributor)) return distributor;
+        }
+        return null;
     }
 
     /** True when the given distributor package name is this built-in distributor. */
