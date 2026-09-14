@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Плагін Tor: невідповідність підпису — підключення відхилено</string>
     <string name="MercurygramTorPluginBindRefused">Плаґін Tor встановлено, але Android відмовився його запустити. Дозвольте йому працювати у фоновому режимі (налаштування автозапуску та батареї) і спробуйте ще раз.</string>
     <string name="MercurygramTorPluginOpenAppInfo">Налаштування плаґіна</string>
+    <string name="MercurygramTorPluginUnavailable">Плаґін Tor недоступний у цьому каналі встановлення.</string>
     <string name="MercurygramTranslationSettings">Переклад</string>
     <string name="MercurygramTranslationRowAbout">Виберіть, як Mercurygram перекладає отримані повідомлення.</string>
     <string name="MercurygramTranslationEngine">Рушій</string>

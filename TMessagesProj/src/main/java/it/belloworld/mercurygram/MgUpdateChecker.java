@@ -41,6 +41,13 @@ public class MgUpdateChecker {
     private static final String GITHUB_LATEST_URL = "https://api.github.com/repos/Mercurygram/Mercurygram/releases/latest";
     private static final String GITHUB_LIST_URL = "https://api.github.com/repos/Mercurygram/Mercurygram/releases";
     private static final String GITHUB_TAG_URL_PREFIX = "https://api.github.com/repos/Mercurygram/Mercurygram/releases/tags/";
+    // SHA-256 of the release keystore cert. Channel detection hangs off this:
+    // a mismatch means "rebuilt and resigned by F-Droid" (isFdroidBuild), which
+    // hides the Tor toggle pre-S, retargets the plugin install link and changes
+    // which cert the plugin's knownSigner BIND permission accepts. Google Play
+    // must therefore be enrolled with this same key as the Play App Signing
+    // key, not just as the upload key: letting Play generate its own signing
+    // key would reclassify every Play install as an F-Droid one.
     private static final String MG_CERT_SHA256 = "1E73DE100E2646BE671AFAD2CB4BB471538E062A745AE5ADBE6C7D1666FD1EE9";
     private static final long CHECK_INTERVAL = 3600 * 1000; // 1 hour
     // Tighter throttle while a pending update is staged: a newer tag
@@ -102,6 +109,27 @@ public class MgUpdateChecker {
 
     private static boolean isFiveDotted(String tag) {
         return tag != null && tag.split("\\.", -1).length >= 5;
+    }
+
+    /**
+     * True when this install may download and install APKs itself: the GitHub
+     * channel. F-Droid installs update through F-Droid and Google Play installs
+     * through Play (the Play build also drops REQUEST_INSTALL_PACKAGES).
+     */
+    public static boolean canSelfInstall() {
+        return !isFdroidBuild()
+                && !MgInstallSource.isPlayStore()
+                && MgInstallSource.declaresInstallPermission();
+    }
+
+    /**
+     * True when this install has some way to reach the Tor plugin: in-app on the
+     * GitHub channel, the catalog entry on F-Droid. Google Play has no plugin
+     * listing and a Play install must not be sent off to an APK download, so
+     * callers there say so instead of offering an install action.
+     */
+    public static boolean hasPluginInstallPath() {
+        return canSelfInstall() || isFdroidBuild();
     }
 
     public static boolean isFdroidBuild() {
@@ -197,7 +225,7 @@ public class MgUpdateChecker {
     }
 
     private static void checkInternal(boolean force, String pinnedTag) {
-        if (isFdroidBuild()) return;
+        if (!canSelfInstall()) return;
 
         // Local reconciliation, no network: ahead of the auto-update and
         // throttle gates so the channel flag tracks the running install at
@@ -438,9 +466,9 @@ public class MgUpdateChecker {
      *  - Writes to cache/mg_tor_plugin.apk, not mg_update.apk, so a
      *    concurrent main updater download can't clobber and so a later
      *    main installUpdate(...) doesn't accidentally install the plugin.
-     * F-Droid channel callers must gate on {@link #isFdroidBuild()} before
-     * calling — F-Droid plugin is signed with a different cert; this method
-     * also short-circuits as a safety net.
+     * Store-channel callers must gate on {@link #canSelfInstall()} before
+     * calling: the F-Droid plugin is signed with a different cert and a Play
+     * install cannot sideload. This method also short-circuits as a safety net.
      */
     public static void downloadPlugin(ProgressCallback callback) {
         if (!isDownloadingPlugin.compareAndSet(false, true)) {
@@ -450,9 +478,9 @@ public class MgUpdateChecker {
             AndroidUtilities.runOnUIThread(() -> callback.onError("Already downloading"));
             return;
         }
-        if (isFdroidBuild()) {
+        if (!canSelfInstall()) {
             isDownloadingPlugin.set(false);
-            AndroidUtilities.runOnUIThread(() -> callback.onError("F-Droid channel"));
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Store channel"));
             return;
         }
         if (Build.SUPPORTED_ABIS.length == 0) {
@@ -653,11 +681,12 @@ public class MgUpdateChecker {
     // currentInstallVersion() fallback to BuildVars.BUILD_VERSION_STRING
     // (3-dotted upstream form, e.g. "12.7.3") on PM exception, which
     // would otherwise produce a false-positive against any 4/5-dotted
-    // plugin tag. F-Droid channel returns false: the plugin's catalog
-    // drives its own update cadence and the signing certs differ so the
-    // in-app download path is not authoritative there anyway.
+    // plugin tag. Store channels return false: F-Droid's catalog drives
+    // its own update cadence and the signing certs differ, and a Play
+    // install cannot sideload at all, so the in-app download path is not
+    // authoritative on either.
     public static boolean isPluginOutdated(String pluginPkg) {
-        if (isFdroidBuild()) return false;
+        if (!canSelfInstall()) return false;
         String installed = installedPluginVersion(pluginPkg);
         if (installed == null) return false;
         String main = currentInstallVersion();
