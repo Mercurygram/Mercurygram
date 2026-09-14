@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Plugin Tor: firma non corrispondente — collegamento rifiutato</string>
     <string name="MercurygramTorPluginBindRefused">Il plugin Tor è installato, ma Android ne ha rifiutato l\'avvio. Consentigli di funzionare in background (impostazioni di avvio automatico e batteria), poi riprova.</string>
     <string name="MercurygramTorPluginOpenAppInfo">Impostazioni del plugin</string>
+    <string name="MercurygramTorPluginUnavailable">Il plugin Tor non è disponibile su questo canale di installazione.</string>
     <string name="MercurygramTranslationSettings">Traduzione</string>
     <string name="MercurygramTranslationRowAbout">Scegli come Mercurygram traduce i messaggi ricevuti.</string>
     <string name="MercurygramTranslationEngine">Motore</string>
