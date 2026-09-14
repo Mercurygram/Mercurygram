@@ -164,6 +164,7 @@
     <string name="MercurygramTorPluginOutdated">Tor plugin update required</string>
     <string name="MercurygramUpdateTorPlugin">Update Tor plugin</string>
     <string name="MercurygramTorPluginSignatureMismatch">Tor plugin: signature mismatch — refusing to bind</string>
+    <string name="MercurygramTorPluginUnavailable">The Tor plugin is not available on this install channel.</string>
     <string name="MercurygramTranslationSettings">Translation</string>
     <string name="MercurygramTranslationRowAbout">Pick how Mercurygram translates received messages.</string>
     <string name="MercurygramTranslationEngine">Engine</string>

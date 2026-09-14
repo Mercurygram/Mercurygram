@@ -1,0 +1,30 @@
+name: Restore JNI native cache
+description: >-
+  Restore-only lookup of the per-ABI JNI native build outputs. The
+  _prewarm-native reusable workflow is the authoritative writer for this key;
+  on a hit every build_*.sh sentinel-skips (.a + .ndk-${NDK_VERSION}) and the
+  gradle task completes without rebuilding natives. On a miss gradle rebuilds
+  them inline, so a miss only costs time. The path list and the key shape live
+  here once because build-mg needs one ABI for an APK build and all four for an
+  app bundle.
+
+inputs:
+  abi:
+    description: 'ABI to restore (armeabi-v7a, arm64-v8a, x86 or x86_64).'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Restore JNI native build outputs (${{ inputs.abi }})
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          TMessagesProj/jni/boringssl/build/${{ inputs.abi }}
+          TMessagesProj/jni/ffmpeg/${{ inputs.abi }}
+          TMessagesProj/jni/ffmpeg/include
+          TMessagesProj/jni/ffmpeg/.ndk-${{ env.NDK_VERSION }}-${{ inputs.abi }}
+          TMessagesProj/jni/td/build/${{ inputs.abi }}
+          TMessagesProj/jni/td/td/generate/auto
+          TMessagesProj/jni/td/tdutils/generate/auto
+        key: jni-native-${{ runner.os }}-${{ inputs.abi }}-ndk${{ env.NDK_VERSION }}-${{ hashFiles('.jni-cache-fingerprint') }}
