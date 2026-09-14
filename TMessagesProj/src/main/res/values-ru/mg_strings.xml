@@ -97,6 +97,7 @@
     <string name="MercurygramTorPluginOutdated">Требуется обновление плагина Tor</string>
     <string name="MercurygramUpdateTorPlugin">Обновить плагин Tor</string>
     <string name="MercurygramTorPluginSignatureMismatch">Плагин Tor: несоответствие подписи — подключение отклонено</string>
+    <string name="MercurygramTorPluginUnavailable">Плагин Tor недоступен в этом канале установки.</string>
     <string name="MercurygramTranslationSettings">Перевод</string>
     <string name="MercurygramTranslationRowAbout">Выберите, как Mercurygram переводит полученные сообщения.</string>
     <string name="MercurygramTranslationEngine">Движок</string>
