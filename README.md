@@ -12,6 +12,7 @@ This is an unofficial fork of [Telegram App for Android](https://github.com/DrKL
 [![Discussions](https://img.shields.io/badge/Official-Group-blue.svg?logo=telegram)](https://t.me/Mercurygram)
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/en/packages/it.belloworld.mercurygram/)
+[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">](https://play.google.com/store/apps/details?id=it.belloworld.mercurygram)
 
 </div>
 
@@ -21,13 +22,15 @@ Mercurygram publishes two kinds of build. The tag shape tells you which:
 
 | Channel | Tag shape | Example | Packages | When it ships |
 |---|---|---|---|---|
-| **Stable** | 4-part `X.Y.Z.M` (M ≥ 1) | `12.7.3.1` | stable only (`it.belloworld.mercurygram`) | Tagged release. Also goes to F-Droid. |
+| **Stable** | 4-part `X.Y.Z.M` (M ≥ 1) | `12.7.3.1` | stable only (`it.belloworld.mercurygram`) | Tagged release. Also goes to F-Droid and Google Play. |
 | **Snapshot** | 5-part `X.Y.Z.M.K` (M ≥ 1) | `12.7.3.1.42` | **both** stable and beta (`it.belloworld.mercurygram.beta`) | Every push to the `Mercurygram` branch (`beta.yml`). Snapshot of the next stable. |
 | **Pre-stable** | 5-part `X.Y.Z.0.K` | `12.7.3.0.5` | **both** stable and beta (`it.belloworld.mercurygram.beta`) | After an upstream rebase, before the first `X.Y.Z.M` (M ≥ 1) stable for that upstream ships (`beta.yml`). |
 
 Snapshots and pre-stable builds both publish two APKs per release: a Release-flavor APK that updates the stable package side and a Debug-flavor APK (filename infixed with `-debug`) that updates the `.beta` package side. Filenames: `Mercurygram-<tag>-<abi>.apk` (Release) and `Mercurygram-debug-<tag>-<abi>.apk` (Debug). Stable installs pull the Release APK via the in-app updater opt-in toggle; `.beta` installs pull the Debug APK.
 
 Versions order naturally: `12.7.3.0.5 < 12.7.3.1 < 12.7.3.1.42 < 12.7.3.2`.
+
+The Google Play listing is the same source tree and the same signing key as the GitHub APKs, built as an app bundle (`Mercurygram-<tag>.aab`, also attached to every stable release). Its versionCode is lower than the per-ABI and fat APKs of the same tag, so a GitHub APK installs over a Play install (it then behaves like a GitHub install: updater on, push opt-in), while Play only takes over again at the next tag. Play installs hide the in-app updater, the Play build hides the Premium and Stars purchase entry points (Play's payments policy, keyed on the bundle itself so sideloading it changes nothing), and Play installs pick the built-in Google FCM push entry by default when no distributor app is installed.
 
 ### One-click install via [Obtainium](https://obtainium.imranr.dev/)
 
@@ -61,7 +64,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 
 [![Add Mercurygram Tor Plugin (Stable + Pre-release) to Obtainium](https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22it.belloworld.mercurygram.plugin.tor%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FMercurygram%2FMercurygram%22%2C%22author%22%3A%22Mercurygram%22%2C%22name%22%3A%22Mercurygram%20Tor%20Plugin%20%28Stable%20%2B%20Pre-release%29%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3A%20true%2C%20%5C%22filterReleaseTitlesByRegEx%5C%22%3A%20%5C%22%5E%5C%5C%5C%5Cd%2B%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%28%5C%5C%5C%5C.%5C%5C%5C%5Cd%2B%29%3F%24%5C%22%2C%20%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5EMercurygram-tor-plugin-%5C%22%7D%22%7D)
 
-> **Stable users:** the in-app updater can be opted in to pre-release updates from **Settings → Mercurygram → Updates → Accept pre-release updates**. Enabling shows a warning dialog. Turning it back off while a pre-release is installed offers the matching 4-part stable as an update, rolling the install back. Installing a pre-release by other means (sideload, Obtainium) switches the toggle on by itself at the next update check, so it always reflects the channel you are actually on.
+> **Stable users:** the in-app updater is hidden on F-Droid and Google Play installs, which update through their store. On GitHub installs it can be opted in to pre-release updates from **Settings → Mercurygram → Updates → Accept pre-release updates**. Enabling shows a warning dialog. Turning it back off while a pre-release is installed offers the matching 4-part stable as an update, rolling the install back. Installing a pre-release by other means (sideload, Obtainium) switches the toggle on by itself at the next update check, so it always reflects the channel you are actually on.
 
 ## Features
 
@@ -69,7 +72,7 @@ Same package ID across these entries; pick **one**. The plugin only ships a Rele
 - Copy the name of a chat, group, channel or user by long-pressing the title in its profile (tapping the ID row still copies the ID)
 - Add a UnifiedPush screen (*Settings → Mercurygram → Notifications → UnifiedPush*) listing the installed distributors, with the registration state shown under the list until the chosen distributor answers with an endpoint. A distributor may be long-pressed to inspect recent UnifiedPush notification/decryption stats
 - Set the [UnifiedPush WebPush gateway](#unifiedpush-webpush-gateway) on the same screen
-- Offer a built-in "Google FCM" entry in the distributor list, for devices that have Play Services and no distributor app installed. It carries no Google library and needs no Firebase project (see [Google FCM without Google libraries](#google-fcm-without-google-libraries)). It is never selected automatically, and picking it warns about what Google gets to see
+- Offer a built-in "Google FCM" entry in the distributor list, for devices that have Play Services and no distributor app installed. It carries no Google library and needs no Firebase project (see [Google FCM without Google libraries](#google-fcm-without-google-libraries)). It is never selected automatically, except on Google Play installs with no distributor app, and picking it warns about what Google gets to see
 - Set the VAPID public key the built-in "Google FCM" entry signs with, on the same screen (shown only while that entry is selected), so its pushes can be routed through a self-hosted gateway instead of Mercurygram's
 - Add toggle setting in Chat Settings to start video messages with rear-facing camera
 - Add toggle setting in Chat Settings to hide keyboard on chat scroll
@@ -238,7 +241,12 @@ What changes with this entry selected is metadata: Google learns that a
 notification was delivered to the device, and Play Services must remain
 installed. Every other distributor keeps Google out of the path entirely, which
 is why this entry is never picked automatically and shows a warning when
-selected. The `/fcm/` route follows the Gateway URL setting, and the gateway's
+selected. The one exception is a Google Play install with no distributor app:
+there the entry is the default, since a Play user expects notifications to work
+out of the box and Play Services is already on the device. The same warning is
+still shown in the distributor settings, and installing any distributor app
+turns the default off again: the subscription moves to that app at the next cold
+start. The `/fcm/` route follows the Gateway URL setting, and the gateway's
 VAPID public key sits next to it on the same screen, so self-hosters can point
 the entry at their own `aesgcm-proxy`. The two only work as a pair: a gateway
 that does not hold the matching private half signs with a key FCM does not know,
@@ -318,7 +326,7 @@ locale.
 
 Tag shape encodes the release channel (see the [Install](#install) section for the table):
 
-- **Stable** — `X.Y.Z.M` (4-part, `M ≥ 1`). `X.Y.Z` is the upstream Telegram version; `M` is the Mercurygram minor revision on top of it. Goes to the `it.belloworld.mercurygram` package, F-Droid.
+- **Stable** — `X.Y.Z.M` (4-part, `M ≥ 1`). `X.Y.Z` is the upstream Telegram version; `M` is the Mercurygram minor revision on top of it. Goes to the `it.belloworld.mercurygram` package, F-Droid, Google Play.
 - **Snapshot** — `X.Y.Z.M.K` (5-part, `M ≥ 1`). Per-push automated build between stable `X.Y.Z.M` and `X.Y.Z.(M+1)`. `K` is per-stable-bump monotonic. Goes to the `it.belloworld.mercurygram.beta` package and (for opted-in stable installs) the `it.belloworld.mercurygram` package.
 - **Pre-stable** — `X.Y.Z.0.K` (5-part, `M = 0`). Per-push automated build issued between an upstream rebase and the first `X.Y.Z.M` (M ≥ 1) stable for that upstream. Lets testers exercise the upcoming stable before it gets the official 4-part tag. Stops being published once any `X.Y.Z.M` ≥ 1 stable exists for the current upstream. `M = 0` is the namespace marker — no `X.Y.Z.0` 4-part tag is ever created.
 
