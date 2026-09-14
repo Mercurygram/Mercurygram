@@ -64,10 +64,11 @@ public class MgTorSettingsActivity extends UniversalFragment {
         }
         // Manual plugin update/repair (mirrors the main "Check for updates
         // now" button). Shown whenever the plugin is installed on the
-        // GitHub channel; F-Droid drives plugin updates from its catalog so
-        // the row is hidden there. Subtitle reflects freshness from disk.
-        if (it.belloworld.mercurygram.tor.MgTorClient.isPluginInstalled()
-                && !MgUpdateChecker.isFdroidBuild()) {
+        // GitHub channel; F-Droid drives plugin updates from its catalog and
+        // Play installs cannot sideload, so the row is hidden there.
+        // Subtitle reflects freshness from disk.
+        if (MgUpdateChecker.canSelfInstall()
+                && it.belloworld.mercurygram.tor.MgTorClient.isPluginInstalled()) {
             // "needs update" = hard floor breach (blocks binding) OR soft
             // versionName drift. Including the floor breach guarantees this
             // repair row offers the install when handleUseTorClick refuses
@@ -95,7 +96,10 @@ public class MgTorSettingsActivity extends UniversalFragment {
         // and bailOutUnavailable already flipped the flag off if the lib is
         // missing on this build).
         if (!SharedConfig.mg_useTor && !it.belloworld.mercurygram.tor.MgTorClient.isPluginInstalled()) {
-            torAbout = torAbout + "\n\n" + LocaleController.getString(R.string.MercurygramTorPluginMissing);
+            // "Install it" only makes sense where the app can actually get it.
+            torAbout = torAbout + "\n\n" + LocaleController.getString(MgUpdateChecker.hasPluginInstallPath()
+                    ? R.string.MercurygramTorPluginMissing
+                    : R.string.MercurygramTorPluginUnavailable);
         }
         items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(torAbout)));
     }
@@ -352,19 +356,27 @@ public class MgTorSettingsActivity extends UniversalFragment {
         }
         // Signature mismatch isn't fixable by installing — fall back to a
         // dismissible alert without an "Install" action.
+        // Same for a channel with no way to reach the plugin at all: say so
+        // instead of offering a button that leads nowhere.
+        boolean noInstallPath = !MgUpdateChecker.hasPluginInstallPath();
+        boolean signatureMismatch =
+                state == it.belloworld.mercurygram.tor.MgTorClient.State.PLUGIN_SIGNATURE_MISMATCH;
+        if (noInstallPath && !signatureMismatch) {
+            msgRes = R.string.MercurygramTorPluginUnavailable;
+        }
         AlertDialog.Builder b = new AlertDialog.Builder(context)
                 .setTitle(LocaleController.getString(R.string.MercurygramTor))
                 .setMessage(LocaleController.getString(msgRes));
-        if (state == it.belloworld.mercurygram.tor.MgTorClient.State.PLUGIN_SIGNATURE_MISMATCH) {
+        if (signatureMismatch || noInstallPath) {
             b.setPositiveButton(LocaleController.getString(R.string.OK), null);
         } else {
             b.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
             b.setPositiveButton(LocaleController.getString(R.string.MercurygramTorInstallPlugin),
                     (d, which) -> {
-                        // F-Droid channel: the plugin APK on F-Droid is signed
-                        // with a different cert and there's no in-app GitHub
-                        // path on that flavor — bounce to the F-Droid page.
-                        if (MgUpdateChecker.isFdroidBuild()) {
+                        // F-Droid: its plugin APK is signed with a different
+                        // cert, so hand off to the catalog entry instead of
+                        // downloading a copy this build would refuse to install.
+                        if (!MgUpdateChecker.canSelfInstall()) {
                             try {
                                 context.startActivity(
                                         it.belloworld.mercurygram.tor.MgTorClient.getInstance().buildPluginInstallIntent());

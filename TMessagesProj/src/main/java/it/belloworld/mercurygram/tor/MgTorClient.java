@@ -671,7 +671,7 @@ public final class MgTorClient {
      */
     public static boolean isPluginUpdateAvailable() {
         return isPluginInstalled()
-                && !MgUpdateChecker.isFdroidBuild()
+                && MgUpdateChecker.canSelfInstall()
                 && MgUpdateChecker.isPluginOutdated(pluginPackage());
     }
 
@@ -706,7 +706,7 @@ public final class MgTorClient {
     public static void maybePromptPluginUpdate(Activity activity) {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
         if (pluginPromptShownThisSession) return;
-        if (MgUpdateChecker.isFdroidBuild()) return;
+        if (!MgUpdateChecker.canSelfInstall()) return;
         // Only nag users who are actually relying on Tor — a plugin
         // sitting installed-but-unused (left over from prior toggle-on
         // experiments) doesn't warrant interrupting the cold start.
@@ -1221,29 +1221,19 @@ public final class MgTorClient {
     public int getSocksPort() { return socksPort; }
 
     /**
-     * Where to send the user to install / update the plugin.
-     * Route by main's own signing cert as the distribution-channel signal:
-     *  - main signed with the developer release cert → GitHub releases.
-     *    Use the tag matching this main's versionName (set by
-     *    gradle/mg-version.gradle) instead of /releases/latest, which
-     *    GitHub server-filters to non-prerelease — a 5-dotted prerelease
-     *    main would otherwise land on a stable-only page with a
-     *    versionCode-mismatched plugin APK.
-     *  - otherwise → F-Droid plugin page. Either channel of the dual-key
-     *    allowlist accepts the bind, so cross-channel installs work on
-     *    API 31+ — but staying on the same channel keeps versionCodes in
-     *    lockstep release-for-release.
+     * Where to send the user to install / update the plugin: the F-Droid
+     * catalog entry, the one channel that both lacks an in-app install path
+     * and has somewhere to send the user. The GitHub channel downloads and
+     * installs the plugin in-app (MgUpdateChecker.runPluginInstall), and
+     * Google Play has no plugin listing to open, so callers there show a
+     * dismissible "not available here" alert instead of linking out to an APK.
+     *
+     * <p>Cross-channel installs still bind on API 31+ (either cert of the
+     * dual-key allowlist is accepted), but staying on one channel keeps main
+     * and plugin versionCodes in lockstep release-for-release.
      */
     public Intent buildPluginInstallIntent() {
-        Uri uri;
-        if (MgUpdateChecker.isFdroidBuild()) {
-            uri = Uri.parse("https://f-droid.org/packages/" + PLUGIN_PACKAGE_BASE + "/");
-        } else {
-            String tag = MgUpdateChecker.currentInstallVersion();
-            uri = (tag != null && !tag.isEmpty())
-                    ? Uri.parse("https://github.com/Mercurygram/Mercurygram/releases/tag/" + tag)
-                    : Uri.parse("https://github.com/Mercurygram/Mercurygram/releases");
-        }
+        Uri uri = Uri.parse("https://f-droid.org/packages/" + PLUGIN_PACKAGE_BASE + "/");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;

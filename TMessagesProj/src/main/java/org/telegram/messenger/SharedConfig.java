@@ -1038,7 +1038,10 @@ public class SharedConfig {
         editor.putBoolean("mg_disableUnifiedPush", disableUnifiedPush);
         editor.putString("mg_unifiedPushGateway2", unifiedPushGateway);
         editor.putString("mg_fcmVapidKey", mgFcmVapidKey);
-        editor.putBoolean("mg_embeddedFcmChosen", mgEmbeddedFcmChosen);
+        // mg_embeddedFcmChosen is deliberately not written here: setMgEmbeddedFcmChosen
+        // is the only writer, so the key's absence keeps meaning "no explicit choice yet"
+        // and mgLoadConfig can keep deriving the default. Writing the derived value back
+        // would freeze it on the first saveConfig of the first session.
         editor.putBoolean("mg_disableSecureFlags", disableSecureFlags);
         editor.putBoolean("mg_removeAdsAndProxySponsor", removeAdsAndProxySponsor);
         editor.putBoolean("mg_disableAutoUpdate", disableAutoUpdate);
@@ -1099,10 +1102,22 @@ public class SharedConfig {
         // this flag existed may have lost the connector's saved distributor before updating, and
         // would otherwise never recover on its own. The last endpoint we were given survives that
         // loss (only an explicit distributor switch clears it), so its shape stands in for the
-        // choice until a setter writes the flag for real.
-        mgEmbeddedFcmChosen = preferences.getBoolean("mg_embeddedFcmChosen",
-                it.belloworld.mercurygram.push.MgEmbeddedFcmDistributor.looksLikeFcmEndpoint(
-                        preferences.getString("mg_unifiedPushEndpointUrl", "")));
+        // choice until a setter writes the flag for real. Google Play installs default to it
+        // when no distributor app is present, and only there: the endpoint heuristic would
+        // otherwise answer for them from the second cold start on (the first registration
+        // persists an /fcm/ endpoint), and installing a distributor app later would never flip
+        // the default back. Re-derived on every load while the key is absent
+        // (setMgEmbeddedFcmChosen is its only writer). contains() rather than a getBoolean
+        // default because Java evaluates that default eagerly and the probes are
+        // PackageManager round trips on a startup path.
+        if (preferences.contains("mg_embeddedFcmChosen")) {
+            mgEmbeddedFcmChosen = preferences.getBoolean("mg_embeddedFcmChosen", false);
+        } else if (it.belloworld.mercurygram.MgInstallSource.isPlayStore()) {
+            mgEmbeddedFcmChosen = it.belloworld.mercurygram.push.MgEmbeddedFcmDistributor.isPlayDefault(ApplicationLoader.applicationContext);
+        } else {
+            mgEmbeddedFcmChosen = it.belloworld.mercurygram.push.MgEmbeddedFcmDistributor.looksLikeFcmEndpoint(
+                    preferences.getString("mg_unifiedPushEndpointUrl", ""));
+        }
         disableSecureFlags = preferences.getBoolean("mg_disableSecureFlags", false);
         removeAdsAndProxySponsor = preferences.getBoolean("mg_removeAdsAndProxySponsor", false);
         disableAutoUpdate = preferences.getBoolean("mg_disableAutoUpdate", false);
@@ -1659,7 +1674,7 @@ public class SharedConfig {
     }
 
     public static boolean isMgUpdateAvailable() {
-        return mgPendingUpdate != null && !it.belloworld.mercurygram.MgUpdateChecker.isFdroidBuild();
+        return mgPendingUpdate != null && it.belloworld.mercurygram.MgUpdateChecker.canSelfInstall();
     }
 
     public static it.belloworld.mercurygram.MgUpdateInfo getMgPendingUpdate() {
