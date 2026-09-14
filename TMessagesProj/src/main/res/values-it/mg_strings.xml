@@ -97,6 +97,7 @@
     <string name="MercurygramTorPluginOutdated">Aggiornamento del plugin Tor richiesto</string>
     <string name="MercurygramUpdateTorPlugin">Aggiorna il plugin Tor</string>
     <string name="MercurygramTorPluginSignatureMismatch">Plugin Tor: firma non corrispondente — collegamento rifiutato</string>
+    <string name="MercurygramTorPluginUnavailable">Il plugin Tor non è disponibile su questo canale di installazione.</string>
     <string name="MercurygramTranslationSettings">Traduzione</string>
     <string name="MercurygramTranslationRowAbout">Scegli come Mercurygram traduce i messaggi ricevuti.</string>
     <string name="MercurygramTranslationEngine">Motore</string>
