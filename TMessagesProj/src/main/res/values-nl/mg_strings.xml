@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Tor-plug-in: handtekening komt niet overeen — koppeling geweigerd</string>
     <string name="MercurygramTorPluginBindRefused">De Tor-plug-in is geïnstalleerd, maar Android weigerde deze te starten. Sta toe dat de plug-in op de achtergrond draait (autostart- en batterij-instellingen) en probeer het opnieuw.</string>
     <string name="MercurygramTorPluginOpenAppInfo">Plug-in-instellingen</string>
+    <string name="MercurygramTorPluginUnavailable">De Tor-plug-in is niet beschikbaar via dit installatiekanaal.</string>
     <string name="MercurygramTranslationSettings">Vertaling</string>
     <string name="MercurygramTranslationRowAbout">Bepaal hoe Mercurygram ontvangen berichten vertaalt.</string>
     <string name="MercurygramTranslationEngine">Engine</string>
