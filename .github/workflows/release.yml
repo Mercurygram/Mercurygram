@@ -58,6 +58,13 @@ jobs:
           - flavor: afatFdX86_64
             task: assembleAfatFdX86_64Release
             abi: x86_64
+          # Google Play bundle. Attached to the GitHub release, uploaded to
+          # Play Console by hand. Artifact name is not apk-* on purpose:
+          # fdroiddata-sync globs *.apk and the release job lists it
+          # separately below.
+          - flavor: bundleAfat
+            task: bundleBundleAfatRelease
+            abi: aab
 
     steps:
       - name: Checkout
@@ -87,7 +94,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: apk-${{ matrix.abi }}
+          name: ${{ matrix.abi == 'aab' && 'bundle-play' || format('apk-{0}', matrix.abi) }}
           path: ${{ steps.build.outputs.apk_path }}
 
   # Tor plugin companion APK — per-ABI Release build of
@@ -444,6 +451,12 @@ jobs:
           merge-multiple: true
           path: artifacts/
 
+      - name: Download Play bundle artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: bundle-play
+          path: artifacts/
+
       - name: Download changelog artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -454,7 +467,9 @@ jobs:
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           body_path: artifacts/changelog.md
-          files: artifacts/*.apk
+          files: |
+            artifacts/*.apk
+            artifacts/*.aab
 
   # Per-app matrix: one parallel leg per AppID, one branch each (and, by
   # default, one MR each). The Python script (fdroid_sync.py) supports

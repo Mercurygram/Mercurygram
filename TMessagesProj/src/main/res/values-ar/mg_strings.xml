@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">إضافة Tor: عدم تطابق التوقيع — تم رفض الربط</string>
     <string name="MercurygramTorPluginBindRefused">إضافة Tor مثبتة، لكن أندرويد رفض تشغيلها. اسمح لها بالعمل في الخلفية (إعدادات التشغيل التلقائي والبطارية)، ثم أعد المحاولة.</string>
     <string name="MercurygramTorPluginOpenAppInfo">إعدادات الإضافة</string>
+    <string name="MercurygramTorPluginUnavailable">إضافة Tor غير متوفرة في قناة التثبيت هذه.</string>
     <string name="MercurygramTranslationSettings">الترجمة</string>
     <string name="MercurygramTranslationRowAbout">اختر كيف يترجم Mercurygram الرسائل المستلمة.</string>
     <string name="MercurygramTranslationEngine">المحرك</string>

@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Plug-in do Tor: assinatura não corresponde — vinculação recusada</string>
     <string name="MercurygramTorPluginBindRefused">O plugin do Tor está instalado, mas o Android recusou iniciá-lo. Permita que ele seja executado em segundo plano (configurações de inicialização automática e bateria) e tente de novo.</string>
     <string name="MercurygramTorPluginOpenAppInfo">Configurações do plugin</string>
+    <string name="MercurygramTorPluginUnavailable">O plugin do Tor não está disponível neste canal de instalação.</string>
     <string name="MercurygramTranslationSettings">Tradução</string>
     <string name="MercurygramTranslationRowAbout">Escolha como o Mercurygram traduz as mensagens recebidas.</string>
     <string name="MercurygramTranslationEngine">Motor</string>

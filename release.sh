@@ -23,7 +23,7 @@ if [ -d TMessagesProj/jni.bak ]; then
     rm -rf TMessagesProj/jni
     cp -a --reflink=auto TMessagesProj/jni.bak TMessagesProj/jni
 fi
-./gradlew assembleAfatRelease assembleAfatDebug \
+./gradlew assembleAfatRelease assembleAfatDebug bundleBundleAfatRelease \
     assembleAfatFdArm32Release assembleAfatFdArm64Release assembleAfatFdX86Release assembleAfatFdX86_64Release \
     -PMG_BUILD_TAG="$TAG" \
     -PRELEASE_STORE_FILE="$KS" \
@@ -42,6 +42,8 @@ cp "$APK_DIR/afatFdArm32/release/afatFdArm32.apk"   "$APK_DIR/Mercurygram-${TAG}
 cp "$APK_DIR/afatFdArm64/release/afatFdArm64.apk"   "$APK_DIR/Mercurygram-${TAG}-arm64-v8a.apk"
 cp "$APK_DIR/afatFdX86/release/afatFdX86.apk"       "$APK_DIR/Mercurygram-${TAG}-x86.apk"
 cp "$APK_DIR/afatFdX86_64/release/afatFdX86_64.apk" "$APK_DIR/Mercurygram-${TAG}-x86_64.apk"
+# Google Play bundle (upload manually through Play Console).
+cp ./TMessagesProj_App/build/outputs/bundle/bundleAfatRelease/*.aab "$APK_DIR/Mercurygram-${TAG}.aab"
 
 # Find previous Mercurygram release tag (4-part version format).
 # `|| true` — both greps return 1 on no-match (e.g. first stable ever, or
@@ -79,4 +81,5 @@ gh release create "$TAG" \
     "$APK_DIR/Mercurygram-${TAG}-arm64-v8a.apk" \
     "$APK_DIR/Mercurygram-${TAG}-x86.apk" \
     "$APK_DIR/Mercurygram-${TAG}-x86_64.apk" \
+    "$APK_DIR/Mercurygram-${TAG}.aab" \
     --notes "$BODY"
