@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.RecyclerView;
 
+import it.belloworld.mercurygram.MgBilling;
 import it.belloworld.mercurygram.compat.billing.BillingClient;
 import it.belloworld.mercurygram.compat.billing.BillingFlowParams;
 import it.belloworld.mercurygram.compat.billing.ProductDetails;
@@ -806,6 +807,7 @@ public class SendGiftSheet extends BottomSheetWithRecyclerListView implements No
                         .putBoolean(Calendar.getInstance().get(Calendar.YEAR) + "show_gift_for_" + dialogId, true)
                         .apply();
                 }, error -> {
+                    button.setLoading(false);
                     BoostDialogs.showToastError(getContext(), error);
                 });
             }
@@ -829,6 +831,10 @@ public class SendGiftSheet extends BottomSheetWithRecyclerListView implements No
                     button.setLoading(false);
                 });
             } else if (BuildVars.useInvoiceBilling()) {
+                if (MgBilling.blockPurchase(getBaseFragment())) {
+                    button.setLoading(false);
+                    return;
+                }
                 final LaunchActivity activity = LaunchActivity.instance;
                 if (activity != null) {
                     Uri uri = Uri.parse(o.bot_url);
