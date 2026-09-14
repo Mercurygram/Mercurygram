@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Tor 플러그인: 서명 불일치 — 바인딩이 거부되었습니다</string>
     <string name="MercurygramTorPluginBindRefused">Tor 플러그인이 설치되어 있지만 안드로이드가 실행을 거부했습니다. 백그라운드 실행을 허용한 뒤(자동 실행 및 배터리 설정) 다시 시도하세요.</string>
     <string name="MercurygramTorPluginOpenAppInfo">플러그인 설정</string>
+    <string name="MercurygramTorPluginUnavailable">이 설치 채널에서는 Tor 플러그인을 사용할 수 없습니다.</string>
     <string name="MercurygramTranslationSettings">번역</string>
     <string name="MercurygramTranslationRowAbout">Mercurygram이 수신한 메시지를 번역하는 방식을 선택하세요.</string>
     <string name="MercurygramTranslationEngine">엔진</string>
