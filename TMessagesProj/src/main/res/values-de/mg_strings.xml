@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Tor-Plugin: Signatur stimmt nicht überein — Bindung verweigert</string>
     <string name="MercurygramTorPluginBindRefused">Das Tor-Plug-in ist installiert, aber Android hat den Start verweigert. Erlaube ihm, im Hintergrund zu laufen (Autostart- und Akkueinstellungen), und versuche es erneut.</string>
     <string name="MercurygramTorPluginOpenAppInfo">Plug-in-Einstellungen</string>
+    <string name="MercurygramTorPluginUnavailable">Das Tor-Plug-in ist über diesen Installationskanal nicht verfügbar.</string>
     <string name="MercurygramTranslationSettings">Übersetzung</string>
     <string name="MercurygramTranslationRowAbout">Lege fest, wie Mercurygram empfangene Nachrichten übersetzt.</string>
     <string name="MercurygramTranslationEngine">Engine</string>

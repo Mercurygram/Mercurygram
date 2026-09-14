@@ -1,0 +1,32 @@
+Mercurygram is an unofficial third-party Telegram client for Android. It is
+open source, built from the official Telegram source code with the
+de-googling patches of Telegram-FOSS forward-ported on top, plus a set of
+privacy and convenience features of its own. It is not affiliated with or
+endorsed by Telegram.
+
+Notifications on this Google Play build arrive through Google's push service
+by default, without any Google library inside the app: the app only asks Play
+Services for a WebPush endpoint and a small gateway signs the pushes Telegram
+cannot sign itself. Message contents stay end-to-end encrypted between
+Telegram and the app. Any UnifiedPush distributor app installed on the device
+can be picked instead, which keeps Google out of the path entirely.
+
+Highlights:
+
+• No Google Play Services dependency, no Firebase, no analytics, no crash
+  reporting. The app talks to Telegram's servers and to nothing else unless
+  you enable a feature that needs it.
+• Message translation through privacy-respecting backends, including a fully
+  offline translator.
+• On-device voice message transcription, no cloud involved.
+• Tracking parameters stripped from links before you open or send them.
+• Local "Mercurygram folders" that never touch the Telegram folder limits.
+• Search chats written in decorated Unicode fonts by typing plain letters.
+• Extra options for chats, media, proxies and notifications, all documented
+  at https://mercurygram.org/features/android/
+
+Telegram Premium and Stars cannot be purchased through this app. Existing
+subscriptions and features bought elsewhere keep working.
+
+Source code, issue tracker and release notes:
+https://github.com/Mercurygram/Mercurygram

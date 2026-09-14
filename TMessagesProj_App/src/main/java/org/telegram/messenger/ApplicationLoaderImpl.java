@@ -19,6 +19,22 @@ import it.belloworld.mercurygram.ui.MgUpdateAlertDialog;
 
 public class ApplicationLoaderImpl extends ApplicationLoader {
     @Override
+    public void onCreate() {
+        super.onCreate();
+        if (BuildConfig.BUNDLE) {
+            // Play Payments policy: no in-app purchase entry points in the artifact shipped to
+            // Play. Keyed on the artifact, not on the installer: the same file sideloaded from
+            // Aurora Store or adb is still the Play build and must keep the restriction, while a
+            // per-ABI APK from GitHub must not gain it. BUNDLE is true only for the two bundle
+            // flavors, and the only app bundle published is the Play one; a future non-Play
+            // bundle flavor needs a build config field of its own here.
+            // Upstream's own "official app needed" sheet takes the purchase entry points' place.
+            BuildVars.IS_BILLING_UNAVAILABLE = true;
+            BuildVars.PLAYSTORE_APP_URL = "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID;
+        }
+    }
+
+    @Override
     protected ILocationServiceProvider onCreateLocationServiceProvider() {
         return new AndroidLocationProvider();
     }

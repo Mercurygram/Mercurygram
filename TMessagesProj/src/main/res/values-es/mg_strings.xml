@@ -99,6 +99,7 @@
     <string name="MercurygramTorPluginSignatureMismatch">Complemento Tor: firma no coincide — vinculación rechazada</string>
     <string name="MercurygramTorPluginBindRefused">El complemento Tor está instalado, pero Android se negó a iniciarlo. Permite que se ejecute en segundo plano (ajustes de inicio automático y batería) y vuelve a intentarlo.</string>
     <string name="MercurygramTorPluginOpenAppInfo">Ajustes del complemento</string>
+    <string name="MercurygramTorPluginUnavailable">El complemento Tor no está disponible en este canal de instalación.</string>
     <string name="MercurygramTranslationSettings">Traducción</string>
     <string name="MercurygramTranslationRowAbout">Elige cómo Mercurygram traduce los mensajes recibidos.</string>
     <string name="MercurygramTranslationEngine">Motor</string>

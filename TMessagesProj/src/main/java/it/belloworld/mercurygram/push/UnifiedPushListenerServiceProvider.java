@@ -15,7 +15,6 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.unifiedpush.android.connector.UnifiedPush;
 
-import java.util.List;
 
 /**
  * UnifiedPush-backed push provider plus the Simple Push (token_type=4)
@@ -67,8 +66,9 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
             // the server there is no token for this device.
             return false;
         }
-        // The embedded FCM distributor is our own package and is never auto-selected, so it only
-        // counts once the user picked it explicitly. Counting it unconditionally would make a
+        // The embedded FCM distributor is our own package and is only ever the active choice
+        // once mg_embeddedFcmChosen says so (picked in settings, or defaulted on a Google Play
+        // install with no distributor app). Counting it unconditionally would make a
         // device with no distributor app installed report push support: onRequestPushToken()
         // would save nothing, UnifiedPush.register() would return immediately, and
         // ApplicationLoader would skip the no-push path that tells the server there is no token.
@@ -77,7 +77,7 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
             return true;
         }
         // The connector drops its saved distributor on UNREGISTERED and on REGISTRATION_FAILED.
-        // With no third-party distributor installed the loop below then finds nothing, this
+        // With no third-party distributor installed the check below then finds nothing, this
         // returns false, and ensureRegistered() stops trying: push stays dead until the user
         // picks the built-in distributor again by hand. The remembered choice is what lets the
         // registration come back on its own.
@@ -85,12 +85,7 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
                 && MgEmbeddedFcmDistributor.isAvailable(ApplicationLoader.applicationContext)) {
             return true;
         }
-        for (String distributor : UnifiedPush.getDistributors(ApplicationLoader.applicationContext)) {
-            if (!ownPackage.equals(distributor)) {
-                return true;
-            }
-        }
-        return false;
+        return MgEmbeddedFcmDistributor.firstThirdPartyDistributor(ApplicationLoader.applicationContext) != null;
     }
 
     @Override
@@ -114,27 +109,41 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
             try {
                 SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
                 SharedConfig.saveConfig();
+                String ownPackage = ApplicationLoader.applicationContext.getPackageName();
+                // The built-in entry is only a default while nothing else can do the job: once a
+                // real distributor app is installed, hand the subscription over instead of keeping
+                // Google in the path. Checked before the state below, because a live FCM
+                // registration keeps the ack distributor non-null and would skip it forever.
+                // switchDistributor() unregisters, revokes both tokens and writes the choice, so
+                // the default stops being re-derived from here on.
+                if (!SharedConfig.mgEmbeddedFcmChosen
+                        && ownPackage.equals(UnifiedPush.getSavedDistributor(ApplicationLoader.applicationContext))) {
+                    String distributor = MgEmbeddedFcmDistributor.firstThirdPartyDistributor(
+                            ApplicationLoader.applicationContext);
+                    if (distributor != null) {
+                        switchDistributor(distributor);
+                        return;
+                    }
+                }
                 if (UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext) == null) {
                     // The embedded FCM distributor is our own package, so it is always in
                     // this list. Picking it silently would route push metadata through
-                    // Google without the user ever asking, so it is only ever selected
-                    // explicitly in the settings. Once it is selected, leave it alone: its
-                    // acknowledgement needs a Play Services round trip, and falling back to
-                    // another distributor meanwhile would undo the user's explicit choice.
-                    String ownPackage = ApplicationLoader.applicationContext.getPackageName();
+                    // Google without the user ever asking, so it is selected only when
+                    // mg_embeddedFcmChosen says so (picked in settings, or defaulted on a
+                    // Google Play install with no distributor app). Once selected, leave it
+                    // alone: its acknowledgement needs a Play Services round trip, and falling
+                    // back to another distributor meanwhile would undo that choice.
                     if (SharedConfig.mgEmbeddedFcmChosen
                             && MgEmbeddedFcmDistributor.isAvailable(ApplicationLoader.applicationContext)) {
-                        // Writing back a choice the user already made through the warning dialog,
-                        // not an auto-pick: the connector clears the saved distributor whenever it
+                        // Writing back the choice mg_embeddedFcmChosen already records, not a
+                        // fresh auto-pick: the connector clears the saved distributor whenever it
                         // drops the registration, and nothing else puts it back.
                         UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, ownPackage);
                     } else if (!ownPackage.equals(UnifiedPush.getSavedDistributor(ApplicationLoader.applicationContext))) {
-                        List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext);
-                        for (String distributor : distributors) {
-                            if (!ownPackage.equals(distributor)) {
-                                UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, distributor);
-                                break;
-                            }
+                        String distributor = MgEmbeddedFcmDistributor.firstThirdPartyDistributor(
+                                ApplicationLoader.applicationContext);
+                        if (distributor != null) {
+                            UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, distributor);
                         }
                     }
                 }
@@ -246,6 +255,12 @@ public final class UnifiedPushListenerServiceProvider implements PushListenerCon
         // package alone would turn re-picking a silently dead distributor into a no-op, with no
         // way to retry a failed registration from the settings.
         if (distributor.equals(UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext))) {
+            // Nothing to re-subscribe, but the choice still has to be written: picking the
+            // built-in entry while it is already registered as the derived default is an
+            // explicit choice, and without this the handover in onRequestPushToken() would
+            // move the subscription away as soon as a distributor app appears.
+            SharedConfig.setMgEmbeddedFcmChosen(
+                    MgEmbeddedFcmDistributor.isSelf(ApplicationLoader.applicationContext, distributor));
             return;
         }
         UnifiedPushReceiver.log("switch -> " + distributor);

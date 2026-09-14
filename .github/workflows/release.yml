@@ -13,6 +13,10 @@ on:
         description: 'Open F-Droid merge request after syncing the branch'
         type: boolean
         default: true
+      play_upload:
+        description: 'Upload the bundle to the Google Play track'
+        type: boolean
+        default: true
 
 # Serialize per-tag runs without canceling them. If a maintainer deletes and
 # re-pushes the same tag (legitimate during the pre-stable → stable cleanup
@@ -58,6 +62,13 @@ jobs:
           - flavor: afatFdX86_64
             task: assembleAfatFdX86_64Release
             abi: x86_64
+          # Google Play bundle. Attached to the GitHub release and uploaded
+          # by play-upload below. Artifact name is not apk-* on purpose:
+          # fdroiddata-sync globs *.apk and the release job lists it
+          # separately below.
+          - flavor: bundleAfat
+            task: bundleBundleAfatRelease
+            abi: aab
 
     steps:
       - name: Checkout
@@ -87,7 +98,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: apk-${{ matrix.abi }}
+          name: ${{ matrix.abi == 'aab' && 'bundle-play' || format('apk-{0}', matrix.abi) }}
           path: ${{ steps.build.outputs.apk_path }}
 
   # Tor plugin companion APK — per-ABI Release build of
@@ -444,6 +455,12 @@ jobs:
           merge-multiple: true
           path: artifacts/
 
+      - name: Download Play bundle artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: bundle-play
+          path: artifacts/
+
       - name: Download changelog artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -454,7 +471,71 @@ jobs:
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           body_path: artifacts/changelog.md
-          files: artifacts/*.apk
+          files: |
+            artifacts/*.apk
+            artifacts/*.aab
+
+  # Upload the bundle to Google Play. Track from repo variable PLAY_TRACK
+  # (default internal), promotion past it stays manual in Play Console.
+  # Gated like the F-Droid MR: a manual run honors the `play_upload` input,
+  # a tag push is on unless repo variable PLAY_AUTO_UPLOAD is 'false', and
+  # both skip cleanly when secret PLAY_SERVICE_ACCOUNT_JSON is unset.
+  play-upload:
+    runs-on: ubuntu-24.04
+    needs: release
+    permissions:
+      contents: read
+    env:
+      PLAY_SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+
+    steps:
+      - name: Decide whether to upload
+        id: gate
+        run: |
+          if [ -z "$PLAY_SA" ]; then
+            open=false
+            echo "PLAY_SERVICE_ACCOUNT_JSON not set, skipping Play upload."
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            open="${{ inputs.play_upload }}"
+          elif [ "${{ vars.PLAY_AUTO_UPLOAD }}" = "false" ]; then
+            open=false
+          else
+            open=true
+          fi
+          echo "open=$open" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Mercurygram at tag
+        if: steps.gate.outputs.open == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.ref }}
+          sparse-checkout: .github/scripts
+
+      - name: Download Play bundle artifact
+        if: steps.gate.outputs.open == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: bundle-play
+          path: artifacts/
+
+      - name: Download changelog artifact
+        if: steps.gate.outputs.open == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: changelog
+          path: artifacts/
+
+      - name: Upload to Google Play
+        if: steps.gate.outputs.open == 'true'
+        env:
+          PLAY_TRACK: ${{ vars.PLAY_TRACK || 'internal' }}
+        run: |
+          umask 077
+          printf '%s' "$PLAY_SA" > "$RUNNER_TEMP/play-sa.json"
+          python3 .github/scripts/play_upload.py --track="$PLAY_TRACK" \
+            --notes=artifacts/changelog.md \
+            "$RUNNER_TEMP/play-sa.json" artifacts/Mercurygram-*.aab
+          rm -f "$RUNNER_TEMP/play-sa.json"
 
   # Per-app matrix: one parallel leg per AppID, one branch each (and, by
   # default, one MR each). The Python script (fdroid_sync.py) supports
