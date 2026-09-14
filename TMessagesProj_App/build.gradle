@@ -302,6 +302,17 @@ android {
         }
     }
 
+    bundle {
+        language {
+            // Ship every locale in the base install. Telegram's own strings come
+            // from the server langpack, but the Mercurygram ones live in
+            // res/values-*, so a per-language split leaves them English for
+            // anyone whose in-app language differs from the device locale Play
+            // installed a split for.
+            enableSplit = false
+        }
+    }
+
     buildFeatures {
         buildConfig = true
     }
