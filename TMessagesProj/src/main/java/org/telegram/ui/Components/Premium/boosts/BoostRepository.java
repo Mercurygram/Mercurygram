@@ -4,6 +4,7 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import it.belloworld.mercurygram.MgBilling;
 import it.belloworld.mercurygram.compat.billing.BillingClient;
 import it.belloworld.mercurygram.compat.billing.BillingFlowParams;
 import it.belloworld.mercurygram.compat.billing.ProductDetails;
@@ -107,6 +108,13 @@ public class BoostRepository {
     }
 
     public static void payGiftCode(List<TLObject> users, TLRPC.TL_premiumGiftCodeOption option, TLRPC.Chat chat, TLRPC.TL_textWithEntities message, BaseFragment baseFragment, Utilities.Callback<Void> onSuccess, Utilities.Callback<TLRPC.TL_error> onError) {
+        if (MgBilling.blockPurchase(baseFragment)) {
+            // Releases the caller's loading button; showToastError ignores a null error.
+            if (onError != null) {
+                onError.run(null);
+            }
+            return;
+        }
         invalidateGiftOptionsToCache(UserConfig.selectedAccount);
         if (!isGoogleBillingAvailable()) {
             payGiftCodeByInvoice(users, option, chat, message, baseFragment, onSuccess, onError);
@@ -335,6 +343,13 @@ public class BoostRepository {
                                    TLRPC.Chat chat, int date, boolean onlyNewSubscribers, BaseFragment baseFragment,
                                    boolean winnersVisible, boolean withAdditionPrize, String prizeDesc,
                                    Utilities.Callback<Void> onSuccess, Utilities.Callback<TLRPC.TL_error> onError) {
+        if (MgBilling.blockPurchase(baseFragment)) {
+            // Releases the caller's loading button; showToastError ignores a null error.
+            if (onError != null) {
+                onError.run(null);
+            }
+            return;
+        }
         if (!isGoogleBillingAvailable()) {
             payGiveAwayByInvoice(chats, selectedCountries, option, chat, date, onlyNewSubscribers, baseFragment, winnersVisible, withAdditionPrize, prizeDesc, onSuccess, onError);
         } else {

@@ -231,7 +231,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
                 LocaleController.getString(R.string.MercurygramTranscriptionEnableInfo))));
 
-        if (!MgUpdateChecker.isFdroidBuild()) {
+        if (MgUpdateChecker.canSelfInstall()) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramSettingsUpdates)));
             items.add(MgSettingsScope.globalCheck(ID_DISABLE_AUTO_UPDATE, LocaleController.getString(R.string.MercurygramDisableAutoUpdate))
                     .setChecked(SharedConfig.disableAutoUpdate));
