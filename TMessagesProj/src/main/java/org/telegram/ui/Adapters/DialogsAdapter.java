@@ -86,6 +86,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 
+import it.belloworld.mercurygram.MgPins;
+
 public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements DialogCell.DialogCellDelegate {
     public final static int VIEW_TYPE_DIALOG = 0,
             VIEW_TYPE_FLICKER = 1,
@@ -1222,6 +1224,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
             int oldNum = fromDialog.pinnedNum;
             fromDialog.pinnedNum = toDialog.pinnedNum;
             toDialog.pinnedNum = oldNum;
+            MgPins.swap(currentAccount, fromDialog, toDialog); // MG: keep the stored All chats order in step with the drag
         }
         Collections.swap(dialogs, fromIndex, toIndex);
         updateList(null);
