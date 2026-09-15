@@ -139,6 +139,7 @@ import java.util.stream.Collectors;
 
 import me.vkryl.core.BitwiseUtils;
 
+import it.belloworld.mercurygram.MgPins;
 import it.belloworld.mercurygram.folders.MgFolders;
 
 public class MessagesController extends BaseController implements NotificationCenter.NotificationCenterDelegate {
@@ -17284,6 +17285,8 @@ public class MessagesController extends BaseController implements NotificationCe
             int size = 0;
             ArrayList<Long> dids = new ArrayList<>();
             ArrayList<Integer> pinned = new ArrayList<>();
+            // MG: All chats keeps the pins past the server limit on this device only, so the request carries just the ones the server takes - a longer list is refused whole and nothing would be synced
+            final int maxOrder = folderId == 0 ? MgPins.serverMaxPinned(currentAccount) : Integer.MAX_VALUE;
             for (int a = 0, N = dialogs.size(); a < N; a++) {
                 TLRPC.Dialog dialog = dialogs.get(a);
                 if (dialog instanceof TLRPC.TL_dialogFolder) {
@@ -17297,6 +17300,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
                 dids.add(dialog.id);
                 pinned.add(dialog.pinnedNum);
+                if (req.order.size() >= maxOrder) {
+                    continue;
+                }
                 if (!DialogObject.isEncryptedDialog(dialog.id)) {
                     TLRPC.InputPeer inputPeer = getInputPeer(dialog.id);
                     TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
@@ -17367,6 +17373,7 @@ public class MessagesController extends BaseController implements NotificationCe
         } else {
             dialog.pinnedNum = 0;
         }
+        MgPins.set(currentAccount, dialog, pin); // MG: remember the All chats order, the server only takes its first few
         sortDialogs(null);
         if (!pin && !dialogs.isEmpty() && dialogs.get(dialogs.size() - 1) == dialog && !dialogsEndReached.get(folderId)) {
             dialogs.remove(dialogs.size() - 1);
@@ -22445,6 +22452,7 @@ public class MessagesController extends BaseController implements NotificationCe
             }
         }
 
+        MgPins.apply(currentAccount, allDialogs); // MG: pins past the server's limit live on this device only, put them back before sorting
         try {
             Collections.sort(allDialogs, dialogComparator);
         } catch (Exception e) {}
