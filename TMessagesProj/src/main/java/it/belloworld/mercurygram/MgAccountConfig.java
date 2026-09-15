@@ -6,6 +6,8 @@ import android.text.TextUtils;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
+import java.util.ArrayList;
+
 /**
  * Mercurygram per-account settings. Lives in the same per-account
  * userconfig / userconfig&lt;N&gt; SharedPreferences file as the rest of
@@ -39,6 +41,8 @@ public class MgAccountConfig {
     public int folderSyncUpdated = 0;
     /** Folder id to icon, as JSON: read from the blob and written back unchanged (see MgFolderSync). */
     public String folderEmoticons = "";
+    /** Pinned chats of the All chats list, top first (see MgPins). */
+    public final ArrayList<Long> mainPins = new ArrayList<>();
 
     /**
      * Whether {@code draftMessage} may go to the server. An empty draft carries no
@@ -93,6 +97,7 @@ public class MgAccountConfig {
         editor.putBoolean("showCharCounter", showCharCounter);
         editor.putInt("folderSyncUpdated", folderSyncUpdated);
         editor.putString("folderEmoticons", folderEmoticons);
+        editor.putString("mainPins", TextUtils.join(",", mainPins));
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -120,6 +125,13 @@ public class MgAccountConfig {
         showCharCounter = preferences.getBoolean("showCharCounter", false);
         folderSyncUpdated = preferences.getInt("folderSyncUpdated", 0);
         folderEmoticons = preferences.getString("folderEmoticons", "");
+        mainPins.clear();
+        for (String pin : TextUtils.split(preferences.getString("mainPins", ""), ",")) {
+            try {
+                mainPins.add(Long.parseLong(pin));
+            } catch (NumberFormatException ignore) {
+            }
+        }
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -147,6 +159,7 @@ public class MgAccountConfig {
         showCharCounter = false;
         folderSyncUpdated = 0;
         folderEmoticons = "";
+        mainPins.clear();
         mgReducedTrackingExhausted = false;
     }
 }
