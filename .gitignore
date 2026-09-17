@@ -13,4 +13,13 @@ TMessagesProj_App/afat/
 TMessagesProj_AppHockeyApp/afat/
 TMessagesProj_AppStandalone/afat/
 TMessagesProj_AppHuawei/afat/
-TMessagesProj/jni/ffmpeg/build_android
+# jni/prebuild: upstream commits the static archives its build_*.sh scripts
+# produce (15 per ABI) plus the ABI-dependent ffmpeg headers. F-Droid cannot
+# ship binaries it did not build, so we run those same scripts over the pinned
+# submodules and treat everything they write as generated.
+TMessagesProj/jni/prebuild/lib/
+TMessagesProj/jni/prebuild/include/
+TMessagesProj/jni/prebuild/pkgconfig/
+TMessagesProj/jni/prebuild/build/
+# Call core wasm module as a C array, built by jni/build_wasm_core.sh.
+TMessagesProj/jni/voip/ReferenceCoreEmbedded.cpp
