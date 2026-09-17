@@ -524,8 +524,11 @@ public class NotificationsSoundActivity extends BaseFragment implements ChatAtta
             systemTones.add(tone);
         }
         if (getMediaDataController().ringtoneDataStore.isLoaded() && selectedTone == null) {
+            // the stored tone could not be resolved (a media rescan reassigned its id, the
+            // cursor is still incomplete, ...): show Default, but do not mark it as changed,
+            // or leaving this screen would overwrite the stored tone with Default and push
+            // that to the server. Playback already falls back to Default on its own.
             selectedTone = defaultTone;
-            selectedToneChanged = true;
         }
         updateRows();
     }
