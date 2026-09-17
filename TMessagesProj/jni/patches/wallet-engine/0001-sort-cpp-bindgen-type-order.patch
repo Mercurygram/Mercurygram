@@ -1,0 +1,15 @@
+diff --git a/bindgen/cpp/bindgen/src/bindings/cpp/gen_cpp/mod.rs b/bindgen/cpp/bindgen/src/bindings/cpp/gen_cpp/mod.rs
+index 847ca68..c152d0e 100644
+--- a/bindgen/cpp/bindgen/src/bindings/cpp/gen_cpp/mod.rs
++++ b/bindgen/cpp/bindgen/src/bindings/cpp/gen_cpp/mod.rs
+@@ -179,7 +179,9 @@ impl<'a> CppWrapperHeader<'a> {
+ 
+         let mut sorted: Vec<Type> = Vec::new();
+         while !definition_topology.peek_all().is_empty() {
+-            let list = definition_topology.pop_all();
++            // pop_all() returns hash-map order; sort so the header is stable.
++            let mut list = definition_topology.pop_all();
++            list.sort();
+             for name in list {
+                 match self.ci.get_type(name) {
+                     // External types are defined in their own namespace's header with their own
