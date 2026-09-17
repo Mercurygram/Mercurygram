@@ -28,6 +28,33 @@ INCLUDE_DIR="$(cd "$INCLUDE_DIR" && pwd)"
 mkdir -p "$LIB_DIR"
 LIB_DIR="$(cd "$LIB_DIR" && pwd)"
 
+# Cargo hashes a path dependency by its path relative to the workspace root
+# when it lies inside that root, else by its absolute path, and the hash ends
+# up in symbol names and code layout. gram-wallet is its own workspace root and
+# reaches wallet-engine through ../, so the archive changed with the checkout
+# path. Build copies of both under one generated root to keep it path-free.
+STAGE_DIR="$BUILD_DIR/src"
+rm -rf "$STAGE_DIR"
+mkdir -p "$STAGE_DIR"
+cp -R "$ADAPTER_DIR" "$STAGE_DIR/gram-wallet"
+cp -R "$ENGINE_DIR" "$STAGE_DIR/wallet-engine"
+rm -f "$STAGE_DIR/wallet-engine/.git"
+# The C++ bindgen emits same-rank types in hash-map order, a new header per run.
+patch -s -d "$STAGE_DIR/wallet-engine" -p1 \
+    < "$JNI_DIR/patches/wallet-engine/0001-sort-cpp-bindgen-type-order.patch"
+mv "$STAGE_DIR/gram-wallet/Cargo.lock" "$STAGE_DIR/Cargo.lock"
+printf '[workspace]\nmembers = ["gram-wallet"]\nexclude = ["wallet-engine"]\nresolver = "3"\n\n' \
+    > "$STAGE_DIR/Cargo.toml"
+# Profiles only apply from the workspace root, so move them there.
+awk -v root="$STAGE_DIR/Cargo.toml" '
+    /^\[/ { profile = /^\[profile[.]/ }
+    /^\[workspace\]$/ { next }
+    profile { print >> root; next }
+    { print }
+' "$ADAPTER_DIR/Cargo.toml" > "$STAGE_DIR/gram-wallet/Cargo.toml"
+ENGINE_DIR="$STAGE_DIR/wallet-engine"
+ADAPTER_DIR="$STAGE_DIR/gram-wallet"
+
 # The app adapter links the engine and reexports its UniFFI scaffolding. Build
 # one archive to avoid linking two copies of Rust and wallet-engine into JNI.
 cd "$ADAPTER_DIR"
