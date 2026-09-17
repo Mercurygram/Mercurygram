@@ -149,7 +149,11 @@ android {
         externalNativeBuild {
             cmake {
                 version '3.22.1'
-                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21' //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                def cmakeArgs = ['-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'] //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                if (getProps('QUIET_NATIVE_BUILD')) {
+                    cmakeArgs += '-DQUIET_BUILD=ON'
+                }
+                arguments(*cmakeArgs)
                 targets 'tmessages.49'
             }
         }
@@ -249,26 +253,168 @@ def getProps(String propName) {
         return "";
     }
 }
-apply plugin: 'com.google.gms.google-services'
 
-task checkVisibility {
-    doFirst {
-        def isPrivateBuild = project.gradle.startParameter.taskNames.find {
-            it.contains("HA_private") || it.contains("HA_hardcore") || it.contains("Debug") || it.contains("Release")
-        }
-        def isPublicAllowed = !project.hasProperty("IS_PRIVATE") || !project.property("IS_PRIVATE").toBoolean()
-        if (!isPrivateBuild && !isPublicAllowed) {
-            throw new GradleException("Building public version of private code!")
-        }
-    }
+// Shared first step: init submodules and apply source-tree patches (idempotent).
+// All per-ABI tasks depend on this so patches are applied exactly once.
+task patchNativeSources {
+    description = 'Init native submodules and apply source patches.'
     doLast {
-        if (project.gradle.startParameter.taskNames.find { it.contains("HA_public") }) {
-            def privateBuild = file("${projectDir}_AppHockeyApp/afat/HA_private/Telegram-Beta.apk")
-            if (privateBuild.exists()) {
-                privateBuild.delete()
+        exec {
+            workingDir rootDir
+            commandLine 'git', 'submodule', 'update', '--init',
+                'TMessagesProj/jni/third_party/libvpx',
+                'TMessagesProj/jni/third_party/ffmpeg',
+                'TMessagesProj/jni/third_party/dav1d',
+                'TMessagesProj/jni/third_party/xiph/ogg',
+                'TMessagesProj/jni/third_party/xiph/opus',
+                'TMessagesProj/jni/third_party/xiph/opusfile',
+                'TMessagesProj/jni/third_party/openh264',
+                'TMessagesProj/jni/third_party/libyuv',
+                'TMessagesProj/jni/third_party/boringssl',
+                'TMessagesProj/jni/tlottie',
+                'TMessagesProj/jni/td'
+        }
+        // ffbuild/version.sh bakes FFMPEG_VERSION into libavutil, preferring a
+        // VERSION file in the source root over `git describe`. Left to git the
+        // string depends on whether the clone carries tags and on git's
+        // auto-scaled abbreviation length, so the same pin can produce
+        // "n8.1.2-30-g45f1910444" or "45f1910444" depending on how the
+        // submodule was fetched. Pinning it to the full submodule SHA makes the
+        // archives byte-identical across shallow and full checkouts, which
+        // F-Droid reproducibility needs. Upstream never hit this: it builds
+        // from a checkout that has tags.
+        def ffmpegDir = file("${projectDir}/jni/third_party/ffmpeg")
+        def ffmpegSha = providers.exec {
+            commandLine 'git', '-C', ffmpegDir.toString(), 'rev-parse', 'HEAD'
+        }.standardOutput.asText.get().trim()
+        new File(ffmpegDir, 'VERSION').text = ffmpegSha + '\n'
+
+        for (script in ['patch_dav1d.sh', 'patch_td.sh']) {
+            exec {
+                workingDir "${projectDir}/jni"
+                commandLine 'bash', script
             }
         }
     }
 }
 
-preBuild.dependsOn checkVisibility
+// Upstream builds every bundled static library from source with
+// jni/prebuild/build_*.sh and commits the resulting archives. F-Droid cannot
+// ship binaries it did not build, so the archives are gitignored and the same
+// scripts run here instead. They read ABIS/LIB_DIR/INCLUDE_DIR from the
+// environment and already do the reproducibility work the fork used to bolt on
+// itself: prefix-mapping the checkout and the NDK to /jni and /android-ndk,
+// SOURCE_DATE_EPOCH/TZ/LC_ALL, stripping debug info and .comment, and
+// rewriting the configure command line libvpx and ffmpeg compile into their
+// own archives (jni/prebuild/common.sh).
+//
+// build_all.sh is deliberately not used: it wipes lib/ and include/ before
+// running, which would throw away the other ABIs on every per-ABI task.
+def prebuildSteps = [
+    ['build_boringssl.sh', ['libcrypto.a', 'libssl.a']],
+    ['build_openh264.sh' , ['libopenh264.a']],
+    ['build_opus.sh'     , ['libopus.a']],
+    ['build_libvpx.sh'   , ['libvpx.a']],
+    ['build_dav1d.sh'    , ['libdav1d.a']],
+    ['build_ffmpeg.sh'   , ['libavcodec.a', 'libavformat.a', 'libavutil.a',
+                            'libswresample.a', 'libswscale.a']],
+    ['build_tlottie.sh'  , ['libtlottie.a']],
+    ['build_tdlib.sh'    , ['libtde2e.a', 'libtdutils.a']],
+]
+
+// Pinned rustc for jni/prebuild/build_tlottie.sh, installed by jni/setup_rust.sh.
+// A different rustc emits different code for identical sources, so the version
+// is fixed here; the paths it records are already remapped by the script.
+def rustToolchain = '1.97.1'
+def rustupHome    = '/var/tmp/mg-rustup'
+def cargoHome     = '/var/tmp/mg-cargo'
+
+// Register one build task per ABI. Each task compiles only for its ABI, so an
+// F-Droid single-ABI build still compiles one ABI.
+['buildNativeLibsArm64'  : 'arm64-v8a',
+ 'buildNativeLibsArm32'  : 'armeabi-v7a',
+ 'buildNativeLibsX86_64' : 'x86_64',
+ 'buildNativeLibsX86'    : 'x86',
+].each { taskName, abi ->
+    tasks.register(taskName) {
+        description = "Build native libraries for ${abi}."
+        dependsOn patchNativeSources
+        doLast {
+            def prebuildDir = "${projectDir}/jni/prebuild"
+            def libDir = file("${prebuildDir}/lib/${abi}")
+            def baseEnv = [
+                ANDROID_NDK_HOME: android.ndkDirectory.toString(),
+                ANDROID_SDK_ROOT: android.sdkDirectory.toString(),
+                ABIS            : abi,
+            ]
+            if (System.getenv('NINJA_PATH')) {
+                baseEnv['NINJA_BIN'] = System.getenv('NINJA_PATH')
+            }
+
+            prebuildSteps.each { script, archives ->
+                // build_ffmpeg.sh also writes the per-ABI generated headers
+                // CMake compiles against, so a run interrupted between the
+                // archives and the overlay has to repeat.
+                def done = archives.every { new File(libDir, it).exists() } &&
+                    (script != 'build_ffmpeg.sh' ||
+                        file("${prebuildDir}/include/${abi}/libavutil/avconfig.h").exists())
+                if (done) {
+                    return
+                }
+                def env = new LinkedHashMap(baseEnv)
+                if (script == 'build_tlottie.sh') {
+                    env['RUSTUP_HOME'] = rustupHome
+                    env['CARGO_HOME'] = cargoHome
+                    env['PATH'] = "${cargoHome}/bin:" + System.getenv('PATH')
+                    env['TLOTTIE_RUST_TOOLCHAIN'] = rustToolchain
+                    exec {
+                        workingDir "${projectDir}/jni"
+                        environment env
+                        commandLine 'bash', 'setup_rust.sh', rustToolchain
+                    }
+                }
+                exec {
+                    workingDir prebuildDir
+                    environment env
+                    commandLine 'bash', "${prebuildDir}/${script}"
+                }
+            }
+        }
+    }
+}
+
+// Ensure sequential execution when all 4 per-ABI tasks run together (fat builds),
+// avoiding races in patch scripts that write shared source files.
+tasks.named('buildNativeLibsArm32').configure  { mustRunAfter 'buildNativeLibsArm64'  }
+tasks.named('buildNativeLibsX86_64').configure { mustRunAfter 'buildNativeLibsArm32'  }
+tasks.named('buildNativeLibsX86').configure    { mustRunAfter 'buildNativeLibsX86_64' }
+
+// Combined task for fat/bundle builds (all 4 ABIs).
+task buildNativeLibs(description: 'Build native libraries for all ABIs.') {
+    dependsOn 'buildNativeLibsArm64', 'buildNativeLibsArm32',
+              'buildNativeLibsX86_64', 'buildNativeLibsX86'
+}
+
+// Wire each CMake/JniLibFolders task to the matching per-ABI native build task.
+// CMake task names include the ABI in brackets, e.g. configureCMakeRelease[arm64-v8a].
+// merge*JniLibFolders tasks don't include the ABI but snapshot jni/; they depend on
+// the full buildNativeLibs to ensure all .so/.a files are present before snapshotting.
+afterEvaluate {
+    def abiToTask = [
+        'arm64-v8a'   : 'buildNativeLibsArm64',
+        'armeabi-v7a' : 'buildNativeLibsArm32',
+        'x86_64'      : 'buildNativeLibsX86_64',
+        'x86'         : 'buildNativeLibsX86',
+    ]
+    tasks.matching {
+        it.name.matches('configureCMake.*') ||
+            it.name.matches('buildCMake.*') ||
+            it.name.matches('externalNativeBuild.*')
+    }.configureEach { task ->
+        def matched = abiToTask.find { abi, _ -> task.name.contains(abi) }
+        dependsOn tasks.named(matched ? matched.value : 'buildNativeLibs')
+    }
+    tasks.matching { it.name.matches('merge.*JniLibFolders') }.configureEach {
+        dependsOn tasks.named('buildNativeLibs')
+    }
+}
