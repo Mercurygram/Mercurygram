@@ -264,7 +264,7 @@ public static VideoAds make(
     private float currentMenuTranslationY;
 
     private void show() {
-        if (ads.isEmpty()) return;
+        if (ads.isEmpty() || bulletinFactory == null) return;
         final TLRPC.TL_sponsoredMessage ad = ads.get(0);
         final long showTime = System.currentTimeMillis() - currentBulletinPassedTime;
         bulletinShowTime = showTime;
@@ -570,6 +570,7 @@ public static VideoAds make(
     }
 
     public void stop() {
+        onPopupCallback = null;
         if (bulletin != null) {
             currentBulletinPassedTime = System.currentTimeMillis() - bulletinShowTime;
             if (!ads.isEmpty()) {
@@ -589,6 +590,10 @@ public static VideoAds make(
             currentMenu.dismiss();
             currentMenu = null;
         }
+        if (premiumSheet != null) {
+            premiumSheet.dismiss();
+            premiumSheet = null;
+        }
         bulletin = null;
         if (loading) {
             ConnectionsManager.getInstance(currentAccount).cancelRequest(requestId, true);
@@ -597,6 +602,7 @@ public static VideoAds make(
         }
         AndroidUtilities.cancelRunOnUIThread(showRunnable);
         setWaitingPaused(true);
+        bulletinFactory = null;
     }
 
     public static class AdOptionsDrawable extends Drawable {
