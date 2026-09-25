@@ -725,6 +725,7 @@ public class ChatCustomReactionsEditActivity extends BaseFragment implements Not
             getMessagesController().setCustomChatReactions(chatId, selectedType, grabReactions(false), reactionsCount, null, null, null);
         }
         getNotificationCenter().removeObserver(this, NotificationCenter.dialogDeleted);
+        getNotificationCenter().removeObserver(this, NotificationCenter.reactionsDidLoad);
     }
 
     @Override
