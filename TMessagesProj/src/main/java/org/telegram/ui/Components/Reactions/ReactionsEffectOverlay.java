@@ -85,6 +85,7 @@ public class ReactionsEffectOverlay {
     private View cell;
     private boolean useWindow;
     private ViewGroup decorView;
+    private BaseFragment baseFragment;
     private static long lastHapticTime;
     ArrayList<AvatarParticle> avatars = new ArrayList<>();
     public long startTime;
@@ -111,6 +112,7 @@ public class ReactionsEffectOverlay {
         this.animationType = animationType;
         this.currentAccount = currentAccount;
         this.cell = cell;
+        this.baseFragment = fragment;
         ReactionsLayoutInBubble.ReactionButton reactionButton = null;
         if (cell instanceof ChatMessageCell) {
             reactionButton = ((ChatMessageCell) cell).getReactionButton(visibleReaction);
@@ -611,6 +613,9 @@ public class ReactionsEffectOverlay {
                 for (int i = 0; i < avatars.size(); i++) {
                     avatars.get(i).imageReceiver.onDetachedFromWindow();
                 }
+                // removeCurrentView() only runs from dispatchDraw; without this an overlay whose
+                // window dies mid-animation would stay in the statics holding its fragment
+                forget(ReactionsEffectOverlay.this);
             }
         };
         effectImageView = new AnimationView(context);
@@ -738,7 +743,17 @@ public class ReactionsEffectOverlay {
         return sizeForAroundReaction() + "_" + sizeForAroundReaction() + "_nolimit_pcache";
     }
 
+    private static void forget(ReactionsEffectOverlay overlay) {
+        if (currentOverlay == overlay) {
+            currentOverlay = null;
+        }
+        if (currentShortOverlay == overlay) {
+            currentShortOverlay = null;
+        }
+    }
+
     private void removeCurrentView() {
+        forget(this);
         try {
             if (useWindow) {
                 windowManager.removeView(windowView);
@@ -747,6 +762,16 @@ public class ReactionsEffectOverlay {
             }
         } catch (Exception e) {
 
+        }
+    }
+
+    // an overlay still running when its fragment goes away keeps the whole fragment alive
+    public static void dismissByFragment(BaseFragment fragment) {
+        for (int i = 0; i < 2; i++) {
+            ReactionsEffectOverlay overlay = i == 0 ? currentOverlay : currentShortOverlay;
+            if (overlay != null && overlay.baseFragment == fragment) {
+                overlay.removeCurrentView();
+            }
         }
     }
 
