@@ -12052,7 +12052,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 animatorX.addUpdateListener(animation -> photoPaintView.setOffsetTranslationX((Float) animation.getAnimatedValue()));
                 paintingOverlay.showAll();
                 containerView.invalidate();
-                photoPaintView.shutdown();
+                shutdownPaintView();
                 animators.add(animatorY);
                 animators.add(animatorX);
                 animators.add(ObjectAnimator.ofFloat(PhotoViewer.this, AnimationProperties.PHOTO_VIEWER_ANIMATION_VALUE, 0, 1));
@@ -12945,6 +12945,18 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         translateYAnimator.setDuration(320);
         translateYAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
         translateYAnimator.start();
+    }
+
+    // the position watcher and the keyboard animator both outlive the paint view
+    private void shutdownPaintView() {
+        if (iBlur3FactoryFrostedLiquidGlass != null) {
+            iBlur3FactoryFrostedLiquidGlass.unsubscribe(photoPaintView.bottomLayout);
+        }
+        if (paintKeyboardAnimator != null) {
+            paintKeyboardAnimator.cancel();
+            paintKeyboardAnimator = null;
+        }
+        photoPaintView.shutdown();
     }
 
     private void closePaintMode() {
@@ -18057,7 +18069,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 editorDoneLayout.setVisibility(View.GONE);
                 photoCropView.setVisibility(View.GONE);
             } else if (currentEditMode == EDIT_MODE_PAINT) {
-                photoPaintView.shutdown();
+                shutdownPaintView();
                 containerView.removeView(photoPaintView.getView());
                 photoPaintView = null;
                 savedState = null;
@@ -18579,6 +18591,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             currentThumb = null;
         }
         animatingImageView.setImageBitmap(null);
+        // the mentions adapters keep their observers, and through them this viewer, alive
+        if (captionEdit != null && captionEdit.mentionContainer != null && captionEdit.mentionContainer.getAdapter() != null) {
+            captionEdit.mentionContainer.getAdapter().onDestroy();
+        }
+        if (topCaptionEdit != null && topCaptionEdit.mentionContainer != null && topCaptionEdit.mentionContainer.getAdapter() != null) {
+            topCaptionEdit.mentionContainer.getAdapter().onDestroy();
+        }
 //        if (captionEdit.editText != null) {
 //            captionEdit.editText.onDestroy();
 //        }
