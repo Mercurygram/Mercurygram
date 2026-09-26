@@ -264,4 +264,6 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramLiveLocationPaused">Posizione in tempo reale in pausa</string>
     <string name="MercurygramLiveLocationPausedInfo">La condivisione si è interrotta al riavvio del dispositivo. Apri Mercurygram per riprenderla.</string>
+    <string name="MercurygramQrLogin">Accedi con codice QR</string>
+    <string name="MercurygramQrLoginInfo">Apri Telegram su un telefono dove hai già effettuato l\'accesso, vai in Impostazioni &gt; Dispositivi e scansiona questo codice.</string>
 </resources>
