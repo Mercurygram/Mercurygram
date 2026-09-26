@@ -263,4 +263,6 @@
     <string name="MercurygramFolder">Mercurygram 폴더</string>
     <string name="MercurygramFolderInfo">Mercurygram에서만 표시되며, 텔레그램에 폴더로 전송되지 않으므로 폴더나 채팅 수 제한이 없습니다. 저장된 메시지의 파일 하나를 통해 Mercurygram 앱 간에 동기화됩니다. 기존 폴더에서 전환하면 폴더가 텔레그램과 Mercurygram 사이에서 이동합니다.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramQrLogin">QR 코드로 로그인</string>
+    <string name="MercurygramQrLoginInfo">이미 로그인된 휴대폰에서 텔레그램을 열고 설정 &gt; 기기로 이동해 이 코드를 스캔하세요.</string>
 </resources>
