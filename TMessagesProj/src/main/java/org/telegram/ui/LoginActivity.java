@@ -240,7 +240,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             MODE_CHANGE_PHONE_NUMBER = 2,
             MODE_CHANGE_LOGIN_EMAIL = 3;
 
-    private final static int VIEW_PHONE_INPUT = 0,
+    public final static int VIEW_PHONE_INPUT = 0,
             VIEW_CODE_MESSAGE = 1,
             VIEW_CODE_SMS = 2,
             VIEW_CODE_FLASH_CALL = 3,
@@ -1643,7 +1643,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         onAuthSuccess(res);
     }
 
-    private void onAuthSuccess(TLRPC.TL_auth_authorization res) {
+    public void onAuthSuccess(TLRPC.TL_auth_authorization res) {
         onAuthSuccess(res, false);
     }
 
@@ -2496,6 +2496,8 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                     loadCountries();
                 });
             }
+
+            if (activityMode == MODE_LOGIN) bottomMargin -= it.belloworld.mercurygram.MgQrLogin.addButton(this, LoginActivity.this, currentAccount);
 
             if (bottomMargin > 0 && !AndroidUtilities.isSmallScreen()) {
                 Space bottomSpacer = new Space(context);

@@ -264,4 +264,6 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramLiveLocationPaused">تم إيقاف مشاركة الموقع المباشر مؤقتًا</string>
     <string name="MercurygramLiveLocationPausedInfo">توقفت المشاركة عند إعادة تشغيل الجهاز. افتح Mercurygram لاستئنافها.</string>
+    <string name="MercurygramQrLogin">تسجيل الدخول برمز QR</string>
+    <string name="MercurygramQrLoginInfo">افتح تيليجرام على هاتف سجّلت الدخول فيه مسبقًا، وانتقل إلى الإعدادات &gt; الأجهزة وامسح هذا الرمز.</string>
 </resources>
