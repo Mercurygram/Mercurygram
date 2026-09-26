@@ -263,4 +263,6 @@
     <string name="MercurygramFolder">مجلد Mercurygram</string>
     <string name="MercurygramFolderInfo">يظهر في Mercurygram فقط، ولا يُرسل إلى تيليجرام كمجلد، لذا لا حد لعدد المجلدات أو الدردشات. يُزامن بين تطبيقات Mercurygram لديك عبر ملف واحد في الرسائل المحفوظة. تغييره في مجلد موجود ينقل المجلد بين تيليجرام وMercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramQrLogin">تسجيل الدخول برمز QR</string>
+    <string name="MercurygramQrLoginInfo">افتح تيليجرام على هاتف سجّلت الدخول فيه مسبقًا، وانتقل إلى الإعدادات &gt; الأجهزة وامسح هذا الرمز.</string>
 </resources>
