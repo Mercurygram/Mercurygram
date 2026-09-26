@@ -264,4 +264,6 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramLiveLocationPaused">Трансляцію геопозиції призупинено</string>
     <string name="MercurygramLiveLocationPausedInfo">Передавання зупинилося після перезавантаження пристрою. Відкрийте Mercurygram, щоб його відновити.</string>
+    <string name="MercurygramQrLogin">Увійти за QR-кодом</string>
+    <string name="MercurygramQrLoginInfo">Відкрийте Telegram на телефоні, де ви вже увійшли, перейдіть у Налаштування &gt; Пристрої та відскануйте цей код.</string>
 </resources>
