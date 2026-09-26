@@ -264,4 +264,6 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramLiveLocationPaused">실시간 위치 공유 일시 중지됨</string>
     <string name="MercurygramLiveLocationPausedInfo">기기를 다시 시작하면서 공유가 중단되었습니다. Mercurygram을 열어 다시 시작하세요.</string>
+    <string name="MercurygramQrLogin">QR 코드로 로그인</string>
+    <string name="MercurygramQrLoginInfo">이미 로그인된 휴대폰에서 텔레그램을 열고 설정 &gt; 기기로 이동해 이 코드를 스캔하세요.</string>
 </resources>
