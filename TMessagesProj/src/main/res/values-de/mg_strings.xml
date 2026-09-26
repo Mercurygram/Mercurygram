@@ -264,4 +264,6 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramLiveLocationPaused">Live-Standort pausiert</string>
     <string name="MercurygramLiveLocationPausedInfo">Die Freigabe wurde beim Neustart des Geräts unterbrochen. Öffne Mercurygram, um sie fortzusetzen.</string>
+    <string name="MercurygramQrLogin">Mit QR-Code anmelden</string>
+    <string name="MercurygramQrLoginInfo">Öffne Telegram auf einem Telefon, auf dem du bereits angemeldet bist, gehe zu Einstellungen &gt; Geräte und scanne diesen Code.</string>
 </resources>

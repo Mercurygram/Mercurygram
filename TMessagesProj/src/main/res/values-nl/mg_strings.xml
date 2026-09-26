@@ -264,4 +264,6 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramLiveLocationPaused">Live locatie gepauzeerd</string>
     <string name="MercurygramLiveLocationPausedInfo">Het delen is gestopt toen je apparaat opnieuw opstartte. Open Mercurygram om het te hervatten.</string>
+    <string name="MercurygramQrLogin">Inloggen met QR-code</string>
+    <string name="MercurygramQrLoginInfo">Open Telegram op een telefoon waarop je al bent ingelogd, ga naar Instellingen &gt; Apparaten en scan deze code.</string>
 </resources>
