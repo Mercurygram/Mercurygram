@@ -263,4 +263,6 @@
     <string name="MercurygramFolder">Pasta Mercurygram</string>
     <string name="MercurygramFolderInfo">Aparece apenas no Mercurygram, nunca é enviada ao Telegram como pasta, então não há limite de pastas ou conversas. Sincronizada entre seus apps Mercurygram por um arquivo nas Mensagens salvas. Alterar em uma pasta existente move a pasta entre o Telegram e o Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramQrLogin">Entrar com código QR</string>
+    <string name="MercurygramQrLoginInfo">Abra o Telegram em um celular em que você já esteja conectado, vá em Configurações &gt; Dispositivos e escaneie este código.</string>
 </resources>
