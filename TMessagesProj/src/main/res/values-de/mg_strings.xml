@@ -263,4 +263,6 @@
     <string name="MercurygramFolder">Mercurygram-Ordner</string>
     <string name="MercurygramFolderInfo">Nur in Mercurygram sichtbar, wird nie als Ordner an Telegram gesendet, daher keine Begrenzung für Ordner oder Chats. Wird über eine Datei in den gespeicherten Nachrichten zwischen deinen Mercurygram-Apps abgeglichen. Bei einem bestehenden Ordner verschiebt der Schalter den Ordner zwischen Telegram und Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramQrLogin">Mit QR-Code anmelden</string>
+    <string name="MercurygramQrLoginInfo">Öffne Telegram auf einem Telefon, auf dem du bereits angemeldet bist, gehe zu Einstellungen &gt; Geräte und scanne diesen Code.</string>
 </resources>
