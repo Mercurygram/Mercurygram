@@ -17929,6 +17929,7 @@ public class MessagesController extends BaseController implements NotificationCe
         boolean needReceivedQueue = false;
         boolean updateStatus = false;
         if (updates instanceof TLRPC.TL_updateShort) {
+            it.belloworld.mercurygram.MgQrLogin.onUpdate(updates.update, currentAccount); // MG: QR login token accepted
             ArrayList<TLRPC.Update> arr = new ArrayList<>();
             arr.add(updates.update);
             processUpdateArray(arr, null, null, false, updates.date);
