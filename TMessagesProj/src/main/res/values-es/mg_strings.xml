@@ -263,4 +263,6 @@
     <string name="MercurygramFolder">Carpeta Mercurygram</string>
     <string name="MercurygramFolderInfo">Solo se muestra en Mercurygram, nunca se envía a Telegram como carpeta, así que no hay límite de carpetas ni de chats. Se sincroniza entre tus apps Mercurygram mediante un archivo en Mensajes guardados. Cambiarlo en una carpeta existente mueve la carpeta entre Telegram y Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramQrLogin">Iniciar sesión con código QR</string>
+    <string name="MercurygramQrLoginInfo">Abre Telegram en un teléfono donde ya hayas iniciado sesión, ve a Ajustes &gt; Dispositivos y escanea este código.</string>
 </resources>

@@ -263,4 +263,6 @@
     <string name="MercurygramFolder">Mercurygram-map</string>
     <string name="MercurygramFolderInfo">Alleen zichtbaar in Mercurygram, wordt nooit als map naar Telegram gestuurd, dus geen limiet op mappen of chats. Gesynchroniseerd tussen je Mercurygram-apps via één bestand in Opgeslagen berichten. Bij een bestaande map verplaatst de schakelaar de map tussen Telegram en Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramQrLogin">Inloggen met QR-code</string>
+    <string name="MercurygramQrLoginInfo">Open Telegram op een telefoon waarop je al bent ingelogd, ga naar Instellingen &gt; Apparaten en scan deze code.</string>
 </resources>

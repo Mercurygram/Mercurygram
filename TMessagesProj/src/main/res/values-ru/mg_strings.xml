@@ -263,4 +263,6 @@
     <string name="MercurygramFolder">Папка Mercurygram</string>
     <string name="MercurygramFolderInfo">Показывается только в Mercurygram, не отправляется в Telegram как папка, поэтому без ограничений на число папок и чатов. Синхронизируется между вашими приложениями Mercurygram через один файл в Избранном. Переключение у существующей папки переносит папку между Telegram и Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramQrLogin">Войти по QR-коду</string>
+    <string name="MercurygramQrLoginInfo">Откройте Telegram на телефоне, где вы уже вошли, перейдите в Настройки &gt; Устройства и отсканируйте этот код.</string>
 </resources>
