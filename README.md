@@ -128,6 +128,7 @@ Fixes for bugs that exist in stock Telegram for Android. Several are backported 
 - Fix saving to Downloads silently skipping media that had to be downloaded first: the freshly downloaded file was looked up at the wrong path, so nothing was saved
 - Fix saving and sharing a watched video that has quality variants ([#135](https://github.com/Mercurygram/Mercurygram/issues/135)): after streaming, the only file on disk belongs to the quality that was played, so Save, Share, Open in and the Files tab failed or were missing. They now find that file
 - Fix push notifications getting lost: only the first push of a process waited for its message to be processed, so the wake lock could be released before the notification was shown, and an OAuth request push could block every later push until the app restarted
+- Fix pinning a chat on a folder tab being refused long before the folder was full: pinned chats were counted twice, and the limit ignored the 200 chats per folder of Premium
 
 ### TF-originated de-googling patches
 
