@@ -8755,7 +8755,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             int maxPinnedCount;
             if (containsFilter && filter != null) {
-                maxPinnedCount = 100 - filter.alwaysShow.size();
+                maxPinnedCount = MgFolders.maxPinned(getMessagesController(), getUserConfig().isPremium(), filter, pinnedCount); // MG: pinned chats already sit in alwaysShow, and the cap is the chats-per-folder limit
             } else if (folderId != 0 || filter != null) {
                 if (getUserConfig().isPremium()) {
                     maxPinnedCount = getMessagesController().maxFolderPinnedDialogsCountPremium;
@@ -9288,7 +9288,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             int maxPinnedCount;
             if (containsFilter) {
-                maxPinnedCount = 100 - filter.alwaysShow.size();
+                maxPinnedCount = MgFolders.maxPinned(getMessagesController(), getUserConfig().isPremium(), filter, pinnedCount); // MG: pinned chats already sit in alwaysShow, and the cap is the chats-per-folder limit
             } else if (folderId != 0 || filter != null) {
                 if (UserConfig.getInstance(currentAccount).isPremium()) {
                     maxPinnedCount = getMessagesController().maxFolderPinnedDialogsCountPremium;
