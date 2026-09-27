@@ -29,6 +29,21 @@ public final class MgFolders {
     }
 
     /**
+     * Pin cap on a folder tab, in the unit DialogsActivity compares against
+     * (new pins + pins counted - already included). Pinned chats are already in
+     * alwaysShow, and the server caps pinned plus included chats together at the
+     * chats-per-folder limit, so pinning adds to the folder only when the chat is
+     * not included yet. Mercurygram folders have no chat limit, only the pin one.
+     */
+    public static int maxPinned(MessagesController mc, boolean premium, DialogFilter filter, int pinnedCount) {
+        if (isMercurygram(filter)) {
+            return premium ? mc.maxFolderPinnedDialogsCountPremium : mc.maxFolderPinnedDialogsCountDefault;
+        }
+        final int chatsLimit = premium ? mc.dialogFiltersChatsLimitPremium : mc.dialogFiltersChatsLimitDefault;
+        return chatsLimit - filter.alwaysShow.size() + pinnedCount;
+    }
+
+    /**
      * Whether the server reconciliation must leave this folder alone: Mercurygram
      * folders always, and the "All chats" entry while any of them exists (the
      * server only ships it alongside server folders, and the tab strip needs it).
