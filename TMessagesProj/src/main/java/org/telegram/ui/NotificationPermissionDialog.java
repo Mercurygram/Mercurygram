@@ -105,6 +105,7 @@ public class NotificationPermissionDialog extends BottomSheet implements Notific
             if (this.whenGranted != null) {
                 this.whenGranted.run(true);
                 this.whenGranted = null;
+                askLater(); // [MG] back off even if the user then leaves the system prompt or settings without granting
             }
             dismiss();
         });
