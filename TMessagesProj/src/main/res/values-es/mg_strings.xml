@@ -266,4 +266,5 @@
     <string name="MercurygramLiveLocationPausedInfo">El envío se detuvo al reiniciar el dispositivo. Abre Mercurygram para reanudarlo.</string>
     <string name="MercurygramQrLogin">Iniciar sesión con código QR</string>
     <string name="MercurygramQrLoginInfo">Abre Telegram en un teléfono donde ya hayas iniciado sesión, ve a Ajustes &gt; Dispositivos y escanea este código.</string>
+    <string name="MercurygramGoToFirstMessage">Ir al primer mensaje</string>
 </resources>
