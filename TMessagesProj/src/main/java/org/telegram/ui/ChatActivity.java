@@ -1688,6 +1688,8 @@ public class ChatActivity extends BaseFragment implements
     private final static int charge_fee = 72;
 
     private final static int chat_menu_topic_create = 73;
+    // Mercurygram: chat menu "Go to first message"
+    private final static int mg_go_to_first_message = 75;
 
     private final static int id_chat_compose_panel = 1000;
 
@@ -3967,6 +3969,11 @@ public class ChatActivity extends BaseFragment implements
                     getSendMessagesHelper().sendMessage(SendMessagesHelper.SendMessageParams.of("/settings", dialog_id, null, null, null, false, null, null, null, true, 0, 0, null, false));
                 } else if (id == search) {
                     openSearchWithText(isSupportedTags() ? "" : null);
+                } else if (id == mg_go_to_first_message) {
+                    // Mercurygram: jump to the oldest message by reusing the calendar
+                    // jump with a date before any chat can exist (Telegram's launch,
+                    // August 2013). Idea from Forkgram.
+                    jumpToDate(1375350800);
                 } else if (id == translate) {
                     getMessagesController().getTranslateController().setHideTranslateDialog(getDialogId(), false, true);
                     if (!getMessagesController().getTranslateController().toggleTranslatingDialog(getDialogId(), true)) {
@@ -4417,6 +4424,9 @@ public class ChatActivity extends BaseFragment implements
 
             if (searchItem != null) {
                 headerItem.lazilyAddSubItem(search, R.drawable.msg_search, LocaleController.getString(R.string.Search));
+            }
+            if (!DialogObject.isEncryptedDialog(dialog_id)) {
+                headerItem.lazilyAddSubItem(mg_go_to_first_message, R.drawable.msg_go_up, LocaleController.getString(R.string.MercurygramGoToFirstMessage));
             }
             if (ChatObject.isBoostSupported(currentChat) && (getUserConfig().isPremium() || ChatObject.isBoosted(chatInfo) || ChatObject.hasAdminRights(currentChat))) {
                 RLottieDrawable drawable = new RLottieDrawable(R.raw.boosts, dp(24), dp(24));
