@@ -266,4 +266,5 @@
     <string name="MercurygramLiveLocationPausedInfo">La condivisione si è interrotta al riavvio del dispositivo. Apri Mercurygram per riprenderla.</string>
     <string name="MercurygramQrLogin">Accedi con codice QR</string>
     <string name="MercurygramQrLoginInfo">Apri Telegram su un telefono dove hai già effettuato l\'accesso, vai in Impostazioni &gt; Dispositivi e scansiona questo codice.</string>
+    <string name="MercurygramGoToFirstMessage">Vai al primo messaggio</string>
 </resources>
