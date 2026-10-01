@@ -20,6 +20,8 @@
 -keep class org.telegram.tgnet.RequestTimeDelegate { *; }
 -keep class org.telegram.tgnet.RequestDelegate { *; }
 -keep class org.telegram.ui.Stories.recorder.FfmpegAudioWaveformLoader { *; }
+# ThemeDescription looks up view fields by name via reflection
+-keepclassmembernames,allowoptimization class org.telegram.ui.** { <fields>; }
 -keep class androidx.mediarouter.app.MediaRouteButton { *; }
 -keepclassmembers class ** {
     @android.webkit.JavascriptInterface <methods>;
