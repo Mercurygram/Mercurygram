@@ -265,4 +265,5 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramQrLogin">Log in by QR code</string>
     <string name="MercurygramQrLoginInfo">Open Telegram on a phone where you are already logged in, go to Settings &gt; Devices and scan this code.</string>
+    <string name="MercurygramGoToFirstMessage">Go to first message</string>
 </resources>
