@@ -265,4 +265,5 @@
     <string name="MercurygramFolderTag">Mercurygram</string>
     <string name="MercurygramQrLogin">Mit QR-Code anmelden</string>
     <string name="MercurygramQrLoginInfo">Öffne Telegram auf einem Telefon, auf dem du bereits angemeldet bist, gehe zu Einstellungen &gt; Geräte und scanne diesen Code.</string>
+    <string name="MercurygramGoToFirstMessage">Zur ersten Nachricht</string>
 </resources>
