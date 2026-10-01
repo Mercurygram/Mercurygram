@@ -10393,6 +10393,20 @@ public class ChatActivityEnterView extends FrameLayout implements
 
     @Override
     public void updateColors() {
+        // A runtime day/night switch (e.g. Battery Saver toggling the system dark theme) only refreshes
+        // messageEditText through ChatActivity's ThemeDescription, which finds the field reflectively by
+        // name. R8 renames the field in release builds, so that lookup fails silently and the input kept
+        // the old text colour (white text on the light panel) until the chat was reopened. Re-apply the
+        // same colours that are set when the field is created.
+        if (messageEditText != null) {
+            messageEditText.setTextColor(getThemedColor(Theme.key_chat_messagePanelText));
+            messageEditText.setLinkTextColor(getThemedColor(Theme.key_chat_messageLinkOut));
+            messageEditText.setHighlightColor(getThemedColor(Theme.key_chat_inTextSelectionHighlight));
+            messageEditText.setHintColor(getThemedColor(Theme.key_chat_messagePanelHint));
+            messageEditText.setHintTextColor(getThemedColor(Theme.key_chat_messagePanelHint));
+            messageEditText.setCursorColor(getThemedColor(Theme.key_chat_messagePanelCursor));
+            messageEditText.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
+        }
         if (messageSendPreview != null) {
             messageSendPreview.updateColors();
         }
