@@ -297,7 +297,7 @@ task patchNativeSources {
         }.standardOutput.asText.get().trim()
         new File(ffmpegDir, 'VERSION').text = ffmpegSha + '\n'
 
-        for (script in ['patch_dav1d.sh', 'patch_td.sh']) {
+        for (script in ['patch_dav1d.sh', 'patch_td.sh', 'patch_tgcalls.sh']) {
             exec {
                 workingDir "${projectDir}/jni"
                 commandLine 'bash', script
