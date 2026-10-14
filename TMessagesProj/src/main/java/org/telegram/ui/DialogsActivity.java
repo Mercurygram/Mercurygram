@@ -286,6 +286,7 @@ import it.belloworld.mercurygram.HiddenAccountHelper;
 import it.belloworld.mercurygram.MgDefaultFolder;
 import it.belloworld.mercurygram.MgPins;
 import it.belloworld.mercurygram.folders.MgFolders;
+import it.belloworld.mercurygram.folders.MgFolderVisibility;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider, FactorAnimator.Target, MainTabsActivity.TabFragmentDelegate {
     private final int ADDITIONAL_LIST_HEIGHT_DP = Build.VERSION.SDK_INT >= 31 ? 48 : 0;
@@ -3845,6 +3846,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                     FilterCreateActivity.FilterInvitesBottomSheet.show(DialogsActivity.this, finalFilter, null);
                                 }
                             })
+                            .addIf(!defaultTab, R.drawable.mg_eye_off, LocaleController.getString(R.string.MercurygramFolderHide), () -> {
+                                MgFolderVisibility.setHidden(getUserConfig(), dialogFilter, true);
+                                getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
+                            })
                             .addIf(!defaultTab, R.drawable.msg_delete, LocaleController.getString(R.string.FilterDeleteItem), true, () -> {
                                 showDeleteAlert(dialogFilter);
                             })
@@ -6812,21 +6817,34 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 return;
             }
         }
-        int index = filterTabsView.getTabsCount() - 1;
+        int folderIndex = -1;
         ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
         for (int i = 0; i < filters.size(); ++i) {
             if (filters.get(i).id == fid) {
-                index = i;
+                folderIndex = i;
                 break;
             }
         }
 
-        FilterTabsView.Tab tab = filterTabsView.getTab(index);
+        // Mercurygram: with folders hidden from the strip, a folder's index no
+        // longer equals its tab position, so locate the tab by its id.
+        int position = filterTabsView.getTabsCount() - 1;
+        FilterTabsView.Tab tab = position >= 0 ? filterTabsView.getTab(position) : null;
+        if (folderIndex >= 0) {
+            for (int i = 0, N = filterTabsView.getTabsCount(); i < N; i++) {
+                FilterTabsView.Tab candidate = filterTabsView.getTab(i);
+                if (candidate != null && candidate.id == folderIndex) {
+                    tab = candidate;
+                    position = i;
+                    break;
+                }
+            }
+        }
         if (tab != null) {
             if (viewPages != null && viewPages.length > 0 && viewPages[0].selectedType == tab.id) {
                 return;
             }
-            filterTabsView.scrollToTab(tab, index);
+            filterTabsView.scrollToTab(tab, position);
         } else {
             filterTabsView.selectLastTab();
         }
@@ -6911,15 +6929,32 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     filterTabsView.resetTabId();
                     selectWithStableId = true;
                 }
+                // Mercurygram: keep the All-chats tab switch in step with the
+                // setting on every rebuild, so toggling it applies without a restart.
+                filterTabsView.showAllChatsTab = !getUserConfig().mg.hideAllTab;
                 filterTabsView.removeTabs();
+                int mgAddedTabs = 0;
                 for (int a = 0, N = filters.size(); a < N; a++) {
-                    if (filters.get(a).isDefault()) {
-                        if (filterTabsView.showAllChatsTab) {
-                            filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
-                        }
+                    final MessagesController.DialogFilter filter = filters.get(a);
+                    if (MgFolderVisibility.isHidden(getUserConfig(), filter)) {
+                        continue; // Mercurygram: folder is hidden from the tab strip, kept everywhere else
+                    }
+                    if (filter.isDefault()) {
+                        filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filter.locked);
                     } else {
-                        final MessagesController.DialogFilter filter = filters.get(a);
-                        filterTabsView.addTab(a, filter.localId, filter.name, filter.entities, filter.title_noanimate, false, filters.get(a).locked);
+                        filterTabsView.addTab(a, filter.localId, filter.name, filter.entities, filter.title_noanimate, false, filter.locked);
+                    }
+                    mgAddedTabs++;
+                }
+                if (mgAddedTabs == 0) {
+                    // Mercurygram: never leave the strip empty — if everything is
+                    // hidden, fall back to showing "All chats".
+                    for (int a = 0, N = filters.size(); a < N; a++) {
+                        if (filters.get(a).isDefault()) {
+                            filterTabsView.showAllChatsTab = true;
+                            filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
+                            break;
+                        }
                     }
                 }
                 if (stableId >= 0) {

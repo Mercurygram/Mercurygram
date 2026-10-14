@@ -7,6 +7,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Mercurygram per-account settings. Lives in the same per-account
@@ -43,6 +44,13 @@ public class MgAccountConfig {
     public String folderEmoticons = "";
     /** Pinned chats of the All chats list, top first (see MgPins). */
     public final ArrayList<Long> mainPins = new ArrayList<>();
+    /**
+     * Folder ids hidden from the chat-list tab strip (see MgFolderVisibility).
+     * Purely local presentation state: the folders themselves stay on the
+     * server untouched, only their tab is omitted. The "All chats" entry is not
+     * stored here — it keeps using {@link #hideAllTab}.
+     */
+    public final HashSet<Integer> hiddenFolderIds = new HashSet<>();
 
     /**
      * Whether {@code draftMessage} may go to the server. An empty draft carries no
@@ -98,6 +106,7 @@ public class MgAccountConfig {
         editor.putInt("folderSyncUpdated", folderSyncUpdated);
         editor.putString("folderEmoticons", folderEmoticons);
         editor.putString("mainPins", TextUtils.join(",", mainPins));
+        editor.putString("hiddenFolderIds", TextUtils.join(",", hiddenFolderIds));
         editor.putBoolean("mgReducedTrackingExhausted", mgReducedTrackingExhausted);
     }
 
@@ -132,6 +141,13 @@ public class MgAccountConfig {
             } catch (NumberFormatException ignore) {
             }
         }
+        hiddenFolderIds.clear();
+        for (String id : TextUtils.split(preferences.getString("hiddenFolderIds", ""), ",")) {
+            try {
+                hiddenFolderIds.add(Integer.parseInt(id));
+            } catch (NumberFormatException ignore) {
+            }
+        }
         mgReducedTrackingExhausted = preferences.getBoolean("mgReducedTrackingExhausted", false);
     }
 
@@ -160,6 +176,7 @@ public class MgAccountConfig {
         folderSyncUpdated = 0;
         folderEmoticons = "";
         mainPins.clear();
+        hiddenFolderIds.clear();
         mgReducedTrackingExhausted = false;
     }
 }

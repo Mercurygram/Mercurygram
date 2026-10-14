@@ -262,6 +262,10 @@
     <string name="MercurygramFolder">Mercurygram-map</string>
     <string name="MercurygramFolderInfo">Alleen zichtbaar in Mercurygram, wordt nooit als map naar Telegram gestuurd, dus geen limiet op mappen of chats. Gesynchroniseerd tussen je Mercurygram-apps via één bestand in Opgeslagen berichten. Bij een bestaande map verplaatst de schakelaar de map tussen Telegram en Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramFolderHide">Map verbergen</string>
+    <string name="MercurygramFolderShow">Map tonen</string>
+    <string name="MercurygramHideFromTabBar">Verbergen op tabbalk</string>
+    <string name="MercurygramHideFromTabBarInfo">Indien aan staat, wordt de map verborgen op de tabbalk van de chatlijst. De map blijft bestaan en kan altijd opnieuw worden getoond via de mapinstellingen.</string>
     <string name="MercurygramLiveLocationPaused">Live locatie gepauzeerd</string>
     <string name="MercurygramLiveLocationPausedInfo">Het delen is gestopt toen je apparaat opnieuw opstartte. Open Mercurygram om het te hervatten.</string>
     <string name="MercurygramQrLogin">Inloggen met QR-code</string>

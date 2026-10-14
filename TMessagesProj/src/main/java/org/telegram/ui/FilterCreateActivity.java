@@ -108,6 +108,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import it.belloworld.mercurygram.folders.MgFolders;
+import it.belloworld.mercurygram.folders.MgFolderVisibility;
 
 public class FilterCreateActivity extends BaseFragment {
 
@@ -219,6 +220,7 @@ public class FilterCreateActivity extends BaseFragment {
         newNeverShow = new ArrayList<>(filter.neverShow);
         newPinned = filter.pinnedDialogs.clone();
         mgFolder = MgFolders.isMercurygram(filter);
+        mgHideFromTab = !creatingNew && MgFolderVisibility.isHidden(getUserConfig(), filter);
     }
 
     private int requestingInvitesReqId;
@@ -226,6 +228,10 @@ public class FilterCreateActivity extends BaseFragment {
     // Mercurygram: this folder gets a negative id and never reaches the server;
     // the id is applied on save so an existing folder can be moved either way
     private boolean mgFolder;
+
+    // Mercurygram: whether this folder is hidden from the chat list tab bar.
+    // Local only; mirrors the eye toggle in FiltersSetupActivity.
+    private boolean mgHideFromTab;
 
     public FilterCreateActivity mgSetFolder(boolean mercurygram) {
         mgFolder = mercurygram;
@@ -328,6 +334,12 @@ public class FilterCreateActivity extends BaseFragment {
             items.add(ItemInner.asCheck(LocaleController.getString(R.string.MercurygramFolder), mgFolder).whenClicked(v -> mgToggleFolder((TextCheckCell) v)));
         }
         items.add(ItemInner.asShadow(mgFolderRow ? LocaleController.getString(R.string.MercurygramFolderInfo) : null));
+        items.add(ItemInner.asCheck(LocaleController.getString(R.string.MercurygramHideFromTabBar), mgHideFromTab).whenClicked(v -> {
+            mgHideFromTab = !mgHideFromTab;
+            ((TextCheckCell) v).setChecked(mgHideFromTab);
+            checkDoneButton(true);
+        }));
+        items.add(ItemInner.asShadow(LocaleController.getString(R.string.MercurygramHideFromTabBarInfo)));
         items.add(ItemInner.asHeader(LocaleController.getString(R.string.FilterInclude)));
         items.add(ItemInner.asButton(R.drawable.msg2_chats_add, LocaleController.getString(R.string.FilterAddChats), false).whenClicked(v -> selectChatsFor(true)));
 
@@ -1115,6 +1127,7 @@ public class FilterCreateActivity extends BaseFragment {
             hasUserChanged = false;
             creatingNew = false;
             filter.flags = newFilterFlags;
+            MgFolderVisibility.setHidden(getUserConfig(), filter, mgHideFromTab); // Mercurygram
             checkDoneButton(true);
 
             getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
@@ -1318,6 +1331,9 @@ public class FilterCreateActivity extends BaseFragment {
             return true;
         }
         if (filter.flags != newFilterFlags) {
+            return true;
+        }
+        if (!creatingNew && mgHideFromTab != MgFolderVisibility.isHidden(getUserConfig(), filter)) { // Mercurygram
             return true;
         }
         return hasUserChanged;

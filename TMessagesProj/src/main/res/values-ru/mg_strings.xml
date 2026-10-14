@@ -262,6 +262,10 @@
     <string name="MercurygramFolder">Папка Mercurygram</string>
     <string name="MercurygramFolderInfo">Показывается только в Mercurygram, не отправляется в Telegram как папка, поэтому без ограничений на число папок и чатов. Синхронизируется между вашими приложениями Mercurygram через один файл в Избранном. Переключение у существующей папки переносит папку между Telegram и Mercurygram.</string>
     <string name="MercurygramFolderTag">Mercurygram</string>
+    <string name="MercurygramFolderHide">Скрыть папку</string>
+    <string name="MercurygramFolderShow">Показать папку</string>
+    <string name="MercurygramHideFromTabBar">Скрыть из таб-бара</string>
+    <string name="MercurygramHideFromTabBarInfo">Если включено, папка скрывается из таб-бара на экране чатов. Папка никуда не исчезает, её всегда можно вернуть в «Настройки → Папки».</string>
     <string name="MercurygramLiveLocationPaused">Трансляция геопозиции приостановлена</string>
     <string name="MercurygramLiveLocationPausedInfo">Передача остановилась после перезагрузки устройства. Откройте Mercurygram, чтобы возобновить её.</string>
     <string name="MercurygramQrLogin">Войти по QR-коду</string>

@@ -13,6 +13,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -297,6 +298,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             case ID_HIDE_ALL_TAB:
                 getUserConfig().mg.hideAllTab = !getUserConfig().mg.hideAllTab;
                 getUserConfig().saveConfig(false);
+                // Rebuild the chat-list tab strip immediately (the folder eye on
+                // "All chats" writes the same flag, so both stay in step).
+                getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
                 refreshList();
                 break;
             case ID_DEFAULT_FOLDER:
