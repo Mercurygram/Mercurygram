@@ -72,6 +72,7 @@ import org.telegram.ui.Components.UndoView;
 import java.util.ArrayList;
 
 import it.belloworld.mercurygram.folders.MgFolders;
+import it.belloworld.mercurygram.folders.MgFolderVisibility;
 
 public class FiltersSetupActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -265,6 +266,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         private final SimpleTextView textView;
         private final TextView valueTextView;
         private final ImageView moveImageView;
+        private final ImageView hideImageView;
         private int lastColor = -2, lastAppliedColor = -1;
         private final View colorImageView;
         private final ImageView optionsImageView;
@@ -292,6 +294,15 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             colorImageView = new View(context);
             addView(colorImageView, LayoutHelper.createFrame(20, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, 22, 0, 22, 0));
 
+            hideImageView = new ImageView(context);
+            hideImageView.setFocusable(false);
+            hideImageView.setScaleType(ImageView.ScaleType.CENTER);
+            hideImageView.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector)));
+            hideImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_stickers_menu), PorterDuff.Mode.MULTIPLY));
+            hideImageView.setImageResource(R.drawable.mg_eye);
+            hideImageView.setContentDescription(LocaleController.getString(R.string.MercurygramFolderHide));
+            addView(hideImageView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 4 : 56, 0, LocaleController.isRTL ? 56 : 4, 0));
+
             textView = new SimpleTextView(context);
             textView.setPadding(0, dp(4), 0, dp(4));
             textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
@@ -302,7 +313,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             drawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_stickers_menu), PorterDuff.Mode.MULTIPLY));
             textView.setRightDrawable(drawable);
             textView.setEmojiColor(Theme.getColor(Theme.key_featuredStickers_addButton, resourceProvider));
-            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 80 : 64, 10, LocaleController.isRTL ? 64 : 80, 0));
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 80 : 104, 10, LocaleController.isRTL ? 104 : 80, 0));
 
             valueTextView = new TextView(context);
             valueTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
@@ -313,7 +324,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             valueTextView.setSingleLine(true);
             valueTextView.setPadding(0, 0, 0, 0);
             valueTextView.setEllipsize(TextUtils.TruncateAt.END);
-            addView(valueTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 80 : 64, 35, LocaleController.isRTL ? 64 : 80, 0));
+            addView(valueTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 80 : 104, 35, LocaleController.isRTL ? 104 : 80, 0));
             valueTextView.setVisibility(GONE);
 
             shareLoadingDrawable = new LoadingDrawable();
@@ -428,6 +439,11 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
 
             shareImageView.setVisibility(filter.isChatlist() ? VISIBLE : GONE);
 
+            // Mercurygram: eye reflects whether the folder's tab is hidden from the chat list
+            final boolean mgHidden = MgFolderVisibility.isHidden(getUserConfig(), filter);
+            hideImageView.setImageResource(mgHidden ? R.drawable.mg_eye_off : R.drawable.mg_eye);
+            hideImageView.setContentDescription(LocaleController.getString(mgHidden ? R.string.MercurygramFolderShow : R.string.MercurygramFolderHide));
+
             StringBuilder info = new StringBuilder();
             if (filter.isDefault() || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_ALL_CHATS) == MessagesController.DIALOG_FILTER_FLAG_ALL_CHATS) {
                 info.append(LocaleController.getString(R.string.FilterAllChats));
@@ -506,10 +522,14 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             optionsImageView.setOnClickListener(listener);
         }
 
+        public void setOnHideClick(OnClickListener listener) {
+            hideImageView.setOnClickListener(listener);
+        }
+
         @Override
         protected void onDraw(Canvas canvas) {
             if (needDivider) {
-                canvas.drawLine(LocaleController.isRTL ? 0 : dp(62), getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? dp(62) : 0), getMeasuredHeight() - 1, Theme.dividerPaint);
+                canvas.drawLine(LocaleController.isRTL ? 0 : dp(102), getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? dp(102) : 0), getMeasuredHeight() - 1, Theme.dividerPaint);
             }
             if (currentFilter != null) {
                 if (currentFilter.locked && progressToLock != 1f) {
@@ -904,6 +924,15 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                             itemTouchHelper.startDrag(listView.getChildViewHolder(filterCell));
                         }
                         return false;
+                    });
+                    filterCell.setOnHideClick(v -> {
+                        FilterCell cell = (FilterCell) v.getParent();
+                        MessagesController.DialogFilter filter = cell.getCurrentFilter();
+                        if (filter != null) {
+                            MgFolderVisibility.setHidden(getUserConfig(), filter, !MgFolderVisibility.isHidden(getUserConfig(), filter));
+                            getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
+                            updateRows(true);
+                        }
                     });
                     filterCell.setOnOptionsClick(v -> {
                         FilterCell cell = (FilterCell) v.getParent();
