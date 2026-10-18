@@ -69,6 +69,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_CONFIRM_INTERNAL_LINKS = 63;
     private static final int ID_SHOW_CHAR_COUNTER = 64;
     private static final int ID_DISABLE_PROXIMITY_SENSOR = 65;
+    private static final int ID_ACCOUNT_ORDER = 66;
 
     @Override
     protected CharSequence getTitle() {
@@ -86,6 +87,10 @@ public class MercurygramSettingsActivity extends UniversalFragment {
             }
             String value = hiddenCount > 0 ? Integer.toString(hiddenCount) : LocaleController.getString(R.string.PasswordOff);
             items.add(UItem.asButton(ID_HIDDEN_ACCOUNTS, R.drawable.msg2_secret, LocaleController.getString(R.string.HiddenAccounts), value));
+            items.add(UItem.asShadow(null));
+        }
+        if (HiddenAccountHelper.getVisibleAccountsCount() > 1) {
+            items.add(UItem.asButton(ID_ACCOUNT_ORDER, R.drawable.tabs_reorder, LocaleController.getString(R.string.MercurygramAccountOrder)));
             items.add(UItem.asShadow(null));
         }
 
@@ -278,6 +283,9 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         switch (item.id) {
             case ID_HIDDEN_ACCOUNTS:
                 presentFragment(new HiddenAccountsActivity());
+                break;
+            case ID_ACCOUNT_ORDER:
+                presentFragment(new MgAccountOrderActivity());
                 break;
             case ID_MESSAGE_DETAILS_MENU:
                 getUserConfig().mg.messageDetailsMenu = !getUserConfig().mg.messageDetailsMenu;
