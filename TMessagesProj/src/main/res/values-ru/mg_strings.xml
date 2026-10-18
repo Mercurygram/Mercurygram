@@ -220,6 +220,8 @@
     <string name="MercurygramPushDiagnostics">Диагностика уведомлений</string>
     <string name="MercurygramPushDiagnosticsNever">Push пока не приходил</string>
     <string name="HiddenAccounts">Скрытые аккаунты</string>
+    <string name="MercurygramAccountOrder">Порядок аккаунтов</string>
+    <string name="MercurygramAccountOrderInfo">Перетаскивайте аккаунты, чтобы изменить их порядок в переключателе аккаунтов и настройках.</string>
     <string name="HiddenAccountsOptions">Параметры</string>
     <string name="HiddenAccountsStealthMode">Скрытный режим</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">Отключите код доступа Telegram перед включением скрытного режима.</string>

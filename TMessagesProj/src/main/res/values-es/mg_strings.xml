@@ -220,6 +220,8 @@
     <string name="MercurygramPushDiagnostics">Diagnóstico de notificaciones</string>
     <string name="MercurygramPushDiagnosticsNever">Ningún push recibido</string>
     <string name="HiddenAccounts">Cuentas ocultas</string>
+    <string name="MercurygramAccountOrder">Reordenar cuentas</string>
+    <string name="MercurygramAccountOrderInfo">Arrastra las cuentas para cambiar su orden en el selector de cuentas y en los ajustes.</string>
     <string name="HiddenAccountsOptions">Opciones</string>
     <string name="HiddenAccountsStealthMode">Modo sigiloso</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">Desactiva el código de acceso de Telegram antes de activar el modo sigiloso.</string>

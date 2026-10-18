@@ -220,6 +220,8 @@
     <string name="MercurygramPushDiagnostics">Meldingsdiagnose</string>
     <string name="MercurygramPushDiagnosticsNever">Nog geen push ontvangen</string>
     <string name="HiddenAccounts">Verborgen accounts</string>
+    <string name="MercurygramAccountOrder">Accounts herschikken</string>
+    <string name="MercurygramAccountOrderInfo">Sleep accounts om hun volgorde in de accountwisselaar en de instellingen te wijzigen.</string>
     <string name="HiddenAccountsOptions">Opties</string>
     <string name="HiddenAccountsStealthMode">Stealth-modus</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">Schakel de Telegram-toegangscode uit voordat je de stealth-modus inschakelt.</string>
