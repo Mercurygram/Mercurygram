@@ -220,6 +220,8 @@
     <string name="MercurygramPushDiagnostics">Diagnóstico de notificações</string>
     <string name="MercurygramPushDiagnosticsNever">Nenhum push recebido</string>
     <string name="HiddenAccounts">Contas ocultas</string>
+    <string name="MercurygramAccountOrder">Reordenar contas</string>
+    <string name="MercurygramAccountOrderInfo">Arraste as contas para mudar a ordem delas no seletor de contas e nas configurações.</string>
     <string name="HiddenAccountsOptions">Opções</string>
     <string name="HiddenAccountsStealthMode">Modo furtivo</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">Desative o código de acesso do Telegram antes de ativar o modo furtivo.</string>

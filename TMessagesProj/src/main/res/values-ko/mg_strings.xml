@@ -220,6 +220,8 @@
     <string name="MercurygramPushDiagnostics">알림 진단</string>
     <string name="MercurygramPushDiagnosticsNever">아직 받은 푸시 없음</string>
     <string name="HiddenAccounts">숨긴 계정</string>
+    <string name="MercurygramAccountOrder">계정 순서 변경</string>
+    <string name="MercurygramAccountOrderInfo">계정을 끌어 계정 전환기와 설정에서의 순서를 바꾸세요.</string>
     <string name="HiddenAccountsOptions">옵션</string>
     <string name="HiddenAccountsStealthMode">스텔스 모드</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">스텔스 모드를 활성화하기 전에 Telegram 암호를 끄세요.</string>

@@ -220,6 +220,8 @@
     <string name="MercurygramPushDiagnostics">تشخيص الإشعارات</string>
     <string name="MercurygramPushDiagnosticsNever">لم يصل أي إشعار فوري بعد</string>
     <string name="HiddenAccounts">الحسابات المخفية</string>
+    <string name="MercurygramAccountOrder">إعادة ترتيب الحسابات</string>
+    <string name="MercurygramAccountOrderInfo">اسحب الحسابات لتغيير ترتيبها في مبدّل الحسابات وفي الإعدادات.</string>
     <string name="HiddenAccountsOptions">الخيارات</string>
     <string name="HiddenAccountsStealthMode">الوضع الخفي</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">عطّل رمز مرور Telegram قبل تفعيل الوضع الخفي.</string>

@@ -220,6 +220,8 @@
     <string name="MercurygramPushDiagnostics">Benachrichtigungsdiagnose</string>
     <string name="MercurygramPushDiagnosticsNever">Noch kein Push empfangen</string>
     <string name="HiddenAccounts">Versteckte Konten</string>
+    <string name="MercurygramAccountOrder">Konten neu anordnen</string>
+    <string name="MercurygramAccountOrderInfo">Ziehe Konten, um ihre Reihenfolge im Kontowechsler und in den Einstellungen zu ändern.</string>
     <string name="HiddenAccountsOptions">Optionen</string>
     <string name="HiddenAccountsStealthMode">Tarnmodus</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">Deaktiviere den Telegram-Sperrcode, bevor du den Tarnmodus aktivierst.</string>
