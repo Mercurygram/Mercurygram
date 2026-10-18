@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="HiddenAccounts">Hidden Accounts</string>
+    <string name="MercurygramAccountOrder">Reorder accounts</string>
+    <string name="MercurygramAccountOrderInfo">Drag accounts to change their order in the account switcher and settings.</string>
     <string name="HiddenAccountsOptions">Options</string>
     <string name="HiddenAccountsStealthMode">Stealth mode</string>
     <string name="HiddenAccountsStealthModeRequiresPasscodeOff">Turn off Telegram passcode before enabling stealth mode.</string>

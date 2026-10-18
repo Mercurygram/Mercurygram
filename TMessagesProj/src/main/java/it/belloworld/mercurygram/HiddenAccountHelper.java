@@ -14,6 +14,7 @@ import org.telegram.tgnet.ConnectionsManager;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public final class HiddenAccountHelper {
@@ -174,6 +175,29 @@ public final class HiddenAccountHelper {
             out.add(a);
         }
         out.sort((o1, o2) -> Long.compare(UserConfig.getInstance(o1).loginTime, UserConfig.getInstance(o2).loginTime));
+    }
+
+    // Every account list sorts by loginTime, so reorder by handing the same
+    // loginTime values back out in the new order (as the old drawer did).
+    // Hidden accounts are not in the list and keep their own values.
+    public static void setVisibleAccountOrder(ArrayList<Integer> order) {
+        int[] times = new int[order.size()];
+        for (int i = 0; i < times.length; i++) {
+            times[i] = UserConfig.getInstance(order.get(i)).loginTime;
+        }
+        Arrays.sort(times);
+        for (int i = 1; i < times.length; i++) {
+            if (times[i] <= times[i - 1]) {
+                times[i] = times[i - 1] + 1;
+            }
+        }
+        for (int i = 0; i < times.length; i++) {
+            UserConfig userConfig = UserConfig.getInstance(order.get(i));
+            if (userConfig.loginTime != times[i]) {
+                userConfig.loginTime = times[i];
+                userConfig.saveConfig(false);
+            }
+        }
     }
 
     public static boolean canHideAccount(int account) {
