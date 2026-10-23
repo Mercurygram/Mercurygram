@@ -244,6 +244,20 @@ public class TranslateController extends BaseController {
         return false;
     }
 
+    // Mercurygram: whether the chat translate bar stays out of view. Without
+    // MLKit there is no source language to filter on, so the bar offers itself
+    // in every chat with text; mg.hideTranslateBar hides it everywhere, the same
+    // way the per-chat Hide does, leaving "Translate" in the chat menu. The bar
+    // still shows while a chat is being translated, so "Show original" stays
+    // reachable. Local only: unlike setHideTranslateDialog, nothing goes to the
+    // server, and isTranslateDialogHidden keeps gating actual translation.
+    public boolean isTranslateBarHidden(long dialogId) {
+        if (isTranslateDialogHidden(dialogId)) {
+            return true;
+        }
+        return getUserConfig().mg.hideTranslateBar && !isTranslatingDialog(dialogId);
+    }
+
     private boolean isChatAutoTranslated(long dialogId) {
         if (!isDialogTranslatable(dialogId)) {
             return false;
