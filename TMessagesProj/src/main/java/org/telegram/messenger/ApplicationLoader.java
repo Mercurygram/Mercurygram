@@ -199,6 +199,8 @@ public class ApplicationLoader extends Application {
             e.printStackTrace();
         }
 
+        LanguageDetector.probe();
+
         try {
             connectivityManager = (ConnectivityManager) ApplicationLoader.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
             BroadcastReceiver networkStateReceiver = new BroadcastReceiver() {

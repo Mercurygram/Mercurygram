@@ -175,6 +175,11 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (via Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineYandex">Yandex</string>
     <string name="MercurygramTranslationPoweredBy">As traduções são fornecidas por\n**%1$s**.</string>
+    <string name="MercurygramTranslationChatsSection">Conversas</string>
+    <string name="MercurygramHideTranslateBar">Ocultar barra de tradução</string>
+    <string name="MercurygramHideTranslateBarAbout">Nunca mostrar a barra ‘Traduzir para…’ no topo das conversas. Você ainda pode traduzir uma conversa pelo menu dela.</string>
+    <string name="MercurygramDoNotTranslateAbout">A barra de tradução não aparece em conversas nesses idiomas. Você ainda pode traduzi-las pelo menu da conversa.</string>
+    <string name="MercurygramDoNotTranslateUnavailable">Este dispositivo não consegue detectar o idioma das mensagens, então a barra de tradução pode aparecer em qualquer conversa com texto.</string>
     <string name="MercurygramCreateMention">Mencionar</string>
     <string name="MercurygramMentionUserIdHint">ID do usuário</string>
     <string name="MercurygramMentionChoose">Escolher contato</string>

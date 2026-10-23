@@ -175,6 +175,11 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (via Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineYandex">Yandex</string>
     <string name="MercurygramTranslationPoweredBy">Vertalingen worden verzorgd door\n**%1$s**.</string>
+    <string name="MercurygramTranslationChatsSection">Chats</string>
+    <string name="MercurygramHideTranslateBar">Vertaalbalk verbergen</string>
+    <string name="MercurygramHideTranslateBarAbout">Toon nooit de balk ‘Vertalen naar…’ bovenaan chats. Je kunt een chat nog steeds vertalen via het menu.</string>
+    <string name="MercurygramDoNotTranslateAbout">De vertaalbalk verschijnt niet in chats in deze talen. Je kunt ze nog steeds vertalen via het chatmenu.</string>
+    <string name="MercurygramDoNotTranslateUnavailable">Dit apparaat kan de taal van berichten niet herkennen, dus de vertaalbalk kan in elke chat met tekst verschijnen.</string>
     <string name="MercurygramCreateMention">Vermelden</string>
     <string name="MercurygramMentionUserIdHint">Gebruikers-ID</string>
     <string name="MercurygramMentionChoose">Contact kiezen</string>

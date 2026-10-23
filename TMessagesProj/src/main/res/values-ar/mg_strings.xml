@@ -175,6 +175,11 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (عبر Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineYandex">Yandex</string>
     <string name="MercurygramTranslationPoweredBy">الترجمات مدعومة بواسطة\n**%1$s**.</string>
+    <string name="MercurygramTranslationChatsSection">الدردشات</string>
+    <string name="MercurygramHideTranslateBar">إخفاء شريط الترجمة</string>
+    <string name="MercurygramHideTranslateBarAbout">لا تعرض أبدًا شريط «ترجمة إلى…» أعلى الدردشات. لا يزال بإمكانك ترجمة الدردشة من قائمتها.</string>
+    <string name="MercurygramDoNotTranslateAbout">لا يظهر شريط الترجمة في الدردشات بهذه اللغات. لا يزال بإمكانك ترجمتها من قائمة الدردشة.</string>
+    <string name="MercurygramDoNotTranslateUnavailable">لا يستطيع هذا الجهاز اكتشاف لغة الرسائل، لذا قد يظهر شريط الترجمة في أي دردشة تحتوي على نص.</string>
     <string name="MercurygramCreateMention">إشارة</string>
     <string name="MercurygramMentionUserIdHint">معرّف المستخدم</string>
     <string name="MercurygramMentionChoose">اختيار جهة اتصال</string>
