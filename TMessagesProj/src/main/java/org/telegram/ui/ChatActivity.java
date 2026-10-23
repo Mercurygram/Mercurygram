@@ -11354,7 +11354,7 @@ public class ChatActivity extends BaseFragment implements
         if (translateItem == null) {
             return;
         }
-        translateItem.setVisibility(getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()) && getMessagesController().getTranslateController().isDialogTranslatableMg(getDialogId()) ? View.VISIBLE : View.GONE);
+        translateItem.setVisibility(getMessagesController().getTranslateController().isTranslateBarHidden(getDialogId()) && getMessagesController().getTranslateController().isDialogTranslatableMg(getDialogId()) ? View.VISIBLE : View.GONE);
     }
 
     private Animator infoTopViewAnimator;
@@ -29398,7 +29398,7 @@ public class ChatActivity extends BaseFragment implements
         // only when the offline on-device translator is selected and usable.
         boolean showTranslate =
             (getMessagesController().getTranslateController().isDialogTranslatableMg(getDialogId())
-                && !getMessagesController().getTranslateController().isTranslateDialogHidden(getDialogId()))
+                && !getMessagesController().getTranslateController().isTranslateBarHidden(getDialogId()))
             || DEBUG_TOP_PANELS;
         boolean showAddProfilePicture = UserObject.isBot(currentUser) && currentUser.bot_can_edit && currentUser.photo == null;
         boolean showBizBot = currentEncryptedChat == null && getUserConfig().isPremium() && preferences.getLong("dialog_botid" + did, 0) != 0 || DEBUG_TOP_PANELS;
