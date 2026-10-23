@@ -175,6 +175,9 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (tramite Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineYandex">Yandex</string>
     <string name="MercurygramTranslationPoweredBy">Le traduzioni sono fornite da\n**%1$s**.</string>
+    <string name="MercurygramTranslationChatsSection">Chat</string>
+    <string name="MercurygramHideTranslateBar">Nascondi barra di traduzione</string>
+    <string name="MercurygramHideTranslateBarAbout">Non mostrare mai la barra ‘Traduci in…’ in cima alle chat. Puoi comunque tradurre una chat dal suo menu.</string>
     <string name="MercurygramCreateMention">Menziona</string>
     <string name="MercurygramMentionUserIdHint">ID utente</string>
     <string name="MercurygramMentionChoose">Scegli contatto</string>
