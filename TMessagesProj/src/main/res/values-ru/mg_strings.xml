@@ -178,6 +178,8 @@
     <string name="MercurygramTranslationChatsSection">Чаты</string>
     <string name="MercurygramHideTranslateBar">Скрыть панель перевода</string>
     <string name="MercurygramHideTranslateBarAbout">Никогда не показывать панель «Перевести на…» вверху чатов. Чат по-прежнему можно перевести из его меню.</string>
+    <string name="MercurygramDoNotTranslateAbout">Панель перевода не появляется в чатах на этих языках. Их по-прежнему можно перевести из меню чата.</string>
+    <string name="MercurygramDoNotTranslateUnavailable">Это устройство не умеет определять язык сообщений, поэтому панель перевода может появляться в любом чате с текстом.</string>
     <string name="MercurygramCreateMention">Упомянуть</string>
     <string name="MercurygramMentionUserIdHint">ID пользователя</string>
     <string name="MercurygramMentionChoose">Выбрать контакт</string>

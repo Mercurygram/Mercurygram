@@ -178,6 +178,8 @@
     <string name="MercurygramTranslationChatsSection">Chats</string>
     <string name="MercurygramHideTranslateBar">Übersetzungsleiste ausblenden</string>
     <string name="MercurygramHideTranslateBarAbout">Die Leiste „Übersetzen in…“ oben in Chats nie anzeigen. Du kannst einen Chat weiterhin über sein Menü übersetzen.</string>
+    <string name="MercurygramDoNotTranslateAbout">Die Übersetzungsleiste erscheint nicht in Chats in diesen Sprachen. Du kannst sie weiterhin über das Chatmenü übersetzen.</string>
+    <string name="MercurygramDoNotTranslateUnavailable">Dieses Gerät kann die Sprache von Nachrichten nicht erkennen, daher kann die Übersetzungsleiste in jedem Chat mit Text erscheinen.</string>
     <string name="MercurygramCreateMention">Erwähnen</string>
     <string name="MercurygramMentionUserIdHint">Benutzer-ID</string>
     <string name="MercurygramMentionChoose">Kontakt auswählen</string>

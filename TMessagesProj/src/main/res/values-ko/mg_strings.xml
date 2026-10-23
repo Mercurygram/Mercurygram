@@ -178,6 +178,8 @@
     <string name="MercurygramTranslationChatsSection">채팅</string>
     <string name="MercurygramHideTranslateBar">번역 바 숨기기</string>
     <string name="MercurygramHideTranslateBarAbout">채팅 상단에 ‘…로 번역’ 바를 표시하지 않습니다. 채팅 메뉴에서 여전히 채팅을 번역할 수 있습니다.</string>
+    <string name="MercurygramDoNotTranslateAbout">이 언어로 된 채팅에는 번역 바가 표시되지 않습니다. 채팅 메뉴에서 여전히 번역할 수 있습니다.</string>
+    <string name="MercurygramDoNotTranslateUnavailable">이 기기는 메시지 언어를 감지할 수 없으므로 텍스트가 있는 모든 채팅에 번역 바가 표시될 수 있습니다.</string>
     <string name="MercurygramCreateMention">멘션</string>
     <string name="MercurygramMentionUserIdHint">사용자 ID</string>
     <string name="MercurygramMentionChoose">연락처 선택</string>

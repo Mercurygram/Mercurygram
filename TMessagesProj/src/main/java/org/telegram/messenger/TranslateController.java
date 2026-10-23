@@ -244,18 +244,32 @@ public class TranslateController extends BaseController {
         return false;
     }
 
-    // Mercurygram: whether the chat translate bar stays out of view. Without
-    // MLKit there is no source language to filter on, so the bar offers itself
-    // in every chat with text; mg.hideTranslateBar hides it everywhere, the same
-    // way the per-chat Hide does, leaving "Translate" in the chat menu. The bar
-    // still shows while a chat is being translated, so "Show original" stays
-    // reachable. Local only: unlike setHideTranslateDialog, nothing goes to the
-    // server, and isTranslateDialogHidden keeps gating actual translation.
+    // Mercurygram: whether the chat translate bar stays out of view. Where
+    // LanguageDetector has no support there is no source language to filter
+    // on, so the bar offers itself in every chat with text; mg.hideTranslateBar
+    // hides it everywhere, the same way the per-chat Hide does, leaving
+    // "Translate" in the chat menu. The bar still shows while a chat is being
+    // translated, so "Show original" stays reachable. Local only: unlike
+    // setHideTranslateDialog, nothing goes to the server, and
+    // isTranslateDialogHidden keeps gating actual translation.
     public boolean isTranslateBarHidden(long dialogId) {
         if (isTranslateDialogHidden(dialogId)) {
             return true;
         }
-        return getUserConfig().mg.hideTranslateBar && !isTranslatingDialog(dialogId);
+        if (isTranslatingDialog(dialogId)) {
+            return false;
+        }
+        if (getUserConfig().mg.hideTranslateBar) {
+            return true;
+        }
+        // The "Do Not Translate" list: the chat stays translatable from its
+        // menu, only the bar no longer offers it.
+        final String language = getDialogDetectedLanguage(dialogId);
+        return language != null && isLanguageRestricted(language);
+    }
+
+    private static boolean isTranslateTargetLanguage(String language) {
+        return language.equals(TranslateAlert2.getToLanguage()) || language.equals(currentLanguage());
     }
 
     private boolean isChatAutoTranslated(long dialogId) {
@@ -916,9 +930,11 @@ public class TranslateController extends BaseController {
     }
 
     private ArrayList<Integer> pendingLanguageChecks = new ArrayList<>();
+    private final HashSet<Integer> redetectedUnknownMessages = new HashSet<>();
     private void checkLanguage(MessageObject messageObject) {
         if (!LanguageDetector.hasSupport()) {
-            // Mercurygram: MLKit removed (LanguageDetector stub returns false). All four
+            // Mercurygram: no language detection on this device (MLKit is gone and
+            // the platform TextClassifier failed LanguageDetector's probe). All four
             // dispatch engines (Telegram RPC, Alternative HTTP, offline AIDL) auto-detect
             // the source language internally, so we don't need a per-message language to
             // decide UI visibility. Mark text messages UNKNOWN_LANGUAGE (the long-press
@@ -947,13 +963,20 @@ public class TranslateController extends BaseController {
         if (!isTranslatable(messageObject) || messageObject.messageOwner == null || TextUtils.isEmpty(detectText)) {
             return;
         }
-        if (messageObject.messageOwner.originalLanguage != null) {
+        final long dialogId = messageObject.getDialogId();
+        final int hash = hash(messageObject);
+        // Mercurygram: messages seen while there was no detector were stored
+        // as UNKNOWN_LANGUAGE. Counted as they are, they would keep the unknown
+        // share above the threshold and the dialog would never be translatable,
+        // so detect each of them again, once per session.
+        if (messageObject.messageOwner.originalLanguage != null && (
+            !UNKNOWN_LANGUAGE.equals(messageObject.messageOwner.originalLanguage) ||
+            !redetectedUnknownMessages.add(hash)
+        )) {
             checkDialogTranslatable(messageObject);
             return;
         }
 
-        final long dialogId = messageObject.getDialogId();
-        final int hash = hash(messageObject);
         if (isDialogTranslatable(dialogId)) {
             return;
         }
@@ -996,11 +1019,15 @@ public class TranslateController extends BaseController {
             messageObject.messageOwner.originalLanguage == null ||
             UNKNOWN_LANGUAGE.equals(messageObject.messageOwner.originalLanguage)
         );
+        // Mercurygram: a language on the "Do Not Translate" list still counts
+        // as translatable, so the chat can be translated from its menu (#117);
+        // isTranslateBarHidden keeps the bar away instead. Only the language
+        // chats get translated into is left out.
         final boolean translatable = (
             isTranslatable(messageObject) &&
             messageObject.messageOwner.originalLanguage != null &&
             !UNKNOWN_LANGUAGE.equals(messageObject.messageOwner.originalLanguage) &&
-            !isLanguageRestricted(messageObject.messageOwner.originalLanguage)
+            !isTranslateTargetLanguage(messageObject.messageOwner.originalLanguage)
         );
 
         if (isUnknown) {
@@ -2079,18 +2106,15 @@ public class TranslateController extends BaseController {
             // UNKNOWN_LANGUAGE and skips checkDialogTranslatable), so a persisted
             // entry carries from="null". Restore the translating state anyway —
             // gating it on from != null is why the per-chat "Translate" toggle
-            // never survived a restart. The language-restricted guard still
-            // applies whenever a real source language was detected.
+            // never survived a restart. No language-restricted guard either: a
+            // restricted chat that is translating was translated from its menu
+            // on purpose (adding the language cancels translations already
+            // running, see checkRestrictedLanguagesUpdate).
             if (from != null) {
                 detectedDialogLanguage.put(did, from);
             }
-            if (from == null || !isLanguageRestricted(from)) {
-                translatingDialogs.put(did, !disabled);
-                translatableDialogs.add(did);
-            }
-            // Restore the persisted target language independently of the
-            // restricted check — hoisted out so a restricted real `from` (legacy
-            // MLKit-era persisted entry) doesn't silently drop the stored target.
+            translatingDialogs.put(did, !disabled);
+            translatableDialogs.add(did);
             if (to != null) {
                 translateDialogLanguage.put(did, to);
             }
@@ -2158,7 +2182,7 @@ public class TranslateController extends BaseController {
 
     // ensure dialogId in storyItem is valid
     public void detectStoryLanguage(TL_stories.StoryItem storyItem) {
-        // Mercurygram: no !hasSupport() bail — the detector stub's onFail marks the caption UNKNOWN_LANGUAGE so canTranslateStory shows the item (engines auto-detect the source).
+        // Mercurygram: no !hasSupport() bail — without detection support, LanguageDetector's synchronous onFail marks the caption UNKNOWN_LANGUAGE so canTranslateStory shows the item (engines auto-detect the source).
         if (storyItem == null || storyItem.detectedLng != null || storyItem.caption == null || storyItem.caption.length() == 0) {
             return;
         }
@@ -2301,7 +2325,7 @@ public class TranslateController extends BaseController {
     private final HashSet<MessageKey> translatingPhotos = new HashSet<>();
 
     public void detectPhotoLanguage(MessageObject messageObject, Utilities.Callback<String> done) {
-        // Mercurygram: no !hasSupport() bail — the detector stub's onFail marks originalLanguage UNKNOWN_LANGUAGE + fires done so canTranslatePhoto shows the item (engines auto-detect the source).
+        // Mercurygram: no !hasSupport() bail — without detection support, LanguageDetector's synchronous onFail marks originalLanguage UNKNOWN_LANGUAGE + fires done so canTranslatePhoto shows the item (engines auto-detect the source).
         if (messageObject == null || messageObject.messageOwner == null || TextUtils.isEmpty(messageObject.messageOwner.message)) {
             return;
         }

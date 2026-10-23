@@ -247,6 +247,8 @@
     <string name="MercurygramTranslationChatsSection">Chats</string>
     <string name="MercurygramHideTranslateBar">Hide translation bar</string>
     <string name="MercurygramHideTranslateBarAbout">Never show the ‘Translate to…’ bar at the top of chats. You can still translate a chat from its menu.</string>
+    <string name="MercurygramDoNotTranslateAbout">The translation bar doesn\'t appear in chats in these languages. You can still translate them from the chat menu.</string>
+    <string name="MercurygramDoNotTranslateUnavailable">This device can\'t detect the language of messages, so the translation bar can appear in any chat with text.</string>
     <string name="MercurygramCreateMention">Mention</string>
     <string name="MercurygramMentionUserIdHint">User ID</string>
     <string name="MercurygramMentionChoose">Choose contact</string>

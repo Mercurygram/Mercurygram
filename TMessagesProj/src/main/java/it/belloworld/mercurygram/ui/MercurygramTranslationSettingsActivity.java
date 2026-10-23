@@ -2,6 +2,7 @@ package it.belloworld.mercurygram.ui;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -9,13 +10,16 @@ import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.LanguageDetector;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.RestrictedLanguagesSelectActivity;
 import org.telegram.ui.Cells.RadioColorCell;
+import org.telegram.ui.Components.TranslateAlert2;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalFragment;
@@ -35,6 +39,7 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
     private static final int ID_ALT_ENGINE = 4;
     private static final int ID_ALT_INSTANCE = 5;
     private static final int ID_HIDE_BAR = 6;
+    private static final int ID_DO_NOT_TRANSLATE = 7;
 
     @Override
     protected CharSequence getTitle() {
@@ -89,6 +94,22 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramHideTranslateBar))
                 .setChecked(getUserConfig().mg.hideTranslateBar));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramHideTranslateBarAbout)));
+        if (LanguageDetector.hasSupport()) {
+            items.add(UItem.asButton(ID_DO_NOT_TRANSLATE,
+                    LocaleController.getString(R.string.DoNotTranslate),
+                    doNotTranslateLabel()));
+            items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDoNotTranslateAbout)));
+        } else {
+            items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramDoNotTranslateUnavailable)));
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // The Do Not Translate row lists the languages, which are edited on
+        // their own screen. Refresh on return so the row shows the change.
+        refreshList();
     }
 
     @Override
@@ -112,6 +133,9 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
                 break;
             case ID_ALT_INSTANCE:
                 showInstancePicker();
+                break;
+            case ID_DO_NOT_TRANSLATE:
+                presentFragment(new RestrictedLanguagesSelectActivity());
                 break;
             case ID_HIDE_BAR:
                 getUserConfig().mg.hideTranslateBar = !getUserConfig().mg.hideTranslateBar;
@@ -344,6 +368,17 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
             default:
                 return LocaleController.getString(R.string.MercurygramTranslationModeDefault);
         }
+    }
+
+    private static String doNotTranslateLabel() {
+        ArrayList<String> names = new ArrayList<>();
+        for (String code : RestrictedLanguagesSelectActivity.getRestrictedLanguages()) {
+            String name = TranslateAlert2.languageName(code);
+            if (name != null) {
+                names.add(TranslateAlert2.capitalFirst(name));
+            }
+        }
+        return TextUtils.join(", ", names);
     }
 
     private static String engineLabel(String engine) {
