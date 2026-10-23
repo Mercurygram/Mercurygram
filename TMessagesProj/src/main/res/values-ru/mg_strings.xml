@@ -175,6 +175,9 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (через Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineYandex">Yandex</string>
     <string name="MercurygramTranslationPoweredBy">Переводы выполняет\n**%1$s**.</string>
+    <string name="MercurygramTranslationChatsSection">Чаты</string>
+    <string name="MercurygramHideTranslateBar">Скрыть панель перевода</string>
+    <string name="MercurygramHideTranslateBarAbout">Никогда не показывать панель «Перевести на…» вверху чатов. Чат по-прежнему можно перевести из его меню.</string>
     <string name="MercurygramCreateMention">Упомянуть</string>
     <string name="MercurygramMentionUserIdHint">ID пользователя</string>
     <string name="MercurygramMentionChoose">Выбрать контакт</string>

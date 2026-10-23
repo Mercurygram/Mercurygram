@@ -34,6 +34,7 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
     private static final int ID_INSTALL_TRANSLATOR = 3;
     private static final int ID_ALT_ENGINE = 4;
     private static final int ID_ALT_INSTANCE = 5;
+    private static final int ID_HIDE_BAR = 6;
 
     @Override
     protected CharSequence getTitle() {
@@ -82,6 +83,12 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
             items.add(UItem.asShadow(MgSettingsScope.withAllAccountsNote(
                     LocaleController.getString(R.string.MercurygramTranslationAlternativeOperatorDisclosure))));
         }
+
+        items.add(UItem.asHeader(LocaleController.getString(R.string.MercurygramTranslationChatsSection)));
+        items.add(UItem.asCheck(ID_HIDE_BAR,
+                        LocaleController.getString(R.string.MercurygramHideTranslateBar))
+                .setChecked(getUserConfig().mg.hideTranslateBar));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramHideTranslateBarAbout)));
     }
 
     @Override
@@ -105,6 +112,11 @@ public class MercurygramTranslationSettingsActivity extends UniversalFragment {
                 break;
             case ID_ALT_INSTANCE:
                 showInstancePicker();
+                break;
+            case ID_HIDE_BAR:
+                getUserConfig().mg.hideTranslateBar = !getUserConfig().mg.hideTranslateBar;
+                getUserConfig().saveConfig(false);
+                refreshList();
                 break;
         }
     }

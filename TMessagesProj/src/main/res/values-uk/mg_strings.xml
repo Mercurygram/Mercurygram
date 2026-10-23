@@ -175,6 +175,9 @@
     <string name="MercurygramTranslationAlternativeEngineGoogle">Google (через Mozhi)</string>
     <string name="MercurygramTranslationAlternativeEngineYandex">Yandex</string>
     <string name="MercurygramTranslationPoweredBy">Переклади виконує\n**%1$s**.</string>
+    <string name="MercurygramTranslationChatsSection">Чати</string>
+    <string name="MercurygramHideTranslateBar">Приховати панель перекладу</string>
+    <string name="MercurygramHideTranslateBarAbout">Ніколи не показувати панель «Перекласти…» вгорі чатів. Чат усе одно можна перекласти з його меню.</string>
     <string name="MercurygramCreateMention">Згадати</string>
     <string name="MercurygramMentionUserIdHint">ID користувача</string>
     <string name="MercurygramMentionChoose">Вибрати контакт</string>
