@@ -150,9 +150,12 @@
     <string name="MercurygramTranscribeOfflineFileUnavailable">기기 내 텍스트 변환: 오디오 파일을 사용할 수 없습니다. 먼저 메시지를 재생해 보세요.</string>
     <string name="MercurygramTranscribeOfflineDecodeFailed">기기 내 텍스트 변환: 오디오를 디코딩할 수 없습니다.</string>
     <string name="MercurygramTranscribeOfflineFailed">기기 내 텍스트 변환에 실패했습니다.</string>
-    <string name="MercurygramEmojiTitle">사용자 지정 이모티콘 팩</string>
-    <string name="MercurygramEmojiRowAbout">기본 세트 대신 직접 만든 이모티콘 이미지를 불러옵니다.</string>
+    <string name="MercurygramEmojiTitle">이모티콘</string>
+    <string name="MercurygramEmojiRowAbout">시스템 이모티콘 글꼴을 사용하거나 기본 세트 대신 직접 만든 이모티콘 이미지를 불러옵니다.</string>
     <string name="MercurygramEmojiRowDisabled">꺼짐</string>
+    <string name="MercurygramEmojiRowSystem">시스템 이모티콘</string>
+    <string name="MercurygramEmojiUseSystem">시스템 이모티콘 사용</string>
+    <string name="MercurygramEmojiUseSystemInfo">휴대폰의 이모티콘 글꼴로 이모티콘을 그립니다. 글꼴에 없는 이모티콘은 기본 세트로 표시됩니다.</string>
     <string name="MercurygramEmojiEnable">사용자 지정 이모티콘 팩 사용</string>
     <string name="MercurygramEmojiEnableInfo">기본 세트 대신 가져온 팩의 이모티콘을 표시합니다. 팩에 없는 이모티콘은 기본 이모티콘으로 대체됩니다.</string>
     <string name="MercurygramEmojiImport">파일에서 팩 가져오기</string>

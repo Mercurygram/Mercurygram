@@ -150,9 +150,12 @@
     <string name="MercurygramTranscribeOfflineFileUnavailable">Расшифровка на устройстве: аудиофайл недоступен. Сначала попробуйте воспроизвести сообщение.</string>
     <string name="MercurygramTranscribeOfflineDecodeFailed">Расшифровка на устройстве: не удалось декодировать аудио.</string>
     <string name="MercurygramTranscribeOfflineFailed">Расшифровка на устройстве не удалась.</string>
-    <string name="MercurygramEmojiTitle">Свой набор эмодзи</string>
-    <string name="MercurygramEmojiRowAbout">Загрузите свои изображения эмодзи вместо встроенного набора.</string>
+    <string name="MercurygramEmojiTitle">Эмодзи</string>
+    <string name="MercurygramEmojiRowAbout">Используйте системный шрифт эмодзи или загрузите свои изображения вместо встроенного набора.</string>
     <string name="MercurygramEmojiRowDisabled">Выкл.</string>
+    <string name="MercurygramEmojiRowSystem">Системные эмодзи</string>
+    <string name="MercurygramEmojiUseSystem">Системные эмодзи</string>
+    <string name="MercurygramEmojiUseSystemInfo">Рисовать эмодзи системным шрифтом телефона. Отсутствующие в шрифте эмодзи берутся из встроенного набора.</string>
     <string name="MercurygramEmojiEnable">Использовать свой набор эмодзи</string>
     <string name="MercurygramEmojiEnableInfo">Показывать эмодзи из импортированного набора вместо встроенного. Отсутствующие в наборе эмодзи берутся из встроенного.</string>
     <string name="MercurygramEmojiImport">Импорт набора из файла</string>
