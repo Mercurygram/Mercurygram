@@ -150,9 +150,12 @@
     <string name="MercurygramTranscribeOfflineFileUnavailable">Transcriptie op apparaat: audiobestand niet beschikbaar. Probeer eerst het bericht af te spelen.</string>
     <string name="MercurygramTranscribeOfflineDecodeFailed">Transcriptie op apparaat: kon de audio niet decoderen.</string>
     <string name="MercurygramTranscribeOfflineFailed">Transcriptie op apparaat mislukt.</string>
-    <string name="MercurygramEmojiTitle">Aangepast emojipakket</string>
-    <string name="MercurygramEmojiRowAbout">Laad je eigen emoji-afbeeldingen in plaats van de ingebouwde set.</string>
+    <string name="MercurygramEmojiTitle">Emoji</string>
+    <string name="MercurygramEmojiRowAbout">Gebruik het emojilettertype van het systeem of laad je eigen emoji-afbeeldingen in plaats van de ingebouwde set.</string>
     <string name="MercurygramEmojiRowDisabled">Uit</string>
+    <string name="MercurygramEmojiRowSystem">Systeememoji</string>
+    <string name="MercurygramEmojiUseSystem">Systeememoji gebruiken</string>
+    <string name="MercurygramEmojiUseSystemInfo">Teken emoji met het emojilettertype van je telefoon. Emoji die het lettertype mist, komen uit de ingebouwde set.</string>
     <string name="MercurygramEmojiEnable">Aangepast emojipakket gebruiken</string>
     <string name="MercurygramEmojiEnableInfo">Toon emoji uit een geïmporteerd pakket in plaats van de ingebouwde set. Ontbrekende emoji in het pakket vallen terug op de ingebouwde.</string>
     <string name="MercurygramEmojiImport">Pakket uit bestand importeren</string>
