@@ -150,9 +150,12 @@
     <string name="MercurygramTranscribeOfflineFileUnavailable">التفريغ على الجهاز: الملف الصوتي غير متوفر. جرّب تشغيل الرسالة أولًا.</string>
     <string name="MercurygramTranscribeOfflineDecodeFailed">التفريغ على الجهاز: تعذّر فك ترميز الصوت.</string>
     <string name="MercurygramTranscribeOfflineFailed">فشل التفريغ على الجهاز.</string>
-    <string name="MercurygramEmojiTitle">حزمة رموز تعبيرية مخصصة</string>
-    <string name="MercurygramEmojiRowAbout">حمّل صور الرموز التعبيرية الخاصة بك بدلاً من المجموعة المدمجة.</string>
+    <string name="MercurygramEmojiTitle">الرموز التعبيرية</string>
+    <string name="MercurygramEmojiRowAbout">استخدم خط الرموز التعبيرية في النظام أو حمّل صورك الخاصة بدلاً من المجموعة المدمجة.</string>
     <string name="MercurygramEmojiRowDisabled">مُعطّل</string>
+    <string name="MercurygramEmojiRowSystem">رموز النظام التعبيرية</string>
+    <string name="MercurygramEmojiUseSystem">استخدام رموز النظام التعبيرية</string>
+    <string name="MercurygramEmojiUseSystemInfo">ارسم الرموز التعبيرية بخط الهاتف. الرموز غير الموجودة في الخط تُعرض من المجموعة المدمجة.</string>
     <string name="MercurygramEmojiEnable">استخدام حزمة رموز تعبيرية مخصصة</string>
     <string name="MercurygramEmojiEnableInfo">عرض الرموز التعبيرية من حزمة مستوردة بدلاً من المجموعة المدمجة. أي رمز تعبيري غير موجود في الحزمة يعود إلى المدمج.</string>
     <string name="MercurygramEmojiImport">استيراد حزمة من ملف</string>
