@@ -220,9 +220,12 @@
     <string name="MercurygramTranscribeOfflineFileUnavailable">On-device transcription: audio file not available. Try playing the message first.</string>
     <string name="MercurygramTranscribeOfflineDecodeFailed">On-device transcription: could not decode the audio.</string>
     <string name="MercurygramTranscribeOfflineFailed">On-device transcription failed.</string>
-    <string name="MercurygramEmojiTitle">Custom emoji pack</string>
-    <string name="MercurygramEmojiRowAbout">Load your own emoji images instead of the built-in set.</string>
+    <string name="MercurygramEmojiTitle">Emoji</string>
+    <string name="MercurygramEmojiRowAbout">Use the system emoji font or load your own emoji images instead of the built-in set.</string>
     <string name="MercurygramEmojiRowDisabled">Off</string>
+    <string name="MercurygramEmojiRowSystem">System emoji</string>
+    <string name="MercurygramEmojiUseSystem">Use system emoji</string>
+    <string name="MercurygramEmojiUseSystemInfo">Draw emoji with your phone\'s emoji font. Emoji the font lacks fall back to the built-in set.</string>
     <string name="MercurygramEmojiEnable">Use custom emoji pack</string>
     <string name="MercurygramEmojiEnableInfo">Render emoji from an imported pack instead of the built-in set. Any emoji the pack is missing falls back to the built-in one.</string>
     <string name="MercurygramEmojiImport">Import pack from file</string>
