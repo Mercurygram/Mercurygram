@@ -431,11 +431,15 @@ public class MercurygramSettingsActivity extends UniversalFragment {
         }
     }
 
-    // Subtitle for the Custom-emoji-pack row: "Off" when disabled; the installed
+    // Subtitle for the Emoji row: "System emoji" when the system font is on;
+    // otherwise "Off" when the pack is disabled; the installed
     // glyph count when a pack is loaded; "No pack installed" when the toggle is
     // on but nothing is imported — every glyph still falls back to the bundled
     // set, so the row must not imply custom emoji are active.
     private static String emojiPackShortLabel() {
+        if (SharedConfig.mg_useSystemEmoji) {
+            return LocaleController.getString(R.string.MercurygramEmojiRowSystem);
+        }
         if (!SharedConfig.mg_useCustomEmojiPack) {
             return LocaleController.getString(R.string.MercurygramEmojiRowDisabled);
         }
