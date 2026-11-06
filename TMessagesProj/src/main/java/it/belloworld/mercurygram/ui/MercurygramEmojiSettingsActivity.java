@@ -23,6 +23,7 @@ public class MercurygramEmojiSettingsActivity extends UniversalFragment {
     private static final int ID_ENABLE = 1;
     private static final int ID_IMPORT = 2;
     private static final int ID_REMOVE = 3;
+    private static final int ID_SYSTEM = 4;
 
     private static final int REQUEST_PICK_PACK = 5101;
 
@@ -36,6 +37,10 @@ public class MercurygramEmojiSettingsActivity extends UniversalFragment {
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
+        items.add(MgSettingsScope.globalCheck(ID_SYSTEM, LocaleController.getString(R.string.MercurygramEmojiUseSystem))
+                .setChecked(SharedConfig.mg_useSystemEmoji));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramEmojiUseSystemInfo)));
+
         items.add(MgSettingsScope.globalCheck(ID_ENABLE, LocaleController.getString(R.string.MercurygramEmojiEnable))
                 .setChecked(SharedConfig.mg_useCustomEmojiPack));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramEmojiEnableInfo)));
@@ -68,6 +73,10 @@ public class MercurygramEmojiSettingsActivity extends UniversalFragment {
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
         switch (item.id) {
+            case ID_SYSTEM:
+                SharedConfig.toggleMgUseSystemEmoji();
+                refreshList();
+                break;
             case ID_ENABLE:
                 SharedConfig.toggleMgUseCustomEmojiPack();
                 refreshList();

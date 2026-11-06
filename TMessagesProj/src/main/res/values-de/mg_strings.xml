@@ -150,9 +150,12 @@
     <string name="MercurygramTranscribeOfflineFileUnavailable">Transkription auf dem Gerät: Audiodatei nicht verfügbar. Spiele die Nachricht zuerst ab.</string>
     <string name="MercurygramTranscribeOfflineDecodeFailed">Transkription auf dem Gerät: Audio konnte nicht dekodiert werden.</string>
     <string name="MercurygramTranscribeOfflineFailed">Transkription auf dem Gerät fehlgeschlagen.</string>
-    <string name="MercurygramEmojiTitle">Eigenes Emoji-Paket</string>
-    <string name="MercurygramEmojiRowAbout">Eigene Emoji-Bilder statt des integrierten Satzes laden.</string>
+    <string name="MercurygramEmojiTitle">Emoji</string>
+    <string name="MercurygramEmojiRowAbout">System-Emoji-Schrift verwenden oder eigene Emoji-Bilder statt des integrierten Satzes laden.</string>
     <string name="MercurygramEmojiRowDisabled">Aus</string>
+    <string name="MercurygramEmojiRowSystem">System-Emoji</string>
+    <string name="MercurygramEmojiUseSystem">System-Emoji verwenden</string>
+    <string name="MercurygramEmojiUseSystemInfo">Emoji mit der Emoji-Schrift des Telefons zeichnen. Fehlende Emoji werden aus dem integrierten Satz genommen.</string>
     <string name="MercurygramEmojiEnable">Eigenes Emoji-Paket verwenden</string>
     <string name="MercurygramEmojiEnableInfo">Emoji aus einem importierten Paket statt des integrierten Satzes anzeigen. Fehlt ein Emoji im Paket, wird das integrierte verwendet.</string>
     <string name="MercurygramEmojiImport">Paket aus Datei importieren</string>

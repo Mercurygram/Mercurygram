@@ -188,11 +188,19 @@ public final class MgEmojiPack {
     }
 
     /**
-     * Routed from {@link Emoji#loadEmoji}. When the custom pack is enabled and
-     * this glyph exists in it, decode that file; otherwise return null and let
-     * the caller read the bundled glyph out of assets/emoji.pack.
+     * Routed from {@link Emoji#loadEmoji}. When system emoji are enabled and
+     * the system font has this glyph, render it ({@link MgSystemEmoji}); when
+     * the custom pack is enabled and this glyph exists in it, decode that file;
+     * otherwise return null and let the caller read the bundled glyph out of
+     * assets/emoji.pack.
      */
     public static Bitmap loadEmojiBitmap(int page, int page2) {
+        if (SharedConfig.mg_useSystemEmoji) {
+            Bitmap bitmap = MgSystemEmoji.render(page, page2);
+            if (bitmap != null) {
+                return bitmap;
+            }
+        }
         if (SharedConfig.mg_useCustomEmojiPack) {
             try {
                 File f = new File(packDir(), page + "_" + page2 + ".png");

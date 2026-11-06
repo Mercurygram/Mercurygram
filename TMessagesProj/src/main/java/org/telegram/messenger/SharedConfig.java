@@ -303,9 +303,26 @@ public class SharedConfig {
 
     public static void toggleMgUseCustomEmojiPack() {
         mg_useCustomEmojiPack = !mg_useCustomEmojiPack;
+        // The system font and a custom pack are alternative glyph sources.
+        if (mg_useCustomEmojiPack) {
+            mg_useSystemEmoji = false;
+        }
+        saveMgEmojiSource();
+    }
+
+    public static void toggleMgUseSystemEmoji() {
+        mg_useSystemEmoji = !mg_useSystemEmoji;
+        if (mg_useSystemEmoji) {
+            mg_useCustomEmojiPack = false;
+        }
+        saveMgEmojiSource();
+    }
+
+    private static void saveMgEmojiSource() {
         ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE)
                 .edit()
                 .putBoolean("mg_useCustomEmojiPack", mg_useCustomEmojiPack)
+                .putBoolean("mg_useSystemEmoji", mg_useSystemEmoji)
                 .apply();
         // Drop cached glyph bitmaps so already-rendered spans repaint from the
         // newly-selected source on the next frame.
@@ -705,6 +722,13 @@ public class SharedConfig {
     // the pack is missing. Global because the emoji bitmap cache (Emoji.emojiBmp)
     // is a process-wide static, same as useSystemFont/useSystemEmoji.
     public static boolean mg_useCustomEmojiPack = false;
+    // Mercurygram: when on, glyphs are rasterized from the system emoji font
+    // (it.belloworld.mercurygram.emoji.MgSystemEmoji) into the same bitmap
+    // cache, falling back per-glyph to the bundled set. Separate from the
+    // dormant upstream useSystemEmoji, which only skips span replacement and
+    // leaves keyboard, reactions and big emoji on the bundled set. Global for
+    // the same process-wide cache reason as mg_useCustomEmojiPack.
+    public static boolean mg_useSystemEmoji = false;
     // Mercurygram: never register the proximity sensor (calls, voice playback,
     // raise-to-listen). Global: device hardware, not an account property.
     public static boolean mg_disableProximitySensor = false;
@@ -1075,6 +1099,7 @@ public class SharedConfig {
         editor.putString("mg_transcribeModel", mg_transcribeModel);
         editor.putBoolean("mg_transcribeVad", mg_transcribeVad);
         editor.putBoolean("mg_useCustomEmojiPack", mg_useCustomEmojiPack);
+        editor.putBoolean("mg_useSystemEmoji", mg_useSystemEmoji);
         editor.putBoolean("mg_disableProximitySensor", mg_disableProximitySensor);
         editor.putString("mg_webPushPrivateKey", webPushPrivateKey != null ? Base64.encodeToString(webPushPrivateKey, Base64.DEFAULT) : "");
         editor.putString("mg_webPushPublicKey", webPushPublicKey != null ? Base64.encodeToString(webPushPublicKey, Base64.DEFAULT) : "");
@@ -1152,6 +1177,7 @@ public class SharedConfig {
         mg_transcribeModel = preferences.getString("mg_transcribeModel", "tiny-q8_0");
         mg_transcribeVad = preferences.getBoolean("mg_transcribeVad", true);
         mg_useCustomEmojiPack = preferences.getBoolean("mg_useCustomEmojiPack", false);
+        mg_useSystemEmoji = preferences.getBoolean("mg_useSystemEmoji", false);
         mg_disableProximitySensor = preferences.getBoolean("mg_disableProximitySensor", false);
         migratePerAccountSettingsV1(preferences);
         migrateTranscribeLangToPerAccount(preferences);
