@@ -17,6 +17,8 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+
+import it.belloworld.mercurygram.location.MgBackgroundLocationGate;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -130,10 +132,16 @@ public class LocationSharingService extends Service implements NotificationCente
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (getInfos().isEmpty()) {
+        if (intent == null && !MgBackgroundLocationGate.isSharingActive()) {
+            // [MG] sticky restart with nothing shared: stop before getInfos() pulls up every
+            // account's controller and storage
             stopSelf();
             return Service.START_NOT_STICKY;
         }
+        // [MG] an empty getInfos() here means "not read back yet", not "nothing shared", so do not
+        // stop on it. Touching the controllers starts that read, and loadSharingLocations() posts
+        // liveLocationsChanged either way, which is where the service stops when it comes back empty.
+        getInfos();
         try {
             if (builder == null) {
                 Intent intent2 = new Intent(ApplicationLoader.applicationContext, LaunchActivity.class);
@@ -162,7 +170,9 @@ public class LocationSharingService extends Service implements NotificationCente
         } catch (Throwable e) {
             FileLog.e(e);
         }
-        return Service.START_NOT_STICKY;
+        // [MG] come back after a background kill; the null-intent check above turns the restart
+        // away again when nothing is shared any more
+        return Service.START_STICKY;
     }
 
     private boolean startForegroundCompat(Notification notification) {
