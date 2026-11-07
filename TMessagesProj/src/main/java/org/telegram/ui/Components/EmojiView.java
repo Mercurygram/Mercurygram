@@ -6347,6 +6347,8 @@ public class EmojiView extends FrameLayout implements
             colorPickerView.dismiss();
         }
         ContentPreviewViewer.getInstance().clearDelegate(contentPreviewViewerDelegate);
+        // the observers registered in onAttachedToWindow are only dropped here
+        onDestroy();
     }
 
     private void checkDocuments(boolean isGif) {
