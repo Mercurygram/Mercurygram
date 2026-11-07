@@ -13,6 +13,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
 
+import it.belloworld.mercurygram.location.MgBackgroundLocationGate;
+
 public class AppStartReceiver extends BroadcastReceiver {
 
     // NotificationsService.onDestroy re-broadcasts org.telegram.start on every death, so a service
@@ -33,7 +35,8 @@ public class AppStartReceiver extends BroadcastReceiver {
         // throws and is swallowed. BOOT_COMPLETED and MY_PACKAGE_REPLACED are exempt and do start.
         final String action = intent.getAction();
         final boolean boot = Intent.ACTION_BOOT_COMPLETED.equals(action);
-        if ("org.telegram.start".equals(action)) {
+        final boolean selfRestart = "org.telegram.start".equals(action);
+        if (selfRestart) {
             final long now = SystemClock.elapsedRealtime();
             if (now - lastSelfRestart < SELF_RESTART_MIN_INTERVAL) {
                 return;
@@ -51,6 +54,11 @@ public class AppStartReceiver extends BroadcastReceiver {
                 }
             }
             ApplicationLoader.startPushService();
+            if (!selfRestart) {
+                // [MG] boot and app update are exempt from the background start limit, so this is
+                // where a persisted live location share gets its foreground service back
+                MgBackgroundLocationGate.onSystemStart();
+            }
         });
     }
 }
