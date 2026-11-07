@@ -24,6 +24,7 @@ import android.text.TextUtils;
 import android.util.SparseIntArray;
 
 import androidx.collection.LongSparseArray;
+import it.belloworld.mercurygram.location.MgBackgroundLocationGate;
 
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLitePreparedStatement;
@@ -60,6 +61,9 @@ public class LocationController extends BaseController implements NotificationCe
     private SparseIntArray requests = new SparseIntArray();
     private LongSparseArray<Boolean> cacheRequests = new LongSparseArray<>();
     private long locationEndWatchTime;
+    // [MG] when the current GPS session started, unlike lastLocationStartTime, which the send
+    // pacing resets on every broadcast
+    private long fixWaitStartTime;
 
     public ArrayList<SharingLocationInfo> sharingLocationsUI = new ArrayList<>();
     private LongSparseArray<SharingLocationInfo> sharingLocationsMapUI = new LongSparseArray<>();
@@ -74,6 +78,10 @@ public class LocationController extends BaseController implements NotificationCe
     private final static int FOREGROUND_UPDATE_TIME = 20 * 1000;
     private final static int WATCH_LOCATION_TIMEOUT = 65 * 1000;
     private final static int SEND_NEW_LOCATION_TIME = 2 * 1000;
+    // [MG] how long a GPS session is held open waiting for its first fix. A device that never
+    // produces one (indoors, GPS off) then falls back to the plain duty cycle below, so it costs
+    // at most this much extra radio time per session.
+    private final static int FRESH_FIX_MAX_WAIT = 60 * 1000;
 
     private ILocationServiceProvider.ILocationRequest locationRequest;
 
@@ -444,7 +452,19 @@ public class LocationController extends BaseController implements NotificationCe
     }
 
     private boolean shouldStopGps() {
+        // [MG] without a fused provider the first fix takes longer than this window, and hanging up
+        // on the providers here left the seed from getLastKnownLocation() as the only position ever
+        // sent. Hold them open until a fix of our own arrives, or the wait runs out.
+        if (started && !hasFreshFix() && SystemClock.elapsedRealtime() - fixWaitStartTime < FRESH_FIX_MAX_WAIT) {
+            return false;
+        }
         return SystemClock.elapsedRealtime() > locationEndWatchTime;
+    }
+
+    // [MG] a fix obtained after the current GPS session started, as opposed to the seed
+    private boolean hasFreshFix() {
+        final Location location = lastKnownLocation;
+        return location != null && location.getElapsedRealtimeNanos() / 1_000_000L >= fixWaitStartTime;
     }
 
     protected void setNewLocationEndWatchTime() {
@@ -655,7 +675,14 @@ public class LocationController extends BaseController implements NotificationCe
             } catch (Exception e) {
                 FileLog.e(e);
             }
-            if (!result.isEmpty()) {
+            if (result.isEmpty()) {
+                if (MgBackgroundLocationGate.isSharingActive()) {
+                    // [MG] a service left over from a boot restore or a sticky restart is waiting to
+                    // hear whether this account has anything; it stops itself once every account is
+                    // loaded and none of them do
+                    AndroidUtilities.runOnUIThread(() -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.liveLocationsChanged));
+                }
+            } else {
                 AndroidUtilities.runOnUIThread(() -> {
                     getMessagesController().putUsers(users, true);
                     getMessagesController().putChats(chats, true);
@@ -754,6 +781,7 @@ public class LocationController extends BaseController implements NotificationCe
 
     private void startService() {
         try {
+            MgBackgroundLocationGate.setSharingActive(true);
             if (PermissionRequest.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) || PermissionRequest.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 ApplicationLoader.applicationContext.startService(new Intent(ApplicationLoader.applicationContext, LocationSharingService.class));
             } else {
@@ -772,6 +800,7 @@ public class LocationController extends BaseController implements NotificationCe
             return;
         }
         LocationSharingService.hidePausedNotification();
+        MgBackgroundLocationGate.setSharingActive(false);
         ApplicationLoader.applicationContext.stopService(new Intent(ApplicationLoader.applicationContext, LocationSharingService.class));
     }
 
@@ -840,7 +869,7 @@ public class LocationController extends BaseController implements NotificationCe
         if (started) {
             return;
         }
-        lastLocationStartTime = SystemClock.elapsedRealtime();
+        lastLocationStartTime = fixWaitStartTime = SystemClock.elapsedRealtime();
         started = true;
         boolean ok = false;
         if (checkServices()) {
