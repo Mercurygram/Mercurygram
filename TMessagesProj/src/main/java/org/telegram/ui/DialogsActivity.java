@@ -2252,7 +2252,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     int pTop = getPaddingTop();
                     DialogCell view = findArchiveDialogCell(parentPage);
                     if (view != null) {
-                        int height = (int) (dp(SharedConfig.useThreeLinesLayout ? 76 : 70) * PullForegroundDrawable.SNAP_HEIGHT);
+                        int height = (int) ((dp(SharedConfig.useThreeLinesLayout ? 76 : 70) + it.belloworld.mercurygram.MgDialogTextScale.rowExtra(SharedConfig.useThreeLinesLayout)) * PullForegroundDrawable.SNAP_HEIGHT);
                         int diff = (view.getTop() - pTop) + view.getMeasuredHeight();
 
                         long pullingTime = System.currentTimeMillis() - startArchivePullingTime;
@@ -2574,7 +2574,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                     parentPage.updateList(true);
                                     if (!SharedConfig.archiveHidden && parentPage.layoutManager.findFirstVisibleItemPosition() == 0) {
                                         disableActionBarScrolling = true;
-                                        parentPage.listView.smoothScrollBy(0, -dp(SharedConfig.useThreeLinesLayout ? 76 : 70));
+                                        parentPage.listView.smoothScrollBy(0, -(dp(SharedConfig.useThreeLinesLayout ? 76 : 70) + it.belloworld.mercurygram.MgDialogTextScale.rowExtra(SharedConfig.useThreeLinesLayout)));
                                     }
                                 }
                                 ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, parentPage.dialogsType, folderId, false);
