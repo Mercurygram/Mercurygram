@@ -8030,7 +8030,7 @@ public class Theme {
             applyDialogsTheme();
         }
 
-        dialogs_messageNamePaint.setTextSize(dp(14));
+        dialogs_messageNamePaint.setTextSize(it.belloworld.mercurygram.MgDialogTextScale.text(14));
         dialogs_timePaint.setTextSize(dp(12));
         dialogs_timePaintBold.setTextSize(dp(12));
         dialogs_timePaintBold.setTypeface(AndroidUtilities.bold());
