@@ -230,7 +230,7 @@ public class ProfileChannelCell extends FrameLayout implements Theme.Colorable {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(102), MeasureSpec.EXACTLY));
+        super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(102) + it.belloworld.mercurygram.MgDialogTextScale.rowExtra(true), MeasureSpec.EXACTLY));
     }
 
 

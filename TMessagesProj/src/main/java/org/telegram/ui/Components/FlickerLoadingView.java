@@ -997,7 +997,7 @@ public class FlickerLoadingView extends View implements Theme.Colorable {
     private int getCellHeight(int width) {
         switch (getViewType()) {
             case DIALOG_CELL_TYPE:
-                return dp((SharedConfig.useThreeLinesLayout ? 78 : 72) + 1);
+                return dp((SharedConfig.useThreeLinesLayout ? 78 : 72) + 1) + it.belloworld.mercurygram.MgDialogTextScale.rowExtra(SharedConfig.useThreeLinesLayout);
             case TOPIC_CELL_TYPE:
                 return dp((SharedConfig.useThreeLinesLayout ? 76 : 64) + 1);
             case DIALOG_TYPE:
