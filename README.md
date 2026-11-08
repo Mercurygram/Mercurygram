@@ -132,6 +132,7 @@ Fixes for bugs that exist in stock Telegram for Android. Several are backported 
 - Fix saving and sharing a watched video that has quality variants ([#135](https://github.com/Mercurygram/Mercurygram/issues/135)): after streaming, the only file on disk belongs to the quality that was played, so Save, Share, Open in and the Files tab failed or were missing. They now find that file
 - Fix push notifications getting lost: only the first push of a process waited for its message to be processed, so the wake lock could be released before the notification was shown, and an OAuth request push could block every later push until the app restarted
 - Fix pinning a chat on a folder tab being refused long before the folder was full: pinned chats were counted twice, and the limit ignored the 200 chats per folder of Premium
+- Fix the chat list ignoring the system font size (*Settings → Display → Font size*) ([#171](https://github.com/Mercurygram/Mercurygram/issues/171)): its rows sized their text in dp, so chat names and message previews stayed small while the rest of the phone grew. Chat list text now follows the font scale, capped at 1.3 so a row keeps its layout, and rows grow to fit; at the default size nothing changes
 
 ### TF-originated de-googling patches
 
