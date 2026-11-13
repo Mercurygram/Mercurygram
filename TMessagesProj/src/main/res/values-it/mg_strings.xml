@@ -45,6 +45,8 @@
     <string name="MercurygramDisableLinkPreviewsAbout">Non recuperare le anteprime delle pagine web durante la scrittura. Questo impedisce ai server di Telegram di caricare i link che digiti o incolli. Le anteprime restano disattivate in tutte le chat.</string>
     <string name="MercurygramPreferSecretChats">Avvia le nuove chat come segrete</string>
     <string name="MercurygramPreferSecretChatsAbout">Quando tocchi il pulsante di composizione per iniziare una nuova conversazione, crea una chat segreta cifrata end-to-end invece di una normale. Le chat segrete restano solo su questo dispositivo e non si sincronizzano tra i tuoi dispositivi. Le chat esistenti e gli altri modi per aprire una chat non sono interessati.</string>
+    <string name="MercurygramSecretChatAccessibility">Consenti agli screen reader di leggere le chat segrete</string>
+    <string name="MercurygramSecretChatAccessibilityAbout">Disattivato per impostazione predefinita: i messaggi delle chat segrete sono nascosti ai servizi di accessibilità. Se attivo, ogni servizio di accessibilità abilitato, non solo il tuo screen reader, può leggere il testo delle tue chat segrete.</string>
     <string name="MercurygramUseSystemFont">Usa il font di sistema</string>
     <string name="MercurygramUseSystemFontAbout">Sostituisce i font Roboto inclusi con i font di sistema del dispositivo. Le schermate già aperte potrebbero dover essere riaperte perché la modifica abbia pieno effetto.</string>
     <string name="MercurygramShowCharCounter">Mostra il contatore dei caratteri</string>

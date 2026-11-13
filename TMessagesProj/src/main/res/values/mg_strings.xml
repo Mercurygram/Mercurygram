@@ -111,6 +111,8 @@
     <string name="MercurygramDisableLinkPreviewsAbout">Don\'t fetch web page previews while composing. This stops Telegram\'s servers from loading links you type or paste. Previews stay off in every chat.</string>
     <string name="MercurygramPreferSecretChats">Start new chats as secret</string>
     <string name="MercurygramPreferSecretChatsAbout">When you tap the compose button to start a new conversation, create an end-to-end encrypted secret chat instead of a regular one. Secret chats live only on this device and don\'t sync across your devices. Existing chats and other ways to open a chat are unaffected.</string>
+    <string name="MercurygramSecretChatAccessibility">Let screen readers read secret chats</string>
+    <string name="MercurygramSecretChatAccessibilityAbout">Off by default: secret chat messages are hidden from accessibility services. When on, every enabled accessibility service, not only your screen reader, can read the text of your secret chats.</string>
     <string name="MercurygramUseSystemFont">Use system font</string>
     <string name="MercurygramUseSystemFontAbout">Replace the bundled Roboto fonts with the device system fonts. Existing screens may need to be reopened for the change to fully apply.</string>
     <string name="MercurygramShowCharCounter">Show character counter</string>

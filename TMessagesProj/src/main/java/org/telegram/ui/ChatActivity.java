@@ -6468,7 +6468,7 @@ public class ChatActivity extends BaseFragment implements
 
             @Override
             public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
-                if (currentEncryptedChat != null) {
+                if (mgHideMessagesFromAccessibility()) {
                     return;
                 }
                 super.onInitializeAccessibilityNodeInfo(info);
@@ -6480,13 +6480,13 @@ public class ChatActivity extends BaseFragment implements
 
             @Override
             public AccessibilityNodeInfo createAccessibilityNodeInfo() {
-                if (currentEncryptedChat != null) {
+                if (mgHideMessagesFromAccessibility()) {
                     return null;
                 }
                 return super.createAccessibilityNodeInfo();
             }
         };
-        if (currentEncryptedChat != null) {
+        if (mgHideMessagesFromAccessibility()) {
             chatListView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
         }
         chatListView.setHideIfEmpty(false);
@@ -30817,6 +30817,10 @@ public class ChatActivity extends BaseFragment implements
     public void onResume() {
         super.onResume();
         checkShowBlur(false);
+        // Mercurygram: the setting may have changed while this chat sat in the back stack
+        if (currentEncryptedChat != null && chatListView != null) {
+            updateMessageListAccessibilityVisibility();
+        }
         activityResumeTime = System.currentTimeMillis();
         if (openImport && getSendMessagesHelper().getImportingHistory(dialog_id) != null) {
             ImportingAlert alert = new ImportingAlert(getParentActivity(), null, this, themeDelegate);
@@ -37887,8 +37891,14 @@ public class ChatActivity extends BaseFragment implements
         MediaController.getInstance().resetGoingToShowMessageObject();
     }
 
+    // Mercurygram: secret chat messages stay hidden from accessibility services unless the user opted in
+    private boolean mgHideMessagesFromAccessibility() {
+        return currentEncryptedChat != null && !getUserConfig().mg.secretChatAccessibility;
+    }
+
     private void updateMessageListAccessibilityVisibility() {
-        if (currentEncryptedChat != null) {
+        if (mgHideMessagesFromAccessibility()) {
+            chatListView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
             return;
         }
         chatListView.setImportantForAccessibility(mentionContainer != null && mentionContainer.isOpen() || (scrimPopupWindow != null && scrimPopupWindow.isShowing()) ? View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS : View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);

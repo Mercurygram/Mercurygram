@@ -70,6 +70,7 @@ public class MercurygramSettingsActivity extends UniversalFragment {
     private static final int ID_SHOW_CHAR_COUNTER = 64;
     private static final int ID_DISABLE_PROXIMITY_SENSOR = 65;
     private static final int ID_ACCOUNT_ORDER = 66;
+    private static final int ID_SECRET_CHAT_ACCESSIBILITY = 67;
 
     @Override
     protected CharSequence getTitle() {
@@ -223,6 +224,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                         LocaleController.getString(R.string.MercurygramPreferSecretChats))
                 .setChecked(getUserConfig().mg.preferSecretChats));
         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramPreferSecretChatsAbout)));
+
+        items.add(UItem.asCheck(ID_SECRET_CHAT_ACCESSIBILITY,
+                        LocaleController.getString(R.string.MercurygramSecretChatAccessibility))
+                .setChecked(getUserConfig().mg.secretChatAccessibility));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramSecretChatAccessibilityAbout)));
 
         items.add(UItem.asButton(ID_TRANSLATION,
                 LocaleController.getString(R.string.MercurygramTranslationSettings),
@@ -416,6 +422,11 @@ public class MercurygramSettingsActivity extends UniversalFragment {
                 break;
             case ID_PREFER_SECRET_CHATS:
                 getUserConfig().mg.preferSecretChats = !getUserConfig().mg.preferSecretChats;
+                getUserConfig().saveConfig(false);
+                refreshList();
+                break;
+            case ID_SECRET_CHAT_ACCESSIBILITY:
+                getUserConfig().mg.secretChatAccessibility = !getUserConfig().mg.secretChatAccessibility;
                 getUserConfig().saveConfig(false);
                 refreshList();
                 break;
