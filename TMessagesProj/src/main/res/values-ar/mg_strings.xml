@@ -45,6 +45,8 @@
     <string name="MercurygramDisableLinkPreviewsAbout">لا تجلب معاينات صفحات الويب أثناء الكتابة. هذا يمنع خوادم تيليجرام من تحميل الروابط التي تكتبها أو تلصقها. تبقى المعاينات معطّلة في كل المحادثات.</string>
     <string name="MercurygramPreferSecretChats">بدء المحادثات الجديدة كمحادثات سرية</string>
     <string name="MercurygramPreferSecretChatsAbout">عند الضغط على زر الإنشاء لبدء محادثة جديدة، يتم إنشاء محادثة سرية مشفّرة من طرف إلى طرف بدلاً من محادثة عادية. تبقى المحادثات السرية على هذا الجهاز فقط ولا تتم مزامنتها بين أجهزتك. لا تتأثر المحادثات الحالية والطرق الأخرى لفتح محادثة.</string>
+    <string name="MercurygramSecretChatAccessibility">السماح لقارئات الشاشة بقراءة المحادثات السرية</string>
+    <string name="MercurygramSecretChatAccessibilityAbout">معطّل افتراضيًا: رسائل المحادثات السرية مخفية عن خدمات إمكانية الوصول. عند التفعيل، تستطيع كل خدمة إمكانية وصول مفعّلة، وليس قارئ الشاشة فقط، قراءة نص محادثاتك السرية.</string>
     <string name="MercurygramUseSystemFont">استخدام خط النظام</string>
     <string name="MercurygramUseSystemFontAbout">يستبدل خطوط Roboto المضمنة بخطوط النظام في الجهاز. قد تحتاج إلى إعادة فتح الشاشات المفتوحة بالفعل لتطبيق التغيير بالكامل.</string>
     <string name="MercurygramShowCharCounter">إظهار عدّاد الأحرف</string>

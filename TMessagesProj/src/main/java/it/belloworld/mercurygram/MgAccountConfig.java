@@ -33,6 +33,7 @@ public class MgAccountConfig {
     public boolean disableInstantView = false;
     public boolean disableLinkPreviews = false;
     public boolean preferSecretChats = false;
+    public boolean secretChatAccessibility = false;
     public boolean deleteForAllByDefault = false;
     public boolean stripTrackingParams = false;
     public boolean disableCloudDrafts = false;
@@ -92,6 +93,7 @@ public class MgAccountConfig {
         editor.putBoolean("disableInstantView", disableInstantView);
         editor.putBoolean("disableLinkPreviews", disableLinkPreviews);
         editor.putBoolean("preferSecretChats", preferSecretChats);
+        editor.putBoolean("secretChatAccessibility", secretChatAccessibility);
         editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
         editor.putBoolean("stripTrackingParams", stripTrackingParams);
         editor.putBoolean("disableCloudDrafts", disableCloudDrafts);
@@ -121,6 +123,7 @@ public class MgAccountConfig {
         disableInstantView = preferences.getBoolean("disableInstantView", false);
         disableLinkPreviews = preferences.getBoolean("disableLinkPreviews", false);
         preferSecretChats = preferences.getBoolean("preferSecretChats", false);
+        secretChatAccessibility = preferences.getBoolean("secretChatAccessibility", false);
         deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
         stripTrackingParams = preferences.getBoolean("stripTrackingParams", false);
         disableCloudDrafts = preferences.getBoolean("disableCloudDrafts", false);
@@ -156,6 +159,7 @@ public class MgAccountConfig {
         disableInstantView = false;
         disableLinkPreviews = false;
         preferSecretChats = false;
+        secretChatAccessibility = false;
         deleteForAllByDefault = false;
         stripTrackingParams = false;
         disableCloudDrafts = false;
